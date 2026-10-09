@@ -92,17 +92,17 @@ abstract class ListQueryBase
      * twice for the same request. Each state is counted on its own table, so the "active" column
      * needs no qualifier.
      *
-     * @return array{active: int, inactive: int, trashed: int}
+     * @return array{active: int, archived: int, trashed: int}
      */
     protected function countStates(
         string $modelClass,
         ?int $activeTotal = null,
-        ?int $inactiveTotal = null,
+        ?int $archivedTotal = null,
         ?int $trashedTotal = null,
     ): array {
         return [
             'active' => $activeTotal ?? $modelClass::query()->where('active', true)->count(),
-            'inactive' => $inactiveTotal ?? $modelClass::query()->where('active', false)->count(),
+            'archived' => $archivedTotal ?? $modelClass::query()->where('active', false)->count(),
             'trashed' => $trashedTotal ?? $modelClass::onlyTrashed()->count(),
         ];
     }

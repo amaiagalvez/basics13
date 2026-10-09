@@ -1,5 +1,5 @@
 {{--
-    State tabs (resource / inactive / trash) built by the *ListTransformer classes, each one with
+    State tabs (resource / archived / trash) built by the *ListTransformer classes, each one with
     the number of records it holds. The current tab links to the full URL, search included, so it
     always describes the view being shown.
 

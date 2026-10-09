@@ -2,12 +2,9 @@
 
 namespace Basics13\Tests\Feature;
 
-use Basics13\ServiceProvider;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Blade;
-use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Orchestra\Testbench\TestCase as TestbenchTestCase;
 
 final class PackageViewsTest extends FeatureTestCase
 {

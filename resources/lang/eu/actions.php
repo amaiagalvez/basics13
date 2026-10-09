@@ -9,7 +9,7 @@ return [
     'add' => 'Gehitu',
     'admin' => 'Admin',
     'agree' => 'Ados',
-    'archive' => 'Artxiboa',
+    'archive' => 'Artxibatu',
     'assign' => 'Esleitu',
     'associate' => 'Elkargoa',
     'attach' => 'Erantsi',

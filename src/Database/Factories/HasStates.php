@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Model;
  */
 trait HasStates
 {
-    public function inactive(): static
+    public function archived(): static
     {
         return $this->state(fn (array $attributes) => [
             'active' => false,

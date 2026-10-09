@@ -31,7 +31,7 @@ abstract class ListTransformer
      * Everything a list view needs above its rows.
      *
      * @param  'active'|'archived'|'trash'  $state
-     * @param  array{active: int, inactive: int, trashed: int}|null  $counts
+     * @param  array{active: int, archived: int, trashed: int}|null  $counts
      * @return array<string, mixed>
      */
     final protected function envelope(string $state, string $search, ?array $counts): array
@@ -60,20 +60,20 @@ abstract class ListTransformer
      * with the number of records it holds.
      *
      * @param  'active'|'archived'|'trash'  $state
-     * @param  array{active: int, inactive: int, trashed: int}|null  $counts
+     * @param  array{active: int, archived: int, trashed: int}|null  $counts
      * @return list<array{label: string, url: string, current: bool, count: int|null, test: string}>
      */
     final protected function tabs(string $state, ?array $counts): array
     {
         return [
             $this->tab($this->resourceLabel(), route($this->routes()['active']), 'active', 'active', $state, $counts),
-            $this->tab(__('basics13::messages.archived_label'), route($this->routes()['archived']), 'archived', 'inactive', $state, $counts),
+            $this->tab(__('basics13::messages.archived_label'), route($this->routes()['archived']), 'archived', 'archived', $state, $counts),
             $this->tab(__('basics13::messages.trash_label'), route($this->routes()['trash']), 'trash', 'trashed', $state, $counts),
         ];
     }
 
     /**
-     * @param  array{active: int, inactive: int, trashed: int}|null  $counts
+     * @param  array{active: int, archived: int, trashed: int}|null  $counts
      * @return array{label: string, url: string, current: bool, count: int|null, test: string}
      */
     private function tab(

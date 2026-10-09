@@ -3,9 +3,8 @@
 namespace Basics13\Tests\Unit\Support\Validation;
 
 use Basics13\Tests\TestCase;
-use Basics13\Tests\Fixtures\BoundedLengthRequest;
 use Basics13\Support\Validation\FieldHints;
-use Basics13\Support\Validation\MaxLength;
+use Basics13\Tests\Fixtures\BoundedLengthRequest;
 
 final class FieldHintsTest extends TestCase
 {

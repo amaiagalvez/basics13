@@ -26,14 +26,14 @@ return [
     'not_in_trash' => 'Erregistro hau ez dago jada zakarrontzian.',
     'cannot_restore_name_taken' => 'Ezinezkoa da berreskuratu beste erregistro bat zakarrontzian izan ez den izen hori duelako.',
     'deleted_name_conflict' => 'Ezabatutako erregistroak izen hori erabiltzen du: :name.',
-    'cannot_delete_related' => 'Ezinezkoa da ezabatu lotutako erregistroak dituelako.',
+    'cannot_delete_related' => 'Ezinezkoa da ezabatu lotutako erregistroak dituelako. Archibatu dezakezu',
     'cannot_force_delete_related' => 'Ezinezkoa da behin betiko ezabatu lotutako erregistroak dituelako.',
 
     // Ekintza-botoiak
     'edit' => 'Editatu',
     'delete' => 'Ezabatu',
     'delete_record' => 'Erregistroa ezabatu?',
-    'archive' => 'Artxiboa',
+    'archive' => 'Artxibatu',
     'archive_record' => 'Erregistroa artxibatu?',
     'activate' => 'Aktibatu',
     'activate_record' => 'Erregistroa aktibatu?',
@@ -53,7 +53,7 @@ return [
     'no_archived_records' => 'Ez dago artxibatutako erregistrorik.',
     'trash_is_empty' => 'Zakarrontzia hutsa dago.',
     'you_can_restore_from_trash' => 'Zakarrontzitik berreskura dezakezu.',
-    'you_can_activate_from_archived' => 'Artxibatuekin zerrendatik aktibatu dezakezu.',
+    'you_can_activate_from_archived' => 'Artxibatueen zerrendatik aktibatu dezakezu berriro.',
     'record_returns_to_active' => 'Erregistroa aktibuen zerrendara itzuliko da.',
     'record_returns_to_archived' => 'Erregistroa artxibatuekin zerrendara itzuliko da.',
 ];

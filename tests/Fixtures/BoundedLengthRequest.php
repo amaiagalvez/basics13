@@ -2,8 +2,8 @@
 
 namespace Basics13\Tests\Fixtures;
 
-use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
+use Illuminate\Foundation\Http\FormRequest;
 
 /**
  * @return array<string, array<int, mixed>>

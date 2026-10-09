@@ -2,8 +2,7 @@
 
 namespace Basics13\Tests\Feature;
 
-use Illuminate\Support\Facades\View;
-use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
+use Basics13\ServiceProvider;
 use Orchestra\Testbench\TestCase as TestbenchTestCase;
 
 abstract class FeatureTestCase extends TestbenchTestCase
@@ -25,6 +24,6 @@ abstract class FeatureTestCase extends TestbenchTestCase
      */
     protected function getPackageProviders($app): array
     {
-        return [\Basics13\ServiceProvider::class];
+        return [ServiceProvider::class];
     }
 }

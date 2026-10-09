@@ -25,7 +25,7 @@ return [
     'not_in_trash' => 'Este registro ya no está en la papelera.',
     'cannot_restore_name_taken' => 'No se puede restaurar porque otro registro fuera de la papelera ya usa este nombre.',
     'deleted_name_conflict' => 'Un registro eliminado ya usa el nombre :name.',
-    'cannot_delete_related' => 'No se puede eliminar porque tiene registros relacionados.',
+    'cannot_delete_related' => 'No se puede eliminar porque tiene registros relacionados. Puedes archivarlo.',
     'cannot_force_delete_related' => 'No se puede eliminar definitivamente porque tiene registros relacionados.',
 
     // Botones de acción
@@ -52,7 +52,7 @@ return [
     'no_archived_records' => 'No hay registros archivados.',
     'trash_is_empty' => 'La papelera está vacía.',
     'you_can_restore_from_trash' => 'Puedes restaurarlo desde la papelera.',
-    'you_can_activate_from_archived' => 'Puedes activarlo desde el listado de archivados.',
+    'you_can_activate_from_archived' => 'Puedes activarlo de nuevo desde el listado de archivados.',
     'record_returns_to_active' => 'El registro volverá al listado de activos.',
     'record_returns_to_archived' => 'El registro volverá al listado de archivados.',
 ];
