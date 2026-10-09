@@ -16,11 +16,19 @@ class ServiceProvider extends BaseServiceProvider
             __DIR__.'/../config/basics13.php' => config_path('basics13.php'),
         ], 'basics13-config');
 
-        // pint.json is published from the package root: the package and its
-        // applications share the same formatting rules.
+        // pint.json is published from the package root (the package and its
+        // applications share the same rules); phpstan.neon and phpunit.xml live
+        // in tooling/ because the package needs its own versions to analyse and
+        // test itself. Everything else an application needs to run lives only in
+        // tooling/ and is published from there.
         $this->publishes([
             __DIR__.'/../pint.json' => base_path('pint.json'),
             __DIR__.'/../tooling/phpstan.neon' => base_path('phpstan.neon'),
+            __DIR__.'/../tooling/phpunit.xml' => base_path('phpunit.xml'),
+            __DIR__.'/../tooling/phpunit.dusk.xml' => base_path('phpunit.dusk.xml'),
+            __DIR__.'/../tooling/boost.json' => base_path('boost.json'),
+            __DIR__.'/../tooling/docker-compose.yml' => base_path('docker-compose.yml'),
+            __DIR__.'/../tooling/Dockerfile.dusk' => base_path('Dockerfile.dusk'),
         ], 'basics13-tooling');
 
         // $this->publishes([
