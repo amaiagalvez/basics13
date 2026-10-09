@@ -8,3 +8,15 @@ parameters:
         - tests/
 
     level: 9
+
+    ignoreErrors:
+        # Public API of the package: both traits are consumed by the application
+        # that uses it (models, factories), so PHPStan sees no usage inside
+        # src/ or tests/. Scope the ignore to these paths so a genuinely unused
+        # trait is still reported.
+        -
+            identifier: trait.unused
+            path: src/Concerns/TracksAuditColumns.php
+        -
+            identifier: trait.unused
+            path: src/Database/Factories/HasStates.php
