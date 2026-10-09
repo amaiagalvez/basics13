@@ -3,20 +3,20 @@ services:
         image: webdevops/php-apache-dev:${DC_PHP:-8.4}
         user: "${DC_UID:-1000}:${DC_GID:-1000}"
         volumes:
-            - ./:/docker
+            - ./:/app-docker
             - ../packages:/packages
-        working_dir: /docker
+        working_dir: /app-docker
         ports:
             - "80:80"
             - "${VITE_PORT:-5173}:${VITE_PORT:-5173}"
         environment:
             HOME: /tmp
             APP_CONFIG_CACHE: /tmp/laravel13-config-cache.php
-            WEB_DOCUMENT_ROOT: /docker/public
+            WEB_DOCUMENT_ROOT: /app-docker/public
             CONTAINER_UID: 1000
             GIT_CONFIG_COUNT: 1
             GIT_CONFIG_KEY_0: safe.directory
-            GIT_CONFIG_VALUE_0: /docker
+            GIT_CONFIG_VALUE_0: /app-docker
             XDEBUG_CLIENT_HOST: 172.17.0.1
             XDEBUG_CLIENT_PORT: 9000
             XDEBUG_START_WITH_REQUEST: "trigger"
@@ -35,9 +35,9 @@ services:
             dockerfile: Dockerfile.dusk
         user: "${DC_UID:-1000}:${DC_GID:-1000}"
         volumes:
-            - ./:/docker
+            - ./:/app-docker
             - ../packages:/packages
-        working_dir: /docker
+        working_dir: /app-docker
         environment:
             HOME: /tmp
             APP_URL: http://laravel13-dusk
@@ -51,7 +51,7 @@ services:
             DB_PASSWORD: laravel
             SESSION_DRIVER: file
             DEBUGBAR_ENABLED: "false"
-            WEB_DOCUMENT_ROOT: /docker/public
+            WEB_DOCUMENT_ROOT: /app-docker/public
             CONTAINER_UID: 1000
         depends_on:
             db:
@@ -65,16 +65,16 @@ services:
         entrypoint: [""]
         user: "${DC_UID:-1000}:${DC_GID:-1000}"
         volumes:
-            - ./:/docker
+            - ./:/app-docker
             - ../packages:/packages
-        working_dir: /docker
+        working_dir: /app-docker
         environment:
             HOME: /tmp
-            WEB_DOCUMENT_ROOT: /docker/public
+            WEB_DOCUMENT_ROOT: /app-docker/public
             LARAVEL_INSTALLER_NO_NODE: "true"
             GIT_CONFIG_COUNT: 1
             GIT_CONFIG_KEY_0: safe.directory
-            GIT_CONFIG_VALUE_0: /docker
+            GIT_CONFIG_VALUE_0: /app-docker
         command: bash -c "
             rm -Rf vendor
             && rm -f composer.lock
@@ -89,12 +89,12 @@ services:
         entrypoint: [""]
         user: "${DC_UID:-1000}:${DC_GID:-1000}"
         volumes:
-            - ./:/docker
+            - ./:/app-docker
             - ../packages:/packages
-        working_dir: /docker
+        working_dir: /app-docker
         environment:
             HOME: /tmp
-            WEB_DOCUMENT_ROOT: /docker/public
+            WEB_DOCUMENT_ROOT: /app-docker/public
         command: bash -c "
             ./vendor/bin/pint"
         networks:
@@ -106,12 +106,12 @@ services:
         entrypoint: [""]
         user: "${DC_UID:-1000}:${DC_GID:-1000}"
         volumes:
-            - ./:/docker
+            - ./:/app-docker
             - ../packages:/packages
-        working_dir: /docker
+        working_dir: /app-docker
         environment:
             HOME: /tmp
-            WEB_DOCUMENT_ROOT: /docker/public
+            WEB_DOCUMENT_ROOT: /app-docker/public
         command: bash -c "
             ./vendor/bin/phpstan analyse --memory-limit=1G"
         networks:
@@ -123,15 +123,15 @@ services:
         entrypoint: [""]
         user: "${DC_UID:-1000}:${DC_GID:-1000}"
         volumes:
-            - ./:/docker
+            - ./:/app-docker
             - ../packages:/packages
             - ./dc-data/npmCache:/npmCache
         ports:
             - "3000:3000"
-        working_dir: /docker
+        working_dir: /app-docker
         environment:
             HOME: /tmp
-            WEB_DOCUMENT_ROOT: /docker/public
+            WEB_DOCUMENT_ROOT: /app-docker/public
             NPM_CONFIG_CACHE: /npmCache
             NPM_CONFIG_UPDATE_NOTIFIER: "false"
         command: bash -c "
@@ -148,15 +148,15 @@ services:
         entrypoint: [""]
         user: "${DC_UID:-1000}:${DC_GID:-1000}"
         volumes:
-            - ./:/docker
+            - ./:/app-docker
             - ../packages:/packages
             - ./dc-data/npmCache:/npmCache
         ports:
             - "3000:3000"
-        working_dir: /docker
+        working_dir: /app-docker
         environment:
             HOME: /tmp
-            WEB_DOCUMENT_ROOT: /docker/public
+            WEB_DOCUMENT_ROOT: /app-docker/public
             NPM_CONFIG_CACHE: /npmCache
             NPM_CONFIG_UPDATE_NOTIFIER: "false"
         command: bash -c "
@@ -171,15 +171,15 @@ services:
         entrypoint: [""]
         user: "${DC_UID:-1000}:${DC_GID:-1000}"
         volumes:
-            - ./:/docker
+            - ./:/app-docker
             - ../packages:/packages
-        working_dir: /docker
+        working_dir: /app-docker
         environment:
             HOME: /tmp
-            WEB_DOCUMENT_ROOT: /docker/public
+            WEB_DOCUMENT_ROOT: /app-docker/public
             GIT_CONFIG_COUNT: 1
             GIT_CONFIG_KEY_0: safe.directory
-            GIT_CONFIG_VALUE_0: /docker
+            GIT_CONFIG_VALUE_0: /app-docker
         command: bash -c "
             composer install --no-progress
             && php artisan migrate:fresh
@@ -196,15 +196,15 @@ services:
         entrypoint: [""]
         user: "${DC_UID:-1000}:${DC_GID:-1000}"
         volumes:
-            - ./:/docker
+            - ./:/app-docker
             - ../packages:/packages
-        working_dir: /docker
+        working_dir: /app-docker
         environment:
             HOME: /tmp
-            WEB_DOCUMENT_ROOT: /docker/public
+            WEB_DOCUMENT_ROOT: /app-docker/public
             GIT_CONFIG_COUNT: 1
             GIT_CONFIG_KEY_0: safe.directory
-            GIT_CONFIG_VALUE_0: /docker
+            GIT_CONFIG_VALUE_0: /app-docker
         command: bash -c "
             composer install --no-progress
             && php artisan migrate
@@ -221,16 +221,16 @@ services:
         entrypoint: [""]
         user: "${DC_UID:-1000}:${DC_GID:-1000}"
         volumes:
-            - ./:/docker
+            - ./:/app-docker
             - ../packages:/packages
-        working_dir: /docker
+        working_dir: /app-docker
         environment:
             HOME: /tmp
-            WEB_DOCUMENT_ROOT: /docker/public
+            WEB_DOCUMENT_ROOT: /app-docker/public
             GIT_CONFIG_COUNT: 1
             GIT_CONFIG_KEY_0: safe.directory
-            GIT_CONFIG_VALUE_0: /docker
-        command: bash docker/run-phpunit-with-coverage.sh
+            GIT_CONFIG_VALUE_0: /app-docker
+        command: bash /packages/basics13/tooling/run-phpunit-with-coverage.sh
         depends_on:
             db:
                 condition: service_healthy
@@ -248,7 +248,7 @@ services:
         volumes:
             - ./dc-data/mysql:/var/lib/mysql
             - ./dc-data/mysqldumps:/mysqldumps
-            - ./docker/mysql/init:/docker-entrypoint-initdb.d
+            - ../packages/basics13/tooling/mysql/init:/docker-entrypoint-initdb.d
         healthcheck:
             test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
             interval: 10s

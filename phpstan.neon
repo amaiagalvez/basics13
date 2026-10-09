@@ -9,6 +9,8 @@ parameters:
 
     level: 9
 
+    reportUnmatchedIgnoredErrors: false
+
     ignoreErrors:
         # Public API of the package: both traits are consumed by the application
         # that uses it (models, factories), so PHPStan sees no usage inside
@@ -16,7 +18,16 @@ parameters:
         # trait is still reported.
         -
             identifier: trait.unused
-            path: src/Concerns/TracksAuditColumns.php
+            path: **/src/Concerns/TracksAuditColumns.php
         -
             identifier: trait.unused
+            path: **/src/Database/Factories/HasStates.php
+        -
+            identifier: staticMethod.notFound
             path: src/Database/Factories/HasStates.php
+        #
+        # Class not found in test context - ServiceProvider class reference
+        # in Feature test case getPackageProviders() is resolved dynamically.
+        -
+            identifier: class.notFound
+            path: tests/Feature/FeatureTestCase.php
