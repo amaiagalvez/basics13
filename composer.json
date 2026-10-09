@@ -12,10 +12,13 @@
     ],
     "require": {
         "php": "^8.3",
-        "laravel/framework": "^13.0",
-        "livewire/flux": "^2.0"
+        "laravel/chisel": "^0.1.0",
+        "laravel/framework": "^13",
+        "laravel/boost": "^2.10",
+        "livewire/flux": "^2",
+        "opcodesio/log-viewer": "^3.24"
     },
-    "require-dev": {
+    "require-dev": {        
         "larastan/larastan": "^3.9",
         "laravel/pint": "^1.27",
         "mockery/mockery": "^1.6",

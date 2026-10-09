@@ -1,22 +1,13 @@
 <?php
 
-namespace Basics13\Tests;
+namespace Basics13\Tests\Feature;
 
-use Basics13\ServiceProvider;
+use Illuminate\Support\Facades\View;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Orchestra\Testbench\TestCase as TestbenchTestCase;
 
-abstract class TestCase extends TestbenchTestCase
+abstract class FeatureTestCase extends TestbenchTestCase
 {
-    /**
-     * Loads the package so its config, translations and views are available to the tests.
-     *
-     * @return array<int, class-string>
-     */
-    protected function getPackageProviders($app): array
-    {
-        return [ServiceProvider::class];
-    }
-
     /**
      * The tests run on SQLite in memory, so nobody needs a database server to check the package.
      * The engines the application really runs are that application's own business.
@@ -25,5 +16,15 @@ abstract class TestCase extends TestbenchTestCase
     {
         $app['config']->set('database.default', 'sqlite');
         $app['config']->set('database.connections.sqlite.database', ':memory:');
+    }
+
+    /**
+     * Loads the package so its config, translations and views are available to the tests.
+     *
+     * @return array<int, class-string>
+     */
+    protected function getPackageProviders($app): array
+    {
+        return [\Basics13\ServiceProvider::class];
     }
 }
