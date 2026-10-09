@@ -1,0 +1,52 @@
+{
+    "name": "amaia/basics13",
+    "description": "Generic Laravel 13 components: audit traits, base controllers, requests, queries, transformers, and view components for resource CRUD with soft deletes, archive, and trash.",
+    "type": "library",
+    "license": "MIT",
+    "version": "1.0.0",
+    "authors": [
+        {
+            "name": "Amaia",
+            "email": "amaia@example.com"
+        }
+    ],
+    "require": {
+        "php": "^8.3",
+        "laravel/framework": "^13.0",
+        "livewire/flux": "^2.0"
+    },
+    "require-dev": {
+        "laravel/pint": "^1.27",
+        "phpunit/phpunit": "^12.0",
+        "mockery/mockery": "^1.6",
+        "larastan/larastan": "^3.9"
+    },
+    "autoload": {
+        "psr-4": {
+            "Basics13\\": "src/"
+        },
+        "files": [
+            "src/Support/Database/helpers_global.php"
+        ]
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Basics13\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Basics13\\ServiceProvider"
+            ]
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true,
+    "config": {
+        "sort-packages": true,
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    }
+}
