@@ -15,7 +15,7 @@ final class ToolingComposeTest extends TestCase
 
     public function test_it_references_only_scripts_that_exist_in_the_package(): void
     {
-        $compose = file_get_contents(self::COMPOSE_FILE);
+        $compose = (string) file_get_contents(self::COMPOSE_FILE);
 
         preg_match_all('#/packages/basics13/tooling/([^\s:]+)#', $compose, $matches);
 
