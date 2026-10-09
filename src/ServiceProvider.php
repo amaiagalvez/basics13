@@ -16,6 +16,13 @@ class ServiceProvider extends BaseServiceProvider
             __DIR__.'/../config/basics13.php' => config_path('basics13.php'),
         ], 'basics13-config');
 
+        // pint.json is published from the package root: the package and its
+        // applications share the same formatting rules.
+        $this->publishes([
+            __DIR__.'/../pint.json' => base_path('pint.json'),
+            __DIR__.'/../tooling/phpstan.neon' => base_path('phpstan.neon'),
+        ], 'basics13-tooling');
+
         // $this->publishes([
         //     __DIR__ . '/../resources/lang' => lang_path('vendor/basics13'),
         // ], 'basics13-lang');

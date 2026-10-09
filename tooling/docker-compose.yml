@@ -1,0 +1,281 @@
+services:
+    laravel13:
+        image: webdevops/php-apache-dev:${DC_PHP:-8.4}
+        user: "${DC_UID:-1000}:${DC_GID:-1000}"
+        volumes:
+            - ./:/docker
+            - ../packages:/packages
+        working_dir: /docker
+        ports:
+            - "80:80"
+            - "${VITE_PORT:-5173}:${VITE_PORT:-5173}"
+        environment:
+            HOME: /tmp
+            APP_CONFIG_CACHE: /tmp/laravel13-config-cache.php
+            WEB_DOCUMENT_ROOT: /docker/public
+            CONTAINER_UID: 1000
+            GIT_CONFIG_COUNT: 1
+            GIT_CONFIG_KEY_0: safe.directory
+            GIT_CONFIG_VALUE_0: /docker
+            XDEBUG_CLIENT_HOST: 172.17.0.1
+            XDEBUG_CLIENT_PORT: 9000
+            XDEBUG_START_WITH_REQUEST: "trigger"
+            XDEBUG_SESSION: VSCODE
+            XDEBUG_MODE: "debug,develop,coverage,trace,profile"
+            PHP_MEMORY_LIMIT: 9064M
+        depends_on:
+            db:
+                condition: service_healthy
+        networks:
+            - frontend
+
+    laravel13-dusk:
+        build:
+            context: .
+            dockerfile: Dockerfile.dusk
+        user: "${DC_UID:-1000}:${DC_GID:-1000}"
+        volumes:
+            - ./:/docker
+            - ../packages:/packages
+        working_dir: /docker
+        environment:
+            HOME: /tmp
+            APP_URL: http://laravel13-dusk
+            APP_CONFIG_CACHE: /tmp/laravel13-dusk-config-cache.php
+            DUSK_CHROMEDRIVER_PATH: /usr/bin/chromedriver
+            DB_CONNECTION: mysql
+            DB_HOST: db
+            DB_PORT: 3306
+            DB_DATABASE: laravel_test
+            DB_USERNAME: laravel
+            DB_PASSWORD: laravel
+            SESSION_DRIVER: file
+            DEBUGBAR_ENABLED: "false"
+            WEB_DOCUMENT_ROOT: /docker/public
+            CONTAINER_UID: 1000
+        depends_on:
+            db:
+                condition: service_healthy
+        networks:
+            - frontend
+
+    laravel13-composer:
+        image: webdevops/php-apache-dev:${DC_PHP:-8.4}
+        profiles: ["composer"]
+        entrypoint: [""]
+        user: "${DC_UID:-1000}:${DC_GID:-1000}"
+        volumes:
+            - ./:/docker
+            - ../packages:/packages
+        working_dir: /docker
+        environment:
+            HOME: /tmp
+            WEB_DOCUMENT_ROOT: /docker/public
+            LARAVEL_INSTALLER_NO_NODE: "true"
+            GIT_CONFIG_COUNT: 1
+            GIT_CONFIG_KEY_0: safe.directory
+            GIT_CONFIG_VALUE_0: /docker
+        command: bash -c "
+            rm -Rf vendor
+            && rm -f composer.lock
+            && composer install --no-progress
+            && composer show | grep izt"
+        networks:
+            - frontend
+
+    laravel13-reformat:
+        image: webdevops/php-apache-dev:${DC_PHP:-8.4}
+        profiles: ["reformat"]
+        entrypoint: [""]
+        user: "${DC_UID:-1000}:${DC_GID:-1000}"
+        volumes:
+            - ./:/docker
+            - ../packages:/packages
+        working_dir: /docker
+        environment:
+            HOME: /tmp
+            WEB_DOCUMENT_ROOT: /docker/public
+        command: bash -c "
+            ./vendor/bin/pint"
+        networks:
+            - frontend
+
+    laravel13-review:
+        image: webdevops/php-apache-dev:${DC_PHP:-8.4}
+        profiles: ["review"]
+        entrypoint: [""]
+        user: "${DC_UID:-1000}:${DC_GID:-1000}"
+        volumes:
+            - ./:/docker
+            - ../packages:/packages
+        working_dir: /docker
+        environment:
+            HOME: /tmp
+            WEB_DOCUMENT_ROOT: /docker/public
+        command: bash -c "
+            ./vendor/bin/phpstan analyse --memory-limit=1G"
+        networks:
+            - frontend
+
+    laravel13-npm-all:
+        image: node:${DC_NODE:-24-bullseye}
+        profiles: ["npm-all"]
+        entrypoint: [""]
+        user: "${DC_UID:-1000}:${DC_GID:-1000}"
+        volumes:
+            - ./:/docker
+            - ../packages:/packages
+            - ./dc-data/npmCache:/npmCache
+        ports:
+            - "3000:3000"
+        working_dir: /docker
+        environment:
+            HOME: /tmp
+            WEB_DOCUMENT_ROOT: /docker/public
+            NPM_CONFIG_CACHE: /npmCache
+            NPM_CONFIG_UPDATE_NOTIFIER: "false"
+        command: bash -c "
+            rm -f package-lock.json
+            && rm -Rf node_modules
+            && npm install
+            && npm run build"
+        networks:
+            - frontend
+
+    laravel13-npm:
+        image: node:${DC_NODE:-24-bullseye}
+        profiles: ["npm"]
+        entrypoint: [""]
+        user: "${DC_UID:-1000}:${DC_GID:-1000}"
+        volumes:
+            - ./:/docker
+            - ../packages:/packages
+            - ./dc-data/npmCache:/npmCache
+        ports:
+            - "3000:3000"
+        working_dir: /docker
+        environment:
+            HOME: /tmp
+            WEB_DOCUMENT_ROOT: /docker/public
+            NPM_CONFIG_CACHE: /npmCache
+            NPM_CONFIG_UPDATE_NOTIFIER: "false"
+        command: bash -c "
+            npm install
+            && npm run build"
+        networks:
+            - frontend
+
+    laravel13-migrate-all:
+        image: webdevops/php-apache-dev:${DC_PHP:-8.4}
+        profiles: ["migrate-all"]
+        entrypoint: [""]
+        user: "${DC_UID:-1000}:${DC_GID:-1000}"
+        volumes:
+            - ./:/docker
+            - ../packages:/packages
+        working_dir: /docker
+        environment:
+            HOME: /tmp
+            WEB_DOCUMENT_ROOT: /docker/public
+            GIT_CONFIG_COUNT: 1
+            GIT_CONFIG_KEY_0: safe.directory
+            GIT_CONFIG_VALUE_0: /docker
+        command: bash -c "
+            composer install --no-progress
+            && php artisan migrate:fresh
+            && php artisan db:seed"
+        depends_on:
+            db:
+                condition: service_healthy
+        networks:
+            - frontend
+
+    laravel13-migrate:
+        image: webdevops/php-apache-dev:${DC_PHP:-8.4}
+        profiles: ["migrate"]
+        entrypoint: [""]
+        user: "${DC_UID:-1000}:${DC_GID:-1000}"
+        volumes:
+            - ./:/docker
+            - ../packages:/packages
+        working_dir: /docker
+        environment:
+            HOME: /tmp
+            WEB_DOCUMENT_ROOT: /docker/public
+            GIT_CONFIG_COUNT: 1
+            GIT_CONFIG_KEY_0: safe.directory
+            GIT_CONFIG_VALUE_0: /docker
+        command: bash -c "
+            composer install --no-progress
+            && php artisan migrate
+            && php artisan db:seed"
+        depends_on:
+            db:
+                condition: service_healthy
+        networks:
+            - frontend
+
+    laravel13-phpunit:
+        image: webdevops/php-apache-dev:${DC_PHP:-8.4}
+        profiles: ["phpunit"]
+        entrypoint: [""]
+        user: "${DC_UID:-1000}:${DC_GID:-1000}"
+        volumes:
+            - ./:/docker
+            - ../packages:/packages
+        working_dir: /docker
+        environment:
+            HOME: /tmp
+            WEB_DOCUMENT_ROOT: /docker/public
+            GIT_CONFIG_COUNT: 1
+            GIT_CONFIG_KEY_0: safe.directory
+            GIT_CONFIG_VALUE_0: /docker
+        command: bash docker/run-phpunit-with-coverage.sh
+        depends_on:
+            db:
+                condition: service_healthy
+        networks:
+            - frontend
+
+    db:
+        image: mariadb:11.7
+        command: --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password --sql-mode=""
+        environment:
+            MYSQL_ROOT_PASSWORD: tormenta
+            MYSQL_DATABASE: laravel
+            MYSQL_USER: laravel
+            MYSQL_PASSWORD: laravel
+        volumes:
+            - ./dc-data/mysql:/var/lib/mysql
+            - ./dc-data/mysqldumps:/mysqldumps
+            - ./docker/mysql/init:/docker-entrypoint-initdb.d
+        healthcheck:
+            test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+            interval: 10s
+            timeout: 5s
+            retries: 10
+        networks:
+            - frontend
+        ports:
+            - 127.0.0.1:13306:3306
+
+    laravel13-myadmin:
+        image: phpmyadmin:5.2.3
+        ports:
+            - 127.0.0.1:4000:80
+        environment:
+            UPLOAD_LIMIT: 64M
+        links:
+            - db:db
+        networks:
+            - frontend
+
+    mailhog:
+        image: mailhog/mailhog:v1.0.1
+        ports:
+            - "127.0.0.1:${MAILHOG_PORT:-8025}:8025"
+        networks:
+            - frontend
+
+networks:
+    frontend: null

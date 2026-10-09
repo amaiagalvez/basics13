@@ -1,0 +1,29 @@
+{
+    "agents": [
+        "copilot"
+    ],
+    "cloud": false,
+    "guidelines": false,
+    "mcp": true,
+    "nightwatch": false,
+    "packages": [
+        "livewire/blaze"
+    ],
+    "sail": false,
+    "skills": [
+        "fortify-development",
+        "laravel-best-practices",
+        "testing-best-practices",
+        "fluxui-development",
+        "livewire-development",
+        "tailwindcss-development",
+        "new-feature",
+        "new-resource",
+        "full-review",
+        "fix-review",
+        "fix-tests",
+        "consistency-review",
+        "ux-design",
+        "ux-implement"
+    ]
+}
