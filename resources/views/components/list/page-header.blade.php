@@ -38,9 +38,9 @@
         </flux:heading>
     </div>
 
-    <x-basics13::components.list.tabs :tabs="$list['tabs']" :prefix="$prefix">
+    <x-basics13::list.tabs :tabs="$list['tabs']" :prefix="$prefix">
         @isset($actions)
             <x-slot:actions>{{ $actions }}</x-slot:actions>
         @endisset
-    </x-basics13::components.list.tabs>
+    </x-basics13::list.tabs>
 </div>

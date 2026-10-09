@@ -8,6 +8,6 @@
     </div>
 
     <nav aria-label="{{ __('Pagination') }}" data-test="{{ $prefix }}-pagination">
-        {{ $paginator->links() }}
+        {{ $paginator->links('basics13::vendor.pagination.tailwind') }}
     </nav>
 </div>
