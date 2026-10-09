@@ -8,12 +8,12 @@ class ServiceProvider extends BaseServiceProvider
 {
     public function boot(): void
     {
-        $this->loadViewsFrom(__DIR__ . '/../resources/views', 'basics13');
-        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang', 'basics13');
-        $this->loadTranslationsFrom(__DIR__ . '/../resources/lang');
+        $this->loadViewsFrom(__DIR__.'/../resources/views', 'basics13');
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'basics13');
+        $this->loadTranslationsFrom(__DIR__.'/../resources/lang');
 
         $this->publishes([
-            __DIR__ . '/../config/basics13.php' => config_path('basics13.php'),
+            __DIR__.'/../config/basics13.php' => config_path('basics13.php'),
         ], 'basics13-config');
 
         // $this->publishes([
@@ -28,7 +28,7 @@ class ServiceProvider extends BaseServiceProvider
         //     __DIR__ . '/../resources/views/vendor/pagination' => resource_path('views/vendor/pagination'),
         // ], 'basics13-pagination');
 
-        $this->mergeConfigFrom(__DIR__ . '/../config/basics13.php', 'basics13');
+        $this->mergeConfigFrom(__DIR__.'/../config/basics13.php', 'basics13');
     }
 
     public function register(): void
