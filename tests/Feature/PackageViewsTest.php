@@ -2,6 +2,7 @@
 
 namespace Basics13\Tests\Feature;
 
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -10,7 +11,7 @@ final class PackageViewsTest extends FeatureTestCase
 {
     public function test_package_views_are_loaded(): void
     {
-        $providers = array_keys($this->app->getLoadedProviders());
+        $providers = array_keys(App::getLoadedProviders());
         $this->assertContains('Basics13\ServiceProvider', $providers, 'Basics13 ServiceProvider not loaded');
 
         $this->assertTrue(View::exists('basics13::components.list.create-action'));
@@ -30,7 +31,7 @@ final class PackageViewsTest extends FeatureTestCase
 
     public function test_package_validation_translations_are_available_to_the_validator(): void
     {
-        $this->app->setLocale('eu');
+        App::setLocale('eu');
 
         $attributes = __('validation.attributes');
 

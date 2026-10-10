@@ -3,10 +3,9 @@
 namespace Basics13\Tests\Unit\Concerns;
 
 use Basics13\Tests\TestCase;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Auth;
 use Basics13\Tests\Fixtures\AuditActor;
 use Illuminate\Database\QueryException;
-use Illuminate\Database\Schema\Blueprint;
 use Basics13\Tests\Fixtures\AuditedRecord;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Basics13\Tests\Fixtures\PlainAuditedRecord;
@@ -15,13 +14,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 class TracksAuditColumnsTest extends TestCase
 {
     use RefreshDatabase;
-
-    protected function setUp(): void
-    {
-        parent::setUp();
-
-        $this->createFixtureTables();
-    }
 
     /**
      * The audited records the trait writes its columns for: AuditedRecord keeps a deleted_at, while
@@ -227,40 +219,10 @@ class TracksAuditColumnsTest extends TestCase
     }
 
     /**
-     * The tables the trait writes its columns to, built with the package's own migration helpers so
-     * the helpers are exercised the way an application uses them. RefreshDatabase wraps every test
-     * in a transaction, so each one runs them against a schema only it can see.
-     */
-    private function createFixtureTables(): void
-    {
-        Schema::create('users', function (Blueprint $table): void {
-            $table->id();
-            $table->string('name');
-            $table->timestamps();
-        });
-
-        Schema::create('audited_records', function (Blueprint $table): void {
-            $table->id();
-            $table->string('name');
-
-            addCommonColumns($table);
-            addAuditColumns($table);
-        });
-
-        Schema::create('plain_audited_records', function (Blueprint $table): void {
-            $table->id();
-            $table->string('name');
-            $table->timestamps();
-
-            addAuditColumns($table);
-        });
-    }
-
-    /**
      * A write with nobody authenticated is the console and queue path: no user on the guard.
      */
     private function loggedOut(): void
     {
-        $this->app['auth']->forgetGuards();
+        Auth::forgetGuards();
     }
 }

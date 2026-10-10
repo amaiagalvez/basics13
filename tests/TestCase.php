@@ -26,4 +26,12 @@ abstract class TestCase extends TestbenchTestCase
         $app['config']->set('database.default', 'sqlite');
         $app['config']->set('database.connections.sqlite.database', ':memory:');
     }
+
+    /**
+     * Define database migrations for the test fixtures.
+     */
+    protected function defineDatabaseMigrations(): void
+    {
+        $this->loadMigrationsFrom(__DIR__.'/Fixtures');
+    }
 }
