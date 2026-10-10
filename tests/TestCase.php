@@ -3,6 +3,9 @@
 namespace Basics13\Tests;
 
 use Basics13\ServiceProvider;
+use Illuminate\Translation\Translator;
+use Illuminate\Validation\ValidationServiceProvider;
+use Illuminate\Translation\TranslationServiceProvider;
 use Orchestra\Testbench\TestCase as TestbenchTestCase;
 
 abstract class TestCase extends TestbenchTestCase
@@ -14,7 +17,11 @@ abstract class TestCase extends TestbenchTestCase
      */
     protected function getPackageProviders($app): array
     {
-        return [ServiceProvider::class];
+        return [
+            TranslationServiceProvider::class,
+            ValidationServiceProvider::class,
+            ServiceProvider::class,
+        ];
     }
 
     /**
@@ -25,6 +32,23 @@ abstract class TestCase extends TestbenchTestCase
     {
         $app['config']->set('database.default', 'sqlite');
         $app['config']->set('database.connections.sqlite.database', ':memory:');
+    }
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        if ($this->app !== null) {
+            $this->app->setLocale('en');
+
+            // Ensure translator is available for __() helper
+            $this->app->booted(function ($app) {
+                if (! $app->bound('translator')) {
+                    $loader = $app->make('translation.loader');
+                    $locale = $app->getLocale();
+                    $app->instance('translator', new Translator($loader, $locale));
+                }
+            });
+        }
     }
 
     /**

@@ -3,8 +3,10 @@
 namespace Basics13\Tests\Unit\Support\Database;
 
 use PDOException;
-use PHPUnit\Framework\TestCase;
+use Basics13\Tests\TestCase;
+use Illuminate\Translation\Translator;
 use Illuminate\Database\QueryException;
+use Illuminate\Validation\ValidationException;
 use Basics13\Support\Database\UniqueConstraintViolation;
 
 class UniqueConstraintViolationTest extends TestCase
@@ -42,6 +44,32 @@ class UniqueConstraintViolationTest extends TestCase
         $exception = $this->queryException(['23000', 1452, 'Foreign key constraint fails']);
 
         $this->assertFalse(UniqueConstraintViolation::causedBy($exception));
+    }
+
+    public function test_rethrow_as_validation_error_throws_validation_exception_for_duplicate_key(): void
+    {
+        $exception = $this->queryException(['23000', 1062, 'Duplicate entry']);
+
+        // Ensure translator is available for __() helper
+        if ($this->app !== null && ! $this->app->bound('translator')) {
+            $loader = $this->app->make('translation.loader');
+            $locale = $this->app->getLocale();
+            $this->app->instance('translator', new Translator($loader, $locale));
+        }
+
+        $this->expectException(ValidationException::class);
+        $this->expectExceptionMessage('already been taken');
+
+        UniqueConstraintViolation::rethrowAsValidationError($exception, 'name');
+    }
+
+    public function test_rethrow_as_validation_error_throws_original_exception_for_non_duplicate_key(): void
+    {
+        $exception = $this->queryException(['23000', 1452, 'Foreign key constraint fails']);
+
+        $this->expectException(QueryException::class);
+
+        UniqueConstraintViolation::rethrowAsValidationError($exception);
     }
 
     /**

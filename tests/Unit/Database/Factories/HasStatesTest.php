@@ -89,4 +89,13 @@ class HasStatesTest extends TestCase
             $dates['end_date'] === null,
         );
     }
+
+    public function test_get_record_static_method_works_directly(): void
+    {
+        // Test the static getRecord method directly on the factory (where the trait method is available)
+        $record = AuditedRecordFactory::getRecord(AuditedRecord::class);
+
+        $this->assertInstanceOf(AuditedRecord::class, $record);
+        $this->assertDatabaseHas('audited_records', ['id' => $record->id]);
+    }
 }

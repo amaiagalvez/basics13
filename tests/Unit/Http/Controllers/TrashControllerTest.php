@@ -11,6 +11,7 @@ use Basics13\Tests\Fixtures\AuditedRecord;
 use Basics13\Http\Controllers\TrashController;
 use Basics13\Http\Requests\TrashDestroyRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 
 class TrashControllerTest extends TestCase
 {
@@ -50,6 +51,21 @@ class TrashControllerTest extends TestCase
         $this->assertSame(__('basics13::messages.cannot_restore_name_taken'), session('error'));
     }
 
+    public function test_restore_trashed_returns_missing_when_record_concurrently_deleted(): void
+    {
+        $controller = new TestTrashController;
+        $trashed = AuditedRecord::factory()->trashed()->create();
+        $request = $this->restoreRequest($trashed);
+
+        // Simulate concurrent force delete - the record is gone when we check
+        $trashed->forceDelete();
+
+        $response = $controller->restore($request);
+
+        $this->assertSame(route('test.trash'), $response->getTargetUrl());
+        $this->assertSame(__('basics13::messages.not_in_trash'), session('error'));
+    }
+
     public function test_destroy_trashed_permanently_deletes_when_no_related_records(): void
     {
         $controller = new TestTrashController;
@@ -75,6 +91,92 @@ class TrashControllerTest extends TestCase
         $this->assertSame(route('test.trash'), $response->getTargetUrl());
         $this->assertSoftDeleted($trashed);
         $this->assertSame(__('Cannot be permanently deleted while it has related records.'), session('error'));
+    }
+
+    public function test_taken_by_returns_true_when_active_record_with_same_name_exists(): void
+    {
+        $controller = new TestTrashController;
+
+        AuditedRecord::factory()->create(['name' => 'Existing Name']);
+
+        $reflection = new \ReflectionMethod($controller, 'takenBy');
+        $reflection->setAccessible(true);
+
+        $result = $reflection->invoke($controller, AuditedRecord::query(), 'Existing Name');
+
+        $this->assertTrue($result);
+    }
+
+    public function test_taken_by_returns_false_when_no_active_record_with_name_exists(): void
+    {
+        $controller = new TestTrashController;
+
+        $reflection = new \ReflectionMethod($controller, 'takenBy');
+        $reflection->setAccessible(true);
+
+        $result = $reflection->invoke($controller, AuditedRecord::query(), 'Non Existent Name');
+
+        $this->assertFalse($result);
+    }
+
+    public function test_restore_took_effect_returns_false_when_record_still_trashed(): void
+    {
+        $controller = new TestTrashController;
+        $trashed = AuditedRecord::factory()->trashed()->create();
+
+        $reflection = new \ReflectionMethod($controller, 'restoreTookEffect');
+        $reflection->setAccessible(true);
+
+        $result = $reflection->invoke($controller, $trashed);
+
+        $this->assertFalse($result);
+    }
+
+    public function test_restore_took_effect_returns_true_when_record_restored(): void
+    {
+        $controller = new TestTrashController;
+        $trashed = AuditedRecord::factory()->trashed()->create();
+        $trashed->restore();
+
+        $reflection = new \ReflectionMethod($controller, 'restoreTookEffect');
+        $reflection->setAccessible(true);
+
+        $result = $reflection->invoke($controller, $trashed);
+
+        $this->assertTrue($result);
+    }
+
+    public function test_force_delete_locked_deletes_record(): void
+    {
+        $controller = new TestTrashController;
+        $trashed = AuditedRecord::factory()->trashed()->create();
+
+        $request = $this->destroyRequest($trashed);
+
+        $reflection = new \ReflectionMethod($controller, 'forceDeleteLocked');
+        $reflection->setAccessible(true);
+
+        $deleted = $reflection->invoke($controller, $request);
+
+        $this->assertTrue($deleted);
+        $this->assertDatabaseMissing('audited_records', ['id' => $trashed->id]);
+    }
+
+    public function test_force_delete_locked_returns_false_when_record_gone(): void
+    {
+        $controller = new TestTrashController;
+        $trashed = AuditedRecord::factory()->trashed()->create();
+        $trashed->forceDelete();
+
+        $request = $this->destroyRequest($trashed);
+
+        $reflection = new \ReflectionMethod($controller, 'forceDeleteLocked');
+        $reflection->setAccessible(true);
+
+        // When the record is force deleted, the lockForUpdate/firstOrFail throws ModelNotFoundException
+        $this->expectException(ModelNotFoundException::class);
+
+        $reflection->invoke($controller, $request);
     }
 
     /** @return RestoreRequest<AuditedRecord> */

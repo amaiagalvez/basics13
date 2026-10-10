@@ -6,6 +6,7 @@ use PHPUnit\Framework\TestCase;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * Test the abstract ListQueryBase through a concrete test subclass.
@@ -122,6 +123,66 @@ final class ListQueryBaseTest extends TestCase
         $this->assertNull($model);
     }
 
+    public function test_paginate_calls_where_matches_and_paginates(): void
+    {
+        $builder = $this->createMock(Builder::class);
+        $builder->expects($this->once())
+            ->method('where')
+            ->with($this->isInstanceOf(\Closure::class))
+            ->willReturnSelf();
+        $stubPaginator = $this->createStub(LengthAwarePaginator::class);
+        $builder->expects($this->once())
+            ->method('paginate')
+            ->with(25)
+            ->willReturn($stubPaginator);
+
+        $paginator = $this->callPaginate($builder, 'test', ['name']);
+
+        $this->assertSame($stubPaginator, $paginator);
+    }
+
+    public function test_paginate_appends_search_when_not_empty(): void
+    {
+        $builder = $this->createStub(Builder::class);
+        $builder->method('where')->willReturn($builder);
+        $mockPaginator = $this->createMock(LengthAwarePaginator::class);
+        $mockPaginator->expects($this->once())
+            ->method('appends')
+            ->with(['search' => 'test']);
+        $builder->method('paginate')->willReturn($mockPaginator);
+
+        $this->callPaginate($builder, 'test', ['name']);
+    }
+
+    public function test_paginate_does_not_append_when_empty(): void
+    {
+        $builder = $this->createStub(Builder::class);
+        $mockPaginator = $this->createMock(LengthAwarePaginator::class);
+        $mockPaginator->expects($this->never())
+            ->method('appends');
+        $builder->method('paginate')->willReturn($mockPaginator);
+
+        $this->callPaginate($builder, '', ['name']);
+    }
+
+    public function test_count_states_uses_provided_totals(): void
+    {
+        $result = $this->callCountStates('stdClass', 10, 5, 2);
+
+        $this->assertSame([
+            'active' => 10,
+            'archived' => 5,
+            'trashed' => 2,
+        ], $result);
+    }
+
+    public function test_count_states_method_exists_and_is_protected(): void
+    {
+        $reflection = new \ReflectionMethod(ListQueryBase::class, 'countStates');
+        $this->assertTrue($reflection->isProtected());
+        $this->assertEquals(4, $reflection->getNumberOfParameters());
+    }
+
     private function callSearchPattern(string $search): string
     {
         $reflection = new \ReflectionMethod($this->query, 'searchPattern');
@@ -155,6 +216,32 @@ final class ListQueryBaseTest extends TestCase
 
         /** @var Model|null */
         return $reflection->invoke($this->query, $builder, $name);
+    }
+
+    /**
+     * @param  Builder<Model>  $builder
+     * @param  array<int, string>  $searchColumns
+     * @return LengthAwarePaginator<int, Model>
+     */
+    private function callPaginate(Builder $builder, string $search, array $searchColumns): LengthAwarePaginator
+    {
+        $reflection = new \ReflectionMethod($this->query, 'paginate');
+        $reflection->setAccessible(true);
+
+        /** @var LengthAwarePaginator<int, Model> */
+        return $reflection->invoke($this->query, $builder, $search, $searchColumns);
+    }
+
+    /**
+     * @return array{active: int, archived: int, trashed: int}
+     */
+    private function callCountStates(string $modelClass, ?int $activeTotal, ?int $archivedTotal, ?int $trashedTotal): array
+    {
+        $reflection = new \ReflectionMethod($this->query, 'countStates');
+        $reflection->setAccessible(true);
+
+        /** @var array{active: int, archived: int, trashed: int} */
+        return $reflection->invoke($this->query, $modelClass, $activeTotal, $archivedTotal, $trashedTotal);
     }
 }
 

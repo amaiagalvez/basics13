@@ -17,8 +17,8 @@ final class BoundedLengthRequest extends FormRequest
     {
         return [
             'slug' => ['string', 'min:3', 'max:12'],
-            'code' => ['string', 'min:2'],
-            'nickname' => ['string', 'max:8'],
+            'code' => ['required', 'string', 'min:2'],
+            'nickname' => ['required', 'string', 'max:8'],
             'title' => ['string', 'min:5', 'max:20', Rule::unique('titles')],
             'quantity' => ['integer', 'min:1', 'max:99'],
         ];
