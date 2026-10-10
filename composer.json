@@ -30,7 +30,7 @@
             "Basics13\\": "src/"
         },
         "files": [
-            "src/Support/Database/helpers_global.php"
+            "src/Support/Database/helpers.php"
         ]
     },
     "autoload-dev": {

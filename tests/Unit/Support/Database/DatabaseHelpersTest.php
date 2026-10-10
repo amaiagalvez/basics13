@@ -4,7 +4,6 @@ namespace Basics13\Tests\Unit\Support\Database;
 
 use Basics13\Tests\TestCase;
 use Illuminate\Support\Facades\DB;
-use Basics13\Support\Database\Helpers;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -55,7 +54,7 @@ class DatabaseHelpersTest extends TestCase
     {
         Schema::create('test_helpers', function (Blueprint $table) {
             $table->id();
-            Helpers::addCommonColumns($table);
+            addCommonColumns($table);
         });
 
         $columns = Schema::getColumnListing('test_helpers');
@@ -72,7 +71,7 @@ class DatabaseHelpersTest extends TestCase
     {
         Schema::create('test_audit', function (Blueprint $table) {
             $table->id();
-            Helpers::addAuditColumns($table);
+            addAuditColumns($table);
         });
 
         $columns = Schema::getColumnListing('test_audit');
@@ -88,11 +87,11 @@ class DatabaseHelpersTest extends TestCase
             $table->id();
             $table->string('name');
             // addCommonColumns adds deleted_at which is required for the partial index
-            Helpers::addCommonColumns($table);
+            addCommonColumns($table);
         });
 
         // This should not throw for SQLite
-        Helpers::addUniqueActiveNameIndex('test_unique_index');
+        addUniqueActiveNameIndex('test_unique_index');
 
         // Verify index was created (SQLite creates partial index)
         $indexes = DB::select("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='test_unique_index'");
@@ -106,10 +105,10 @@ class DatabaseHelpersTest extends TestCase
             $table->string('name');
             $table->unsignedBigInteger('tenant_id');
             // addCommonColumns adds deleted_at which is required for the partial index
-            Helpers::addCommonColumns($table);
+            addCommonColumns($table);
         });
 
-        Helpers::addUniqueActiveNameIndex('test_unique_index_scoped', ['tenant_id']);
+        addUniqueActiveNameIndex('test_unique_index_scoped', ['tenant_id']);
 
         $indexes = DB::select("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='test_unique_index_scoped'");
         $this->assertNotEmpty($indexes);

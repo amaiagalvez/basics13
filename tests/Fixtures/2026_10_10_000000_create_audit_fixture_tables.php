@@ -1,6 +1,5 @@
 <?php
 
-use Basics13\Support\Database\Helpers;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Database\Migrations\Migration;
@@ -19,18 +18,18 @@ return new class extends Migration
             $table->id();
             $table->string('name');
 
-            Helpers::addCommonColumns($table);
-            Helpers::addAuditColumns($table);
+            addCommonColumns($table);
+            addAuditColumns($table);
         });
 
-        Helpers::addUniqueActiveNameIndex('audited_records');
+        addUniqueActiveNameIndex('audited_records');
 
         Schema::create('plain_audited_records', function (Blueprint $table): void {
             $table->id();
             $table->string('name');
             $table->timestamps();
 
-            Helpers::addAuditColumns($table);
+            addAuditColumns($table);
         });
     }
 

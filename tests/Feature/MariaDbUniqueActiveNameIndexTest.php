@@ -4,7 +4,6 @@ namespace Basics13\Tests\Feature;
 
 use Basics13\Tests\TestCase;
 use Illuminate\Support\Facades\DB;
-use Basics13\Support\Database\Helpers;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\QueryException;
 use PHPUnit\Framework\Attributes\Group;
@@ -115,10 +114,10 @@ class MariaDbUniqueActiveNameIndexTest extends TestCase
             $table->id();
             $table->string('name');
             $table->unsignedBigInteger('tenant_id');
-            Helpers::addCommonColumns($table);
+            addCommonColumns($table);
         });
         $this->tableCreated = true;
 
-        Helpers::addUniqueActiveNameIndex('basics13_unique_index_test', $scope);
+        addUniqueActiveNameIndex('basics13_unique_index_test', $scope);
     }
 }
