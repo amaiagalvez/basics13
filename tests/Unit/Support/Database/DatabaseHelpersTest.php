@@ -6,6 +6,7 @@ use Basics13\Tests\TestCase;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Database\Events\QueryExecuted;
 use PHPUnit\Framework\Attributes\DataProvider;
 
 class DatabaseHelpersTest extends TestCase
@@ -83,19 +84,29 @@ class DatabaseHelpersTest extends TestCase
 
     public function test_add_unique_active_name_index_creates_index_for_sqlite(): void
     {
-        Schema::create('test_unique_index', function (Blueprint $table) {
+        $statement = null;
+
+        DB::listen(static function (QueryExecuted $query) use (&$statement): void {
+            if (str_starts_with($query->sql, 'CREATE UNIQUE INDEX')) {
+                $statement = $query->sql;
+            }
+        });
+
+        Schema::create('CUM_test_unique_index', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             // addCommonColumns adds deleted_at which is required for the partial index
             addCommonColumns($table);
         });
 
-        // This should not throw for SQLite
-        addUniqueActiveNameIndex('test_unique_index');
+        addUniqueActiveNameIndex('CUM_test_unique_index');
 
-        // Verify index was created (SQLite creates partial index)
-        $indexes = DB::select("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='test_unique_index'");
+        $indexes = DB::select("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='CUM_test_unique_index'");
         $this->assertNotEmpty($indexes);
+        $this->assertSame(
+            'CREATE UNIQUE INDEX "CUM_test_unique_index_active_name_unique" ON "CUM_test_unique_index" ("name") WHERE "deleted_at" IS NULL',
+            $statement,
+        );
     }
 
     public function test_add_unique_active_name_index_with_scope(): void

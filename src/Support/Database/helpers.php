@@ -47,11 +47,18 @@ function addUniqueActiveNameIndex(string $table, array $scope = []): void
     $index = implode('_', array_merge([$table], $scope, ['active_name', 'unique']));
 
     if (in_array(DB::connection()->getDriverName(), ['sqlite', 'pgsql'], true)) {
-        DB::statement(sprintf(
-            'CREATE UNIQUE INDEX %s ON %s (%s) WHERE deleted_at IS NULL',
-            $index,
-            $table,
-            implode(', ', array_merge([...$scope, 'name']))
+        $connection = DB::connection();
+        $grammar = $connection->getQueryGrammar();
+
+        $connection->statement(sprintf(
+            'CREATE UNIQUE INDEX %s ON %s (%s) WHERE %s IS NULL',
+            $grammar->wrap($index),
+            $grammar->wrapTable($table),
+            implode(', ', array_map(
+                fn (string $column): string => $grammar->wrap($column),
+                [...$scope, 'name'],
+            )),
+            $grammar->wrap('deleted_at'),
         ));
 
         return;
