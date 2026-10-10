@@ -2,6 +2,7 @@
 
 namespace Basics13\Tests\Fixtures;
 
+use Closure;
 use Illuminate\Validation\Rule;
 use Illuminate\Foundation\Http\FormRequest;
 
@@ -42,6 +43,18 @@ final class ComprehensiveFieldHintsRequest extends FormRequest
 
             // Field without required
             'notes' => ['nullable', 'string', 'max:500'],
+
+            'unbounded_text' => ['nullable', 'string'],
+            'custom_text' => [
+                'required',
+                'string',
+                static function (string $attribute, mixed $value, Closure $fail): void {
+                    if ($value === 'forbidden') {
+                        $fail('This value is forbidden.');
+                    }
+                },
+                'min:2',
+            ],
         ];
     }
 }

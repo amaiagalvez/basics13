@@ -2,6 +2,9 @@
 
 namespace Basics13\Tests\Unit\Database\Factories;
 
+use Mockery;
+use Faker\Generator;
+use DateTimeImmutable;
 use Basics13\Tests\TestCase;
 use Basics13\Tests\Fixtures\AuditedRecord;
 use Basics13\Tests\Fixtures\AuditedRecordFactory;
@@ -76,18 +79,40 @@ class HasStatesTest extends TestCase
             }
         };
 
-        // Test with allowNull = false (should never return null)
-        $dates = $factory->callGetDateRange(false);
-        $this->assertNotNull($dates['start_date']);
-        $this->assertNotNull($dates['end_date']);
+        $faker = Mockery::mock(Generator::class);
+        $faker->shouldReceive('boolean')->once()->with(20)->andReturnTrue();
+        $locale = config('app.faker_locale');
+        $this->assertIsString($locale);
+        app()->instance(Generator::class.':'.$locale, $faker);
 
-        // Test with allowNull = true - just ensure it runs without error
-        // The actual null return is probabilistic (20% chance)
         $dates = $factory->callGetDateRange(true);
-        $this->assertSame(
-            $dates['start_date'] === null,
-            $dates['end_date'] === null,
-        );
+
+        $this->assertSame(['start_date' => null, 'end_date' => null], $dates);
+    }
+
+    public function test_get_date_range_returns_ordered_dates_when_nullable_dates_are_not_selected(): void
+    {
+        $factory = new class extends AuditedRecordFactory
+        {
+            /** @return array{start_date: string|null, end_date: string|null} */
+            public function callGetDateRange(): array
+            {
+                return $this->getDateRange(-1, 1, true);
+            }
+        };
+        $faker = Mockery::mock(Generator::class);
+        $faker->shouldReceive('boolean')->once()->with(20)->andReturnFalse();
+        $faker->shouldReceive('dateTimeBetween')->once()->with('-1 year', 'now')
+            ->andReturn(new DateTimeImmutable('2025-10-10'));
+        $faker->shouldReceive('dateTimeBetween')->once()->with('2025-10-10', '+1 year')
+            ->andReturn(new DateTimeImmutable('2026-04-10'));
+        $locale = config('app.faker_locale');
+        $this->assertIsString($locale);
+        app()->instance(Generator::class.':'.$locale, $faker);
+
+        $dates = $factory->callGetDateRange();
+
+        $this->assertSame(['start_date' => '2025-10-10', 'end_date' => '2026-04-10'], $dates);
     }
 
     public function test_get_record_static_method_works_directly(): void

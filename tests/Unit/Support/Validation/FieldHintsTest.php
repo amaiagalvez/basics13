@@ -29,6 +29,31 @@ final class FieldHintsTest extends TestCase
         $this->assertSame([], $hints->for('quantity'));
     }
 
+    public function test_text_without_length_limits_has_no_length_hint(): void
+    {
+        $hints = new FieldHints(ComprehensiveFieldHintsRequest::class);
+
+        $this->assertSame([], $hints->for('unbounded_text'));
+    }
+
+    public function test_custom_rules_are_ignored_without_losing_supported_hints(): void
+    {
+        $hints = new FieldHints(ComprehensiveFieldHintsRequest::class);
+
+        $this->assertSame([
+            __('Use at least :min characters.', ['min' => 2]),
+        ], $hints->for('custom_text'));
+        $this->assertTrue($hints->isRequired('custom_text'));
+    }
+
+    public function test_length_notices_returns_empty_for_text_without_limits(): void
+    {
+        $hints = new FieldHints(ComprehensiveFieldHintsRequest::class);
+        $method = new \ReflectionMethod($hints, 'lengthNotices');
+
+        $this->assertSame([], $method->invoke($hints, [['string', []]]));
+    }
+
     public function test_is_required_returns_true_for_required_field(): void
     {
         $hints = new FieldHints(BoundedLengthRequest::class);
