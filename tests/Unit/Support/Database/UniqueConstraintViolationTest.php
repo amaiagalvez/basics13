@@ -4,7 +4,6 @@ namespace Basics13\Tests\Unit\Support\Database;
 
 use PDOException;
 use Basics13\Tests\TestCase;
-use Illuminate\Translation\Translator;
 use Illuminate\Database\QueryException;
 use Illuminate\Validation\ValidationException;
 use Basics13\Support\Database\UniqueConstraintViolation;
@@ -50,15 +49,8 @@ class UniqueConstraintViolationTest extends TestCase
     {
         $exception = $this->queryException(['23000', 1062, 'Duplicate entry']);
 
-        // Ensure translator is available for __() helper
-        if ($this->app !== null && ! $this->app->bound('translator')) {
-            $loader = $this->app->make('translation.loader');
-            $locale = $this->app->getLocale();
-            $this->app->instance('translator', new Translator($loader, $locale));
-        }
-
         $this->expectException(ValidationException::class);
-        $this->expectExceptionMessage('already been taken');
+        $this->expectExceptionMessage(__('validation.unique', ['attribute' => __('Name')]));
 
         UniqueConstraintViolation::rethrowAsValidationError($exception, 'name');
     }
