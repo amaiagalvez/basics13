@@ -1,3 +1,5 @@
 .phpunit.result.cache
 /tests/coverage
 /vendor
+/.tmp
+/storage/*
