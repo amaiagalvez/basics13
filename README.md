@@ -22,7 +22,7 @@ The package centralizes the common logic to keep apps consistent and reduce copy
 
 ## Important runtime note
 
-The package tests and Blade compilation need a writable temporary directory. The package bootstrap creates or reuses a local `.tmp` directory and sets `TMPDIR`, `TEMP`, and `TMP` to it so Laravel can compile view cache files reliably in CI and local containers.
+The package tests and Blade compilation need a writable temporary directory. The package bootstrap creates or reuses a local `storage/.tmp` directory inside the package and sets `TMPDIR`, `TEMP`, and `TMP` to it so Laravel can compile view cache files reliably in CI and local containers.
 
 ## Validation
 

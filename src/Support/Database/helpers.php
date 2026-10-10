@@ -1,11 +1,15 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
+use Illuminate\Database\Schema\Blueprint;
+
 /**
  * Check if the database driver is SQLite or PostgreSQL.
  */
 function isSqliteOrPgsql(): bool
 {
-    $driver = app()?->connection()->getDriverName();
+    $driver = DB::connection()->getDriverName();
 
     return in_array($driver, ['sqlite', 'pgsql'], true);
 }
@@ -13,7 +17,7 @@ function isSqliteOrPgsql(): bool
 /**
  * Add the columns shared by the application's soft-deleting tables.
  */
-function addCommonColumns($table): void
+function addCommonColumns(Blueprint $table): void
 {
     $table->longText('notes')->nullable();
     $table->boolean('active')->default(true);
@@ -26,7 +30,7 @@ function addCommonColumns($table): void
 /**
  * Add the three audit columns that record who created, last changed and trashed a row.
  */
-function addAuditColumns($table): void
+function addAuditColumns(Blueprint $table): void
 {
     $table->foreignId('created_by')->nullable()->constrained('users');
     $table->foreignId('updated_by')->nullable()->constrained('users');
@@ -42,7 +46,7 @@ function addUniqueActiveNameIndex(string $table, array $scope = []): void
 {
     $index = implode('_', array_merge([$table], $scope, ['active_name', 'unique']));
 
-    if (in_array(app()->connection()->getDriverName(), ['sqlite', 'pgsql'], true)) {
+    if (in_array(DB::connection()->getDriverName(), ['sqlite', 'pgsql'], true)) {
         DB::statement(sprintf(
             'CREATE UNIQUE INDEX %s ON %s (%s) WHERE deleted_at IS NULL',
             $index,
@@ -53,6 +57,8 @@ function addUniqueActiveNameIndex(string $table, array $scope = []): void
         return;
     }
 
-    $table->string('active_name')->nullable()->storedAs('IF(deleted_at IS NULL, name, NULL)');
-    $table->unique([...$scope, 'active_name'], $index);
+    Schema::table($table, static function (Blueprint $blueprint) use ($scope, $index): void {
+        $blueprint->string('active_name')->nullable()->storedAs('IF(deleted_at IS NULL, name, NULL)');
+        $blueprint->unique([...$scope, 'active_name'], $index);
+    });
 }

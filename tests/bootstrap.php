@@ -4,6 +4,7 @@ $packageRoot = realpath(__DIR__.'/..');
 
 $storageDir = $packageRoot.'/storage/framework/views';
 $cacheDir = $packageRoot.'/bootstrap/cache';
+$tempDir = $packageRoot.'/storage/.tmp';
 
 foreach ([$storageDir, $cacheDir] as $dir) {
     if (! is_dir($dir) && ! mkdir($dir, 0777, true) && ! is_dir($dir)) {
@@ -12,11 +13,11 @@ foreach ([$storageDir, $cacheDir] as $dir) {
 }
 
 foreach (['TMPDIR', 'TEMP', 'TMP'] as $key) {
-    putenv(sprintf('%s=%s', $key, $packageRoot.'/.tmp'));
+    putenv(sprintf('%s=%s', $key, $tempDir));
 }
 
-if (! is_dir($packageRoot.'/.tmp') && ! mkdir($packageRoot.'/.tmp', 0777, true) && ! is_dir($packageRoot.'/.tmp')) {
-    throw new RuntimeException(sprintf('Unable to create temporary directory: %s', $packageRoot.'/.tmp'));
+if (! is_dir($tempDir) && ! mkdir($tempDir, 0777, true) && ! is_dir($tempDir)) {
+    throw new RuntimeException(sprintf('Unable to create temporary directory: %s', $tempDir));
 }
 
 putenv(sprintf('VIEW_COMPILED_PATH=%s', $storageDir));
