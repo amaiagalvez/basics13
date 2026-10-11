@@ -28,6 +28,7 @@ return [
     'deleted_name_conflict' => 'Un enregistrement supprimé utilise déjà le nom :name.',
     'cannot_delete_related' => 'Ne peut pas être supprimé car il a des enregistrements liés.',
     'cannot_force_delete_related' => 'Ne peut pas être supprimé définitivement car il a des enregistrements liés.',
+    'archive_instead_of_delete' => 'Archivez cet enregistrement au lieu de le supprimer car il a des enregistrements liés.',
 
     // Boutons d'action
     'edit' => 'Editer',
@@ -56,4 +57,5 @@ return [
     'you_can_activate_from_archived' => 'Vous pouvez l\'activer depuis la liste des archivés.',
     'record_returns_to_active' => 'L\'enregistrement retournera à la liste active.',
     'record_returns_to_archived' => 'L\'enregistrement retournera à la liste des archivés.',
+    'pagination_summary' => 'Affichage de :first à :last sur :total résultats',
 ];

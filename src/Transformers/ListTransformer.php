@@ -136,7 +136,7 @@ abstract class ListTransformer
             'label' => __('basics13::messages.edit'),
             'icon' => 'pencil-square',
             'test' => $this->resourceKey().'-edit-'.$this->key($record),
-            $this->resourceKey() => $this->editPayload($record),
+            'payload' => $this->editPayload($record),
         ];
     }
 
@@ -163,9 +163,9 @@ abstract class ListTransformer
      * @param  TRecord  $record
      * @return array<string, mixed>
      */
-    final protected function archiveAction(Model $record): array
+    final protected function archiveAction(Model $record, ?string $hint = null): array
     {
-        return $this->confirmAction(
+        $action = $this->confirmAction(
             $record,
             __('basics13::messages.archive'),
             'archive-box',
@@ -176,6 +176,12 @@ abstract class ListTransformer
             __('basics13::messages.you_can_activate_from_archived'),
             danger: true,
         );
+
+        if ($hint !== null) {
+            $action['hint'] = $hint;
+        }
+
+        return $action;
     }
 
     /**

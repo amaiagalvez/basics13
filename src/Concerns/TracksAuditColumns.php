@@ -14,7 +14,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * command, a queued job or an unauthenticated flow leaves the trail of whoever really created or
  * changed the row instead of erasing it.
  *
- * The columns come from `addAuditColumns()` in `Basics13\Support\Database\Helpers` and are never
+ * The columns come from the global `addAuditColumns()` helper and are never
  * mass assignable, so a request payload cannot claim authorship.
  */
 trait TracksAuditColumns

@@ -90,11 +90,19 @@ abstract class TrashController extends Controller
      */
     final protected function destroyTrashed(TrashDestroyRequest $request): RedirectResponse
     {
-        $deleted = DB::transaction(fn (): bool => $this->forceDeleteLocked($request));
+        try {
+            $deleted = DB::transaction(fn (): bool => $this->forceDeleteLocked($request));
+        } catch (QueryException $exception) {
+            if (! $this->deleteRestrictedByForeignKey($exception)) {
+                throw $exception;
+            }
+
+            $deleted = false;
+        }
 
         if (! $deleted) {
             return to_route($this->trashRoute())
-                ->with('error', __('Cannot be permanently deleted while it has related records.'));
+                ->with('error', __('basics13::messages.cannot_force_delete_related'));
         }
 
         return to_route($this->trashRoute())->with('status', __('basics13::messages.permanently_deleted'));
@@ -125,6 +133,22 @@ abstract class TrashController extends Controller
             ->firstOrFail();
 
         return $locked->forceDelete() !== false;
+    }
+
+    private function deleteRestrictedByForeignKey(QueryException $exception): bool
+    {
+        $sqlState = (string) ($exception->errorInfo[0] ?? $exception->getCode());
+        $driverCode = (int) ($exception->errorInfo[1] ?? 0);
+
+        return $sqlState === '23503'
+            || ($sqlState === '23000' && (
+                $driverCode === 1451
+                || $driverCode === 787
+                || ($driverCode === 19 && str_contains(
+                    (string) ($exception->errorInfo[2] ?? ''),
+                    'FOREIGN KEY constraint failed',
+                ))
+            ));
     }
 
     private function restoreConflictResponse(): RedirectResponse

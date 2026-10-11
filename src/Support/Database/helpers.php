@@ -46,7 +46,7 @@ function addUniqueActiveNameIndex(string $table, array $scope = []): void
 {
     $index = implode('_', array_merge([$table], $scope, ['active_name', 'unique']));
 
-    if (in_array(DB::connection()->getDriverName(), ['sqlite', 'pgsql'], true)) {
+    if (isSqliteOrPgsql()) {
         $connection = DB::connection();
         $grammar = $connection->getQueryGrammar();
 

@@ -27,6 +27,7 @@ return [
     'deleted_name_conflict' => 'Un registro eliminado ya usa el nombre :name.',
     'cannot_delete_related' => 'No se puede eliminar porque tiene registros relacionados. Puedes archivarlo.',
     'cannot_force_delete_related' => 'No se puede eliminar definitivamente porque tiene registros relacionados.',
+    'archive_instead_of_delete' => 'Archiva este registro en lugar de eliminarlo porque tiene registros relacionados.',
 
     // Botones de acción
     'edit' => 'Editar',
@@ -55,4 +56,5 @@ return [
     'you_can_activate_from_archived' => 'Puedes activarlo de nuevo desde el listado de archivados.',
     'record_returns_to_active' => 'El registro volverá al listado de activos.',
     'record_returns_to_archived' => 'El registro volverá al listado de archivados.',
+    'pagination_summary' => 'Mostrando :first a :last de :total resultados',
 ];

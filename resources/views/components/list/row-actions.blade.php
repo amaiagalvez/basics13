@@ -1,11 +1,10 @@
 {{--
     Row action buttons built by the *ListTransformer classes.
-    "form-modal" actions open the "{prefix}-form" drawer and pass $action[$payloadKey] to the
+    "form-modal" actions open the "{prefix}-form" drawer and pass $action['payload'] to the
     Alpine $editHandler; any other action opens the "{prefix}-confirm" modal.
-    $blockedHint, when given, replaces the tooltip of the blocking action so the reason why the
-    record cannot be deleted is readable before clicking it.
+    Each action can supply its own hint without replacing the tooltips of other actions.
 --}}
-@props(['actions', 'prefix', 'payloadKey', 'editHandler', 'blockedHint' => null])
+@props(['actions', 'prefix', 'editHandler'])
 
 <div class="flex justify-end gap-0.5">
     @foreach ($actions as $action)
@@ -15,7 +14,7 @@
                     <flux:button size="xs" square variant="ghost" :icon="$action['icon']"
                         :aria-label="$action['label']"
                         x-on:click="{{ $editHandler }}(JSON.parse($el.dataset.payload))"
-                        data-payload="{{ json_encode($action[$payloadKey]) }}"
+                        data-payload="{{ json_encode($action['payload']) }}"
                         :data-test="$action['test']" />
                 </flux:tooltip>
             </flux:modal.trigger>
@@ -28,7 +27,7 @@
             </flux:tooltip>
         @else
             <flux:modal.trigger :name="$prefix.'-confirm'">
-                <flux:tooltip :content="$blockedHint ?? $action['label']">
+                <flux:tooltip :content="$action['hint'] ?? $action['label']">
                     <flux:button size="xs" square variant="ghost" :icon="$action['icon']"
                         :aria-label="$action['label']"
                         :class="($action['danger'] ?? false) ? 'text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300' : ''"

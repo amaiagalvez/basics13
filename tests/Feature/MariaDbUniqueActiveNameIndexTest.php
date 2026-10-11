@@ -97,6 +97,45 @@ class MariaDbUniqueActiveNameIndexTest extends TestCase
         $this->assertSame(2, DB::table('basics13_unique_index_test')->count());
     }
 
+    /** @param list<string> $scope */
+    #[DataProvider('collationVariants')]
+    public function test_index_rejects_case_and_accent_variants_on_insert_and_restore(array $scope, string $variant): void
+    {
+        $this->createTable($scope);
+        $trashedId = DB::table('basics13_unique_index_test')->insertGetId([
+            'name' => $variant, 'tenant_id' => 1, 'deleted_at' => now(),
+        ]);
+        DB::table('basics13_unique_index_test')->insert(['name' => 'Mikel', 'tenant_id' => 1]);
+
+        try {
+            DB::table('basics13_unique_index_test')->insert(['name' => $variant, 'tenant_id' => 1]);
+            $this->fail('Case and accent variants must collide under utf8mb4_unicode_ci.');
+        } catch (QueryException $exception) {
+            $this->assertTrue(UniqueConstraintViolation::causedBy($exception));
+        }
+
+        try {
+            DB::table('basics13_unique_index_test')->where('id', $trashedId)->update(['deleted_at' => null]);
+            $this->fail('Restoring a case or accent variant must violate the unique index.');
+        } catch (QueryException $exception) {
+            $this->assertTrue(UniqueConstraintViolation::causedBy($exception));
+        }
+
+        $this->assertSame(2, DB::table('basics13_unique_index_test')->count());
+        $this->assertNotNull(DB::table('basics13_unique_index_test')->where('id', $trashedId)->value('deleted_at'));
+    }
+
+    /** @return array<string, array{list<string>, string}> */
+    public static function collationVariants(): array
+    {
+        return [
+            'unscoped case' => [[], 'mikel'],
+            'unscoped accent' => [[], 'Míkel'],
+            'scoped case' => [['tenant_id'], 'mikel'],
+            'scoped accent' => [['tenant_id'], 'Míkel'],
+        ];
+    }
+
     /** @return array<string, array{list<string>}> */
     public static function indexScopes(): array
     {
@@ -111,6 +150,8 @@ class MariaDbUniqueActiveNameIndexTest extends TestCase
     {
         Schema::create('basics13_unique_index_test', static function (Blueprint $table): void {
             $table->temporary();
+            $table->charset = 'utf8mb4';
+            $table->collation = 'utf8mb4_unicode_ci';
             $table->id();
             $table->string('name');
             $table->unsignedBigInteger('tenant_id');

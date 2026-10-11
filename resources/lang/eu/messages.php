@@ -8,7 +8,7 @@ return [
     | CRUD baliabideen emaitza-mezu orokorrak
     |--------------------------------------------------------------------------
     |
-    | Mezu hauek paketearen kontroladore eta transformadoreBasedeek erabiltzen
+    | Mezu hauek paketearen oinarrizko kontroladore eta transformadoreek erabiltzen
     | dituzte sortzeko, eguneratzeko, artxibatzeko, zakarrontzirabidatzeko eta
     | berreskuratzeko eragiketarako. Baliabide-agnostikoak dira, beraz, edozein
     | baliabideak berriro erabili ditzake.
@@ -26,8 +26,9 @@ return [
     'not_in_trash' => 'Erregistro hau ez dago jada zakarrontzian.',
     'cannot_restore_name_taken' => 'Ezinezkoa da berreskuratu beste erregistro bat zakarrontzian izan ez den izen hori duelako.',
     'deleted_name_conflict' => 'Ezabatutako erregistroak izen hori erabiltzen du: :name.',
-    'cannot_delete_related' => 'Ezinezkoa da ezabatu lotutako erregistroak dituelako. Archibatu dezakezu',
+    'cannot_delete_related' => 'Ezinezkoa da ezabatu lotutako erregistroak dituelako. Artxibatu dezakezu.',
     'cannot_force_delete_related' => 'Ezinezkoa da behin betiko ezabatu lotutako erregistroak dituelako.',
+    'archive_instead_of_delete' => 'Artxibatu erregistro hau ezabatu ordez, lotutako erregistroak dituelako.',
 
     // Ekintza-botoiak
     'edit' => 'Editatu',
@@ -48,7 +49,7 @@ return [
     'created_at' => 'Sortze data',
     'updated_at' => 'Eguneraketa data',
     'deleted_at' => 'Ezabaketa data',
-    'archived_label' => 'Artxibatu',
+    'archived_label' => 'Artxibatuak',
     'trash_label' => 'Zakarrontzia',
     'no_archived_records' => 'Ez dago artxibatutako erregistrorik.',
     'trash_is_empty' => 'Zakarrontzia hutsa dago.',
@@ -56,4 +57,5 @@ return [
     'you_can_activate_from_archived' => 'Artxibatueen zerrendatik aktibatu dezakezu berriro.',
     'record_returns_to_active' => 'Erregistroa aktibuen zerrendara itzuliko da.',
     'record_returns_to_archived' => 'Erregistroa artxibatuekin zerrendara itzuliko da.',
+    'pagination_summary' => ':first–:last erakusten, :total emaitzatik',
 ];

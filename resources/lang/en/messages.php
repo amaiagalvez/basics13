@@ -27,6 +27,7 @@ return [
     'deleted_name_conflict' => 'A deleted record already uses the name :name.',
     'cannot_delete_related' => 'Cannot be deleted while it has related records.',
     'cannot_force_delete_related' => 'Cannot be permanently deleted while it has related records.',
+    'archive_instead_of_delete' => 'Archive this record instead of deleting it because it has related records.',
 
     // Action buttons
     'edit' => 'Edit',
@@ -55,4 +56,5 @@ return [
     'you_can_activate_from_archived' => 'You can activate it from the archived list.',
     'record_returns_to_active' => 'The record will return to the active list.',
     'record_returns_to_archived' => 'The record will return to the archived list.',
+    'pagination_summary' => 'Showing :first to :last of :total results',
 ];

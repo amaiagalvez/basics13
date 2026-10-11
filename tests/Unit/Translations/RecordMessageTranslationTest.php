@@ -25,6 +25,10 @@ class RecordMessageTranslationTest extends TestCase
         'not_in_trash',
         'cannot_restore_name_taken',
         'deleted_name_conflict',
+        'cannot_delete_related',
+        'cannot_force_delete_related',
+        'archive_instead_of_delete',
+        'pagination_summary',
         'created_at',
         'updated_at',
         'deleted_at',
@@ -89,6 +93,18 @@ class RecordMessageTranslationTest extends TestCase
                     );
                 }
             }
+
+        }
+    }
+
+    public function test_pagination_summary_preserves_its_parameters_in_every_locale(): void
+    {
+        foreach ($this->packageTranslations() as $locale => $translations) {
+            preg_match_all('/:[a-z_]+/', $translations['pagination_summary'], $matches);
+            $parameters = $matches[0];
+            sort($parameters);
+
+            $this->assertSame([':first', ':last', ':total'], $parameters, $locale);
         }
     }
 

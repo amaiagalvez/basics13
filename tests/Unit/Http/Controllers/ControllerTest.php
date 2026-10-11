@@ -61,7 +61,7 @@ class ControllerTest extends TestCase
 
     public function test_deleted_name_conflict_returns_redirect_with_conflict_when_not_json(): void
     {
-        Route::get('records', fn () => null)->name('auditedrecords.index');
+        Route::get('records', fn () => null)->name('custom-records.index');
         $controller = new TestController;
         $trashed = AuditedRecord::factory()->make(['id' => 1, 'name' => 'Conflict Name']);
         $request = Request::create('/', 'POST');
@@ -69,8 +69,8 @@ class ControllerTest extends TestCase
         $response = $controller->conflict($request, $trashed);
 
         $this->assertInstanceOf(RedirectResponse::class, $response);
-        $this->assertSame(route('auditedrecords.index'), $response->getTargetUrl());
-        $this->assertSame(['id' => 1, 'name' => 'Conflict Name'], session('deleted_auditedrecord_conflict'));
+        $this->assertSame(route('custom-records.index'), $response->getTargetUrl());
+        $this->assertSame(['id' => 1, 'name' => 'Conflict Name'], session('custom_record_conflict'));
     }
 }
 
@@ -90,6 +90,6 @@ class TestController extends Controller
 
     public function conflict(Request $request, AuditedRecord $record): RedirectResponse|JsonResponse
     {
-        return $this->deletedNameConflict($request, $record);
+        return $this->deletedNameConflict($request, $record, 'custom-records.index', 'custom_record_conflict');
     }
 }

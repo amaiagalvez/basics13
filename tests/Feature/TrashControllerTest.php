@@ -1,14 +1,20 @@
 <?php
 
-namespace Basics13\Tests\Unit\Http\Controllers;
+namespace Basics13\Tests\Feature;
 
+use PDOException;
 use Basics13\Tests\TestCase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\QueryException;
+use Illuminate\Database\Schema\Blueprint;
 use Basics13\Http\Requests\RestoreRequest;
 use Basics13\Tests\Fixtures\AuditedRecord;
 use Basics13\Http\Controllers\TrashController;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Basics13\Http\Requests\TrashDestroyRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
@@ -90,7 +96,71 @@ class TrashControllerTest extends TestCase
 
         $this->assertSame(route('test.trash'), $response->getTargetUrl());
         $this->assertSoftDeleted($trashed);
-        $this->assertSame(__('Cannot be permanently deleted while it has related records.'), session('error'));
+        $this->assertSame(__('basics13::messages.cannot_force_delete_related'), session('error'));
+    }
+
+    public function test_destroy_trashed_reports_a_real_foreign_key_restriction(): void
+    {
+        Schema::create('record_dependents', static function (Blueprint $table): void {
+            $table->id();
+            $table->foreignId('record_id')->constrained('audited_records')->restrictOnDelete();
+        });
+
+        try {
+            $trashed = AuditedRecord::factory()->trashed()->create();
+            DB::table('record_dependents')->insert(['record_id' => $trashed->id]);
+
+            $response = (new TestTrashController)->destroy($this->destroyRequest($trashed));
+
+            $this->assertSame(route('test.trash'), $response->getTargetUrl());
+            $this->assertSame(__('basics13::messages.cannot_force_delete_related'), session('error'));
+            $this->assertNull(session('status'));
+            $this->assertSoftDeleted($trashed->refresh());
+            $this->assertSame(1, DB::table('record_dependents')->count());
+        } finally {
+            Schema::dropIfExists('record_dependents');
+        }
+    }
+
+    /** @param array{string, int|null, string} $errorInfo */
+    #[DataProvider('deleteDatabaseErrors')]
+    public function test_destroy_trashed_only_handles_foreign_key_restrictions(array $errorInfo, bool $restricted): void
+    {
+        $trashed = AuditedRecord::factory()->trashed()->create();
+        $previous = new PDOException($errorInfo[2]);
+        $previous->errorInfo = $errorInfo;
+        $exception = new QueryException('sqlite', 'delete from audited_records', [], $previous);
+        AuditedRecord::deleting(static function () use ($exception): never {
+            throw $exception;
+        });
+
+        try {
+            $response = (new TestTrashController)->destroy($this->destroyRequest($trashed));
+            $this->assertTrue($restricted, 'Unrelated database errors must propagate.');
+            $this->assertSame(route('test.trash'), $response->getTargetUrl());
+            $this->assertSame(__('basics13::messages.cannot_force_delete_related'), session('error'));
+        } catch (QueryException $caught) {
+            $this->assertFalse($restricted);
+            $this->assertSame($exception, $caught);
+            $this->assertNull(session('error'));
+        }
+
+        $this->assertSoftDeleted($trashed->refresh());
+        $this->assertNull(session('status'));
+    }
+
+    /** @return array<string, array{array{string, int|null, string}, bool}> */
+    public static function deleteDatabaseErrors(): array
+    {
+        return [
+            'MariaDB restrict' => [['23000', 1451, 'Cannot delete a parent row'], true],
+            'PostgreSQL restrict' => [['23503', null, 'Foreign key violation'], true],
+            'SQLite extended code' => [['23000', 787, 'FOREIGN KEY constraint failed'], true],
+            'SQLite base code' => [['23000', 19, 'FOREIGN KEY constraint failed'], true],
+            'SQLite unique constraint' => [['23000', 19, 'UNIQUE constraint failed'], false],
+            'MariaDB insert constraint' => [['23000', 1452, 'Cannot add a child row'], false],
+            'Database unavailable' => [['HY000', 1, 'Database unavailable'], false],
+        ];
     }
 
     public function test_taken_by_returns_true_when_active_record_with_same_name_exists(): void

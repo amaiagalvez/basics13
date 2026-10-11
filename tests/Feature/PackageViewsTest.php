@@ -39,6 +39,22 @@ final class PackageViewsTest extends FeatureTestCase
         $this->assertSame(__('basics13::validation.attributes.name'), $attributes['name']);
     }
 
+    public function test_http_status_translations_are_available_in_every_supported_locale(): void
+    {
+        $expected = [
+            'en' => 'Not Found',
+            'eu' => 'Ez da aurkitu',
+            'es' => 'No encontrado',
+            'fr' => 'Page non trouvée',
+        ];
+
+        foreach ($expected as $locale => $notFound) {
+            App::setLocale($locale);
+
+            $this->assertSame($notFound, __('http-statuses.404'));
+        }
+    }
+
     public function test_package_table_keeps_the_pagination_summary_for_an_empty_list(): void
     {
         $html = Blade::render(
@@ -46,7 +62,9 @@ final class PackageViewsTest extends FeatureTestCase
             ['paginator' => new LengthAwarePaginator([], 0, 15)],
         );
 
-        $this->assertStringContainsString(__('Showing'), $html);
-        $this->assertStringContainsString(__('results'), $html);
+        $this->assertStringContainsString(
+            __('basics13::messages.pagination_summary', ['first' => 0, 'last' => 0, 'total' => 0]),
+            $html,
+        );
     }
 }

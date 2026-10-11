@@ -7,6 +7,7 @@ use Illuminate\Support\Facades\Route;
 use Illuminate\Database\Eloquent\Model;
 use Basics13\Tests\Fixtures\AuditedRecord;
 use Basics13\Transformers\ListTransformer;
+use PHPUnit\Framework\Attributes\DataProvider;
 
 class ListTransformerTest extends TestCase
 {
@@ -106,9 +107,10 @@ class ListTransformerTest extends TestCase
         $this->assertSame('No test records match your search.', $transformer->buildEnvelope('trash', 'search')['emptyMessage']);
     }
 
-    public function test_edit_action_returns_correct_structure(): void
+    #[DataProvider('reservedResourceKeys')]
+    public function test_edit_action_preserves_metadata_and_payload(string $resourceKey): void
     {
-        $transformer = new TestListTransformer;
+        $transformer = new TestListTransformer($resourceKey);
         $record = AuditedRecord::factory()->make(['id' => 1]);
 
         $result = $transformer->actions($record)['edit'];
@@ -116,8 +118,31 @@ class ListTransformerTest extends TestCase
         $this->assertSame('form-modal', $result['type']);
         $this->assertSame(__('basics13::messages.edit'), $result['label']);
         $this->assertSame('pencil-square', $result['icon']);
-        $this->assertSame(['test' => $record->id], $result['test']);
-        $this->assertArrayHasKey('test', $result);
+        $this->assertSame($resourceKey.'-edit-'.$record->id, $result['test']);
+        $this->assertSame(['test' => $record->id], $result['payload']);
+    }
+
+    /** @return array<string, array{string}> */
+    public static function reservedResourceKeys(): array
+    {
+        return [
+            'test selector' => ['test'],
+            'action type' => ['type'],
+            'label' => ['label'],
+            'icon' => ['icon'],
+        ];
+    }
+
+    public function test_archive_hint_does_not_change_other_action_labels(): void
+    {
+        $transformer = new TestListTransformer;
+        $record = AuditedRecord::factory()->make(['id' => 1]);
+        $hint = 'Archive instead of deleting.';
+        $action = $transformer->archiveWithHint($record, $hint);
+
+        $this->assertSame($hint, $action['hint']);
+        $this->assertSame(__('basics13::messages.archive'), $action['label']);
+        $this->assertArrayNotHasKey('hint', $transformer->actions($record)['restore']);
     }
 
     public function test_delete_action_returns_correct_structure(): void
@@ -248,6 +273,14 @@ class ListTransformerTest extends TestCase
  */
 class TestListTransformer extends ListTransformer
 {
+    public function __construct(private readonly string $resource = 'test') {}
+
+    /** @return array<string, mixed> */
+    public function archiveWithHint(AuditedRecord $record, string $hint): array
+    {
+        return $this->archiveAction($record, $hint);
+    }
+
     /**
      * @return array{action: string, value: string, placeholder: string}
      */
@@ -306,7 +339,7 @@ class TestListTransformer extends ListTransformer
 
     protected function resourceKey(): string
     {
-        return 'test';
+        return $this->resource;
     }
 
     /**
