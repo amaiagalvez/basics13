@@ -26,6 +26,12 @@ trait HasStates
     /**
      * Get an existing random record or create a new one.
      *
+     * `TModel` is bound to `Model` because PHPStan cannot express "model with a factory":
+     * `HasFactory` is a trait, so intersecting it into a template bound resolves to `*NEVER*`.
+     * The `factory()` call is ignored in phpstan.neon instead; every caller passes a model
+     * that declares a factory. `createOne()` is used over `create()`, which is typed
+     * `Collection<int, TModel>|TModel` and would not satisfy `TModel`.
+     *
      * @template TModel of Model
      *
      * @param  class-string<TModel>  $modelClass
@@ -33,7 +39,7 @@ trait HasStates
      */
     public static function getRecord(string $modelClass): Model
     {
-        return $modelClass::inRandomOrder()->first() ?? $modelClass::factory()->create();
+        return $modelClass::inRandomOrder()->first() ?? $modelClass::factory()->createOne();
     }
 
     /**

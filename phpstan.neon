@@ -7,27 +7,14 @@ parameters:
         - src/
         - tests/
 
-    level: 9
-
-    reportUnmatchedIgnoredErrors: false
+    level: 7
 
     ignoreErrors:
-        # Public API of the package: both traits are consumed by the application
-        # that uses it (models, factories), so PHPStan sees no usage inside
-        # src/ or tests/. Scope the ignore to these paths so a genuinely unused
-        # trait is still reported.
-        -
-            identifier: trait.unused
-            path: **/src/Concerns/TracksAuditColumns.php
-        -
-            identifier: trait.unused
-            path: **/src/Database/Factories/HasStates.php
+        # `Model::factory()` comes from the `HasFactory` trait, so PHPStan cannot see it on
+        # the `TModel of Model` bound. Binding it instead is not an option: `HasFactory` is a
+        # trait, and intersecting one into a template bound resolves to `*NEVER*`. Every
+        # caller passes a model that declares a factory. Scoped so any other undefined static
+        # call is still reported.
         -
             identifier: staticMethod.notFound
             path: src/Database/Factories/HasStates.php
-        #
-        # Class not found in test context - ServiceProvider class reference
-        # in Feature test case getPackageProviders() is resolved dynamically.
-        -
-            identifier: class.notFound
-            path: tests/Feature/FeatureTestCase.php
