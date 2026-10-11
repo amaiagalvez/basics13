@@ -13,11 +13,11 @@ use Illuminate\Database\QueryException;
 use Basics13\Http\Requests\RestoreRequest;
 use Basics13\Tests\Fixtures\AuditedRecord;
 use Basics13\Http\Controllers\TrashController;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
 class TrashRestoreTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     protected function setUp(): void
     {

@@ -7,11 +7,11 @@ use Basics13\Queries\ListQueryBase;
 use Basics13\Tests\Fixtures\AuditedRecord;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
 class ListQueryBaseSearchTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_search_matches_any_column_and_excludes_unrelated_records(): void
     {

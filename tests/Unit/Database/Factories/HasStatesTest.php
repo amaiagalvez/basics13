@@ -8,11 +8,11 @@ use DateTimeImmutable;
 use Basics13\Tests\TestCase;
 use Basics13\Tests\Fixtures\AuditedRecord;
 use Basics13\Tests\Fixtures\AuditedRecordFactory;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
 class HasStatesTest extends TestCase
 {
-    use RefreshDatabase;
+    use LazilyRefreshDatabase;
 
     public function test_archived_state_sets_active_to_false(): void
     {
