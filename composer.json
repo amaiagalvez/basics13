@@ -4,12 +4,6 @@
     "type": "library",
     "license": "MIT",
     "version": "1.0.0",
-    "authors": [
-        {
-            "name": "Amaia",
-            "email": "amaia@example.com"
-        }
-    ],
     "require": {
         "php": "^8.3",
         "laravel/chisel": "^0.1.0",
