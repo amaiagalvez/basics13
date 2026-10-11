@@ -16,8 +16,8 @@ use Basics13\Tests\Fixtures\AuditedRecord;
 use Basics13\Http\Controllers\TrashController;
 use PHPUnit\Framework\Attributes\DataProvider;
 use Basics13\Http\Requests\TrashDestroyRequest;
-use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 use Illuminate\Database\Eloquent\ModelNotFoundException;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
 class TrashControllerTest extends TestCase
 {
