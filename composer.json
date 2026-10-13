@@ -12,8 +12,9 @@
         "livewire/flux": "^2",
         "opcodesio/log-viewer": "^3.24"
     },
-    "require-dev": {        
+    "require-dev": {
         "larastan/larastan": "^3.9",
+        "laravel/dusk": "^8.7",
         "laravel/pint": "^1.27",
         "mockery/mockery": "^1.6",
         "orchestra/testbench": "^11.3",

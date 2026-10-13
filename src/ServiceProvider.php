@@ -11,10 +11,16 @@ class ServiceProvider extends BaseServiceProvider
         $this->loadViewsFrom(__DIR__.'/../resources/views', 'basics13');
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'basics13');
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang');
+        $this->loadJsonTranslationsFrom(__DIR__.'/../resources/lang');
 
         $this->publishes([
             __DIR__.'/../config/basics13.php' => config_path('basics13.php'),
         ], 'basics13-config');
+
+        $this->publishes([
+            __DIR__.'/../resources/js' => resource_path('js/vendor/basics13'),
+            __DIR__.'/../resources/css' => resource_path('css/vendor/basics13'),
+        ], 'basics13-assets');
 
         // pint.json is published from the package root (the package and its
         // applications share the same rules); phpstan.neon and phpunit.xml live

@@ -42,4 +42,16 @@ final class ServiceProviderTest extends TestCase
             $this->assertFileExists($source);
         }
     }
+
+    public function test_shared_frontend_assets_are_publishable(): void
+    {
+        $paths = ServiceProvider::pathsToPublish(null, 'basics13-assets');
+
+        $this->assertCount(2, $paths);
+
+        foreach (array_keys($paths) as $source) {
+            $this->assertDirectoryExists($source);
+            $this->assertFileExists($source.'/app.'.basename($source));
+        }
+    }
 }
