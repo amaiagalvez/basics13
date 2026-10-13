@@ -4,20 +4,34 @@ namespace Basics13\Support\Testing;
 
 use Illuminate\Support\Env;
 use Illuminate\Support\Collection;
-use Illuminate\Foundation\Application;
+use Illuminate\Database\Eloquent\Model;
 use Laravel\Dusk\TestCase as BaseTestCase;
 use Facebook\WebDriver\Chrome\ChromeOptions;
 use PHPUnit\Framework\Attributes\BeforeClass;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
+use Illuminate\Database\Eloquent\Factories\Factory;
 
 abstract class DuskTestCase extends BaseTestCase
 {
-    protected function setUp(): void
+    /** @param array<string, mixed> $attributes */
+    protected function user(array $attributes = []): Model&Authenticatable
     {
-        parent::setUp();
+        $model = config('auth.providers.users.model');
 
-        self::assertSame('laravel_test', config('database.connections.mysql.database'));
+        if (! is_string($model) || ! is_subclass_of($model, Model::class) || ! method_exists($model, 'factory')) {
+            static::fail('Browser tests require an Eloquent authentication model with a factory.');
+        }
+
+        $factory = $model::factory();
+        static::assertInstanceOf(Factory::class, $factory);
+
+        $user = $factory->createOne($attributes);
+        static::assertInstanceOf(Model::class, $user);
+        static::assertInstanceOf(Authenticatable::class, $user);
+
+        return $user;
     }
 
     protected function baseUrl(): string
@@ -29,12 +43,6 @@ abstract class DuskTestCase extends BaseTestCase
         }
 
         return rtrim($baseUrl, '/');
-    }
-
-    protected function getEnvironmentSetUp(Application $app): void
-    {
-        $app['config']->set('database.default', 'mysql');
-        $app['config']->set('database.connections.mysql.database', 'laravel_test');
     }
 
     /**
