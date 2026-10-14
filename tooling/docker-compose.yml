@@ -248,7 +248,7 @@ services:
         volumes:
             - ./dc-data/mysql:/var/lib/mysql
             - ./dc-data/mysqldumps:/mysqldumps
-            - ../../packages/basics13/tooling/mysql/init:/docker-entrypoint-initdb.d
+            - ./mysql/init:/docker-entrypoint-initdb.d
         healthcheck:
             test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
             interval: 10s

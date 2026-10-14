@@ -17,14 +17,23 @@ final class ToolingComposeTest extends TestCase
     {
         $compose = (string) file_get_contents(self::COMPOSE_FILE);
 
-        preg_match_all('#/packages/basics13/tooling/([^\s:]+)#', $compose, $matches);
+        // Match volume paths that reference files under tooling/:
+        // - Legacy absolute paths: /packages/basics13/tooling/...
+        // - Correct relative paths: ./tooling/... or ../tooling/...
+        // (The test ignores other volume paths like ./:/app-docker or ../../packages:/packages)
+        preg_match_all('#(?:/packages/basics13/tooling/|[./]+tooling/)([^\s:]+)#', $compose, $matches);
 
-        $this->assertNotEmpty($matches[1], 'El compose canónico no referencia ningún script del paquete.');
+        $this->assertNotEmpty($matches[1], 'El compose canónico no referencia ningún script del paquete bajo tooling/.');
 
         foreach ($matches[1] as $relativePath) {
+            $toolingDir = realpath(dirname(__DIR__, 2).'/tooling');
+            if ($toolingDir === false) {
+                $this->fail('Directorio tooling no encontrado.');
+            }
+            $resolvedPath = realpath($toolingDir.'/'.$relativePath);
             $this->assertTrue(
-                file_exists(dirname(__DIR__, 2).'/tooling/'.$relativePath),
-                sprintf('tooling/%s no existe en el paquete.', $relativePath)
+                $resolvedPath !== false && str_starts_with($resolvedPath, $toolingDir),
+                sprintf('tooling/%s no existe en el paquete o escapa del directorio.', $relativePath)
             );
         }
     }
