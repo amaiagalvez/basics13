@@ -18,8 +18,3 @@ parameters:
         -
             identifier: staticMethod.notFound
             path: src/Database/Factories/HasStates.php
-
-        # Trait is used by domain packages (customers13, projects13) not this package.
-        -
-            identifier: trait.unused
-            path: src/Concerns/TransactionalDelete.php
