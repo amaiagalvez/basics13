@@ -8,6 +8,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * @template TModel of Model
+ *
+ * @method array<literal-string> searchColumns(string $scope, array<literal-string> $columns)
  */
 abstract class ListQueryBase
 {
@@ -78,15 +80,6 @@ abstract class ListQueryBase
     }
 
     /**
-     * @param  Builder<TModel>  $query
-     * @return TModel|null
-     */
-    protected function firstTrashedByName(Builder $query, string $name): ?Model
-    {
-        return $query->where('name', $name)->latest('deleted_at')->first();
-    }
-
-    /**
      * Number of records in each list state, shown as the badge of the state tabs. A caller that
      * already paginated an unfiltered list passes the total it has, so the same count is not run
      * twice for the same request. Each state is counted on its own table, so the "active" column
@@ -103,9 +96,73 @@ abstract class ListQueryBase
         return [
             'active' => $activeTotal ?? $modelClass::query()->where('active', true)->count(),
             'archived' => $archivedTotal ?? $modelClass::query()->where('active', false)->count(),
-            'trashed' => $trashedTotal ?? $modelClass::onlyTrashed()->count(),
+            'trashed' => $trashedTotal ?? $modelClass::query()->withTrashed()->whereNotNull('deleted_at')->count(),
         ];
     }
+
+    /**
+     * Public accessor for state counts using the concrete model class.
+     *
+     * @return array{active: int, archived: int, trashed: int}
+     */
+    public function stateCounts(
+        ?int $activeTotal = null,
+        ?int $archivedTotal = null,
+        ?int $trashedTotal = null,
+    ): array {
+        return $this->countStates($this->getModelClass(), $activeTotal, $archivedTotal, $trashedTotal);
+    }
+
+    /**
+     * Find a soft-deleted record by name, optionally scoped by project.
+     */
+    public function findTrashedByName(string $name, ?int $projectId = null): ?Model
+    {
+        /** @var Builder<TModel> $query */
+        /** @phpstan-ignore method.notFound */
+        $query = $this->getModelClass()::query()->withTrashed()->whereNotNull('deleted_at');
+
+        if ($projectId !== null) {
+            $query->where('project_id', $projectId);
+        }
+
+        return $this->firstTrashedByName($query, $name);
+    }
+
+    /**
+     * @param  Builder<TModel>  $query
+     */
+    protected function firstTrashedByName(Builder $query, string $name): ?Model
+    {
+        return $query->where('name', $name)->latest('deleted_at')->first();
+    }
+
+    /**
+     * Base search columns for a list, with whatever the integration contributes appended.
+     *
+     * @param  non-empty-list<literal-string>  $columns
+     * @return non-empty-list<literal-string>
+     */
+    protected function searchColumns(string $scope, array $columns): array
+    {
+        /** @var non-empty-list<literal-string> $columns An integration appends to the base columns; it never replaces them. */
+        /** @phpstan-ignore method.notFound */
+        $columns = $this->integration()->searchColumns($scope, $columns);
+
+        return $columns;
+    }
+
+    /**
+     * The fully qualified model class name for this query.
+     *
+     * @return class-string<Model>
+     */
+    abstract protected function getModelClass(): string;
+
+    /**
+     * The integration instance for this query.
+     */
+    abstract protected function integration(): object;
 
     /**
      * Escape the LIKE wildcards and the escape character itself in a search term.

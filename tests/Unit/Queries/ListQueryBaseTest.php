@@ -252,5 +252,26 @@ final class ListQueryBaseTest extends TestCase
  */
 class TestListQuery extends ListQueryBase
 {
-    // No additional methods needed for testing base functionality
+    /**
+     * @return class-string<Model>
+     */
+    protected function getModelClass(): string
+    {
+        return Model::class;
+    }
+
+    protected function integration(): object
+    {
+        return new class
+        {
+            /**
+             * @param  non-empty-list<literal-string>  $columns
+             * @return non-empty-list<literal-string>
+             */
+            public function searchColumns(string $scope, array $columns): array
+            {
+                return $columns;
+            }
+        };
+    }
 }

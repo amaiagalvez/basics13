@@ -62,4 +62,27 @@ class SearchListQuery extends ListQueryBase
     {
         return $this->paginate(AuditedRecord::query()->orderBy('id'), $search, $columns);
     }
+
+    /**
+     * @return class-string<AuditedRecord>
+     */
+    protected function getModelClass(): string
+    {
+        return AuditedRecord::class;
+    }
+
+    protected function integration(): object
+    {
+        return new class
+        {
+            /**
+             * @param  non-empty-list<literal-string>  $columns
+             * @return non-empty-list<literal-string>
+             */
+            public function searchColumns(string $scope, array $columns): array
+            {
+                return $columns;
+            }
+        };
+    }
 }
