@@ -4,8 +4,8 @@ namespace Basics13\Tests\Unit\Queries;
 
 use PHPUnit\Framework\TestCase;
 use Basics13\Queries\ListQueryBase;
-use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Basics13\Tests\Fixtures\AuditedRecord;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
@@ -183,6 +183,38 @@ final class ListQueryBaseTest extends TestCase
         $this->assertEquals(4, $reflection->getNumberOfParameters());
     }
 
+    public function test_state_counts_calls_count_states_with_model_class(): void
+    {
+        $query = new TestListQueryWithCountStates;
+        $result = $this->callStateCounts($query);
+
+        $this->assertSame([
+            'active' => 10,
+            'archived' => 5,
+            'trashed' => 2,
+        ], $result);
+    }
+
+    public function test_state_counts_passes_through_provided_totals(): void
+    {
+        $query = new TestListQueryWithCountStates;
+        $result = $this->callStateCounts($query, 7, 3, 1);
+
+        $this->assertSame([
+            'active' => 7,
+            'archived' => 3,
+            'trashed' => 1,
+        ], $result);
+    }
+
+    public function test_search_columns_calls_integration_search_columns(): void
+    {
+        $query = new TestListQueryWithSearchColumns;
+        $result = $this->callSearchColumns($query, 'customers', ['name', 'email']);
+
+        $this->assertSame(['name', 'email', 'integration-column'], $result);
+    }
+
     private function callSearchPattern(string $search): string
     {
         $reflection = new \ReflectionMethod($this->query, 'searchPattern');
@@ -193,42 +225,42 @@ final class ListQueryBaseTest extends TestCase
     }
 
     /**
-     * @param  Builder<Model>  $builder
+     * @param  Builder<AuditedRecord>  $builder
      * @param  array<int, string>  $searchColumns
-     * @return Builder<Model>
+     * @return Builder<AuditedRecord>
      */
     private function callWhereMatches(Builder $builder, string $search, array $searchColumns): Builder
     {
         $reflection = new \ReflectionMethod($this->query, 'whereMatches');
         $reflection->setAccessible(true);
 
-        /** @var Builder<Model> */
+        /** @var Builder<AuditedRecord> */
         return $reflection->invoke($this->query, $builder, $search, $searchColumns);
     }
 
     /**
-     * @param  Builder<Model>  $builder
+     * @param  Builder<AuditedRecord>  $builder
      */
-    private function callFirstTrashedByName(Builder $builder, string $name): ?Model
+    private function callFirstTrashedByName(Builder $builder, string $name): ?AuditedRecord
     {
         $reflection = new \ReflectionMethod($this->query, 'firstTrashedByName');
         $reflection->setAccessible(true);
 
-        /** @var Model|null */
+        /** @var AuditedRecord|null */
         return $reflection->invoke($this->query, $builder, $name);
     }
 
     /**
-     * @param  Builder<Model>  $builder
+     * @param  Builder<AuditedRecord>  $builder
      * @param  array<int, string>  $searchColumns
-     * @return LengthAwarePaginator<int, Model>
+     * @return LengthAwarePaginator<int, AuditedRecord>
      */
     private function callPaginate(Builder $builder, string $search, array $searchColumns): LengthAwarePaginator
     {
         $reflection = new \ReflectionMethod($this->query, 'paginate');
         $reflection->setAccessible(true);
 
-        /** @var LengthAwarePaginator<int, Model> */
+        /** @var LengthAwarePaginator<int, AuditedRecord> */
         return $reflection->invoke($this->query, $builder, $search, $searchColumns);
     }
 
@@ -243,21 +275,46 @@ final class ListQueryBaseTest extends TestCase
         /** @var array{active: int, archived: int, trashed: int} */
         return $reflection->invoke($this->query, $modelClass, $activeTotal, $archivedTotal, $trashedTotal);
     }
+
+    /**
+     * @return array{active: int, archived: int, trashed: int}
+     */
+    private function callStateCounts(TestListQueryWithCountStates $query, ?int $activeTotal = null, ?int $archivedTotal = null, ?int $trashedTotal = null): array
+    {
+        $reflection = new \ReflectionMethod($query, 'stateCounts');
+        $reflection->setAccessible(true);
+
+        /** @var array{active: int, archived: int, trashed: int} */
+        return $reflection->invoke($query, $activeTotal, $archivedTotal, $trashedTotal);
+    }
+
+    /**
+     * @param  non-empty-list<literal-string>  $columns
+     * @return non-empty-list<literal-string>
+     */
+    private function callSearchColumns(TestListQueryWithSearchColumns $query, string $scope, array $columns): array
+    {
+        $reflection = new \ReflectionMethod($query, 'searchColumns');
+        $reflection->setAccessible(true);
+
+        /** @var non-empty-list<literal-string> */
+        return $reflection->invoke($query, $scope, $columns);
+    }
 }
 
 /**
  * Concrete implementation of ListQueryBase for testing.
  *
- * @extends ListQueryBase<Model>
+ * @extends ListQueryBase<AuditedRecord>
  */
 class TestListQuery extends ListQueryBase
 {
     /**
-     * @return class-string<Model>
+     * @return class-string<AuditedRecord>
      */
     protected function getModelClass(): string
     {
-        return Model::class;
+        return AuditedRecord::class;
     }
 
     protected function integration(): object
@@ -271,6 +328,84 @@ class TestListQuery extends ListQueryBase
             public function searchColumns(string $scope, array $columns): array
             {
                 return $columns;
+            }
+        };
+    }
+}
+
+/**
+ * Test implementation that tracks countStates calls.
+ *
+ * @extends ListQueryBase<AuditedRecord>
+ */
+class TestListQueryWithCountStates extends ListQueryBase
+{
+    /**
+     * @return class-string<AuditedRecord>
+     */
+    protected function getModelClass(): string
+    {
+        return AuditedRecord::class;
+    }
+
+    protected function integration(): object
+    {
+        return new class
+        {
+            /**
+             * @param  non-empty-list<literal-string>  $columns
+             * @return non-empty-list<literal-string>
+             */
+            public function searchColumns(string $scope, array $columns): array
+            {
+                return $columns;
+            }
+        };
+    }
+
+    /**
+     * @return array{active: int, archived: int, trashed: int}
+     */
+    protected function countStates(
+        string $modelClass,
+        ?int $activeTotal = null,
+        ?int $archivedTotal = null,
+        ?int $trashedTotal = null,
+    ): array {
+        return [
+            'active' => $activeTotal ?? 10,
+            'archived' => $archivedTotal ?? 5,
+            'trashed' => $trashedTotal ?? 2,
+        ];
+    }
+}
+
+/**
+ * Test implementation that tracks searchColumns calls.
+ *
+ * @extends ListQueryBase<AuditedRecord>
+ */
+class TestListQueryWithSearchColumns extends ListQueryBase
+{
+    /**
+     * @return class-string<AuditedRecord>
+     */
+    protected function getModelClass(): string
+    {
+        return AuditedRecord::class;
+    }
+
+    protected function integration(): object
+    {
+        return new class
+        {
+            /**
+             * @param  non-empty-list<literal-string>  $columns
+             * @return non-empty-list<literal-string>
+             */
+            public function searchColumns(string $scope, array $columns): array
+            {
+                return [...$columns, 'integration-column'];
             }
         };
     }

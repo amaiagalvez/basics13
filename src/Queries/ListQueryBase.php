@@ -115,6 +115,11 @@ abstract class ListQueryBase
 
     /**
      * Find a soft-deleted record by name, optionally scoped by project.
+     *
+     * The record comes back as the query's own model, so a caller keeps its columns instead of
+     * receiving the bare `Model` and losing them.
+     *
+     * @return TModel|null
      */
     public function findTrashedByName(string $name, ?int $projectId = null): ?Model
     {
@@ -131,6 +136,7 @@ abstract class ListQueryBase
 
     /**
      * @param  Builder<TModel>  $query
+     * @return TModel|null
      */
     protected function firstTrashedByName(Builder $query, string $name): ?Model
     {

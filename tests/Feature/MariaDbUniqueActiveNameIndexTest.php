@@ -33,7 +33,11 @@ class MariaDbUniqueActiveNameIndexTest extends TestCase
 
         config([
             'database.default' => 'mysql',
+            'database.connections.mysql.host' => 'db',
+            'database.connections.mysql.port' => 3306,
             'database.connections.mysql.database' => $database,
+            'database.connections.mysql.username' => 'laravel',
+            'database.connections.mysql.password' => 'laravel',
         ]);
     }
 
