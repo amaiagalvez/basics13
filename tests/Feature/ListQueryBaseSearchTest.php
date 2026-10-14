@@ -83,10 +83,33 @@ class ListQueryBaseSearchTest extends TestCase
 
     public function test_find_trashed_by_name_scopes_by_project_id(): void
     {
-        // This test would need a project_id column on the model; AuditedRecord doesn't have one.
-        // The method accepts the parameter but the test model doesn't support it.
-        // Skipping detailed project_id test since the model doesn't have the column.
-        $this->markTestSkipped('AuditedRecord fixture does not have project_id column.');
+        $this->trashNamed('Scoped Record', 1);
+        $this->trashNamed('Scoped Record', 2);
+
+        $query = new FindTrashedListQuery;
+
+        $this->assertSame(1, $query->findTrashedByName('Scoped Record', 1)?->project_id);
+        $this->assertSame(2, $query->findTrashedByName('Scoped Record', 2)?->project_id);
+        $this->assertNull($query->findTrashedByName('Scoped Record', 3));
+    }
+
+    /**
+     * Trash a record under a name that no other row holds, then rename it to the shared one.
+     *
+     * The active-name index keeps the two rows from clashing while the rename happens, because a
+     * soft-deleted row is out of that index.
+     */
+    private function trashNamed(string $name, int $projectId): AuditedRecord
+    {
+        $record = AuditedRecord::factory()->create([
+            'name' => $name.' '.$projectId,
+            'project_id' => $projectId,
+        ]);
+
+        $record->update(['name' => $name]);
+        $record->delete();
+
+        return $record;
     }
 
     public function test_state_counts_returns_correct_counts(): void

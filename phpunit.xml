@@ -16,6 +16,15 @@
         <include>
             <directory>src</directory>
         </include>
+        <exclude>
+            <!--
+                DuskTestCase is a browser-suite base class: prepare() starts chromedriver and
+                driver() needs a live WebDriver endpoint, so no test in this package can reach it.
+                The application and the domain packages run it for real through their own browser
+                suites. Excluded here so the package coverage measures code this package can test.
+            -->
+            <file>src/Support/Testing/DuskTestCase.php</file>
+        </exclude>
     </source>
     <php>
         <env name="APP_ENV" value="testing"/>

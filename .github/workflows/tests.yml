@@ -65,8 +65,9 @@ jobs:
         run: vendor/bin/phpstan analyse --memory-limit=1G
 
       # MariaDbUniqueActiveNameIndexTest is #[Group('mariadb')] and skips itself unless
-      # BASICS13_MARIADB_DATABASE is set, and it hardcodes the Compose hostname `db`. It therefore
-      # only runs locally: `bash testing13/phpunit.sh basics13 coverage mariadb`. Running it here
-      # would need that hostname made configurable first.
+      # BASICS13_MARIADB_DATABASE is set. It therefore only runs locally:
+      # `bash testing13/phpunit.sh basics13 coverage mariadb`. Running it here would need a
+      # MariaDB service, and with it the four lines of the MySQL branch of addUniqueActiveNameIndex()
+      # that the in-memory SQLite run cannot reach.
       - name: Run tests
         run: vendor/bin/phpunit

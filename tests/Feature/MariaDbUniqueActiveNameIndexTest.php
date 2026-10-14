@@ -13,6 +13,10 @@ use Basics13\Support\Database\UniqueConstraintViolation;
 
 /**
  * Temporary tables isolate these tests without migrating or refreshing a shared database.
+ *
+ * The connection reads DB_HOST, DB_PORT, DB_USERNAME and DB_PASSWORD and falls back to the
+ * Compose service defaults, so it reaches the database both from the tooling Compose network and
+ * from testing13/phpunit.sh, which runs the container on the host network against a published port.
  */
 #[Group('mariadb')]
 class MariaDbUniqueActiveNameIndexTest extends TestCase
@@ -33,11 +37,11 @@ class MariaDbUniqueActiveNameIndexTest extends TestCase
 
         config([
             'database.default' => 'mysql',
-            'database.connections.mysql.host' => 'db',
-            'database.connections.mysql.port' => 3306,
+            'database.connections.mysql.host' => getenv('DB_HOST') ?: 'db',
+            'database.connections.mysql.port' => (int) (getenv('DB_PORT') ?: 3306),
             'database.connections.mysql.database' => $database,
-            'database.connections.mysql.username' => 'laravel',
-            'database.connections.mysql.password' => 'laravel',
+            'database.connections.mysql.username' => getenv('DB_USERNAME') ?: 'laravel',
+            'database.connections.mysql.password' => getenv('DB_PASSWORD') ?: 'laravel',
         ]);
     }
 

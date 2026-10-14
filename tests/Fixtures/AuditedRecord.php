@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  *
  * @property int $id
  * @property string $name
+ * @property int|null $project_id
  * @property string|null $notes
  * @property bool $active
  * @property int|null $created_by
@@ -24,7 +25,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property CarbonImmutable|null $updated_at
  * @property CarbonImmutable|null $deleted_at
  */
-#[Fillable(['name', 'notes'])]
+#[Fillable(['name', 'project_id', 'notes'])]
 class AuditedRecord extends Model
 {
     /** @use HasFactory<AuditedRecordFactory> */

@@ -18,6 +18,10 @@ return new class extends Migration
             $table->id();
             $table->string('name');
 
+            // The scope ListQueryBase::findTrashedByName() filters on. No project table exists here
+            // on purpose: the package has no domain model, only the column the query looks for.
+            $table->unsignedBigInteger('project_id')->nullable();
+
             addCommonColumns($table);
             addAuditColumns($table);
         });
