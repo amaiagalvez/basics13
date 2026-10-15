@@ -3,6 +3,7 @@
 namespace Basics13\Transformers;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * Builds the list views of every resource.
@@ -343,4 +344,145 @@ abstract class ListTransformer
      * @return array<string, mixed>
      */
     abstract protected function editPayload(Model $record): array;
+
+    /**
+     * Columns specific to the resource, without the extra date or actions.
+     *
+     * @param  TRecord  $record
+     * @param  array<string, mixed>  $extra
+     * @return array<string, mixed>
+     */
+    abstract protected function columns(Model $record, array $extra): array;
+
+    /**
+     * Whether the delete action should become an archive action (active list only).
+     *
+     * @param  TRecord  $record
+     */
+    abstract protected function getDeleteBlockCondition(Model $record): bool;
+
+    /**
+     * Whether the force-delete action should be blocked in the trash list.
+     *
+     * @param  TRecord  $record
+     */
+    abstract protected function getForceDeleteBlockCondition(Model $record): bool;
+
+    /**
+     * Hint shown when force-delete is blocked in the trash list.
+     *
+     * @param  TRecord  $record
+     */
+    abstract protected function getForceDeleteBlockHint(Model $record): string;
+
+    /**
+     * Extra date column for the given scope.
+     *
+     * @param  TRecord  $record
+     * @param  'active'|'archived'|'trash'  $scope
+     * @return string|null ISO 8601 string or null
+     */
+    abstract protected function getExtraDate(Model $record, string $scope): ?string;
+
+    /**
+     * Whether the trashed record should restore to active list (vs archived).
+     *
+     * @param  TRecord  $record
+     */
+    abstract protected function getRestoreActive(Model $record): bool;
+
+    /**
+     * Active list view: rows with edit + delete/archive actions and created_at date.
+     *
+     * @param  LengthAwarePaginator<int, TRecord>  $records
+     * @param  array{active: int, archived: int, trashed: int}|null  $counts
+     * @return array<string, mixed>
+     */
+    public function active(LengthAwarePaginator $records, string $search, ?array $counts = null): array
+    {
+        return [
+            ...$this->envelope('active', $search, $counts),
+            'rows' => collect($records->items())->map(function (Model $record): array {
+                $extra = $this->integrationRow($record);
+
+                return [
+                    ...$this->columns($record, $extra),
+                    'extraDate' => $this->getExtraDate($record, 'active'),
+                    'actions' => [
+                        $this->editAction($record),
+                        $this->getDeleteBlockCondition($record)
+                            ? $this->archiveAction($record, __('basics13::messages.archive_instead_of_delete'))
+                            : $this->deleteAction($record),
+                    ],
+                ];
+            })->all(),
+        ];
+    }
+
+    /**
+     * Archived list view: rows with activate action and updated_at date.
+     *
+     * @param  LengthAwarePaginator<int, TRecord>  $records
+     * @param  array{active: int, archived: int, trashed: int}|null  $counts
+     * @return array<string, mixed>
+     */
+    public function archived(LengthAwarePaginator $records, string $search, ?array $counts = null): array
+    {
+        return [
+            ...$this->envelope('archived', $search, $counts),
+            'rows' => collect($records->items())->map(function (Model $record): array {
+                $extra = $this->integrationRow($record);
+
+                return [
+                    ...$this->columns($record, $extra),
+                    'extraDate' => $this->getExtraDate($record, 'archived'),
+                    'actions' => [$this->activateAction($record)],
+                ];
+            })->all(),
+        ];
+    }
+
+    /**
+     * Trash list view: rows with restore + force-delete/blocked actions and deleted_at date.
+     *
+     * @param  LengthAwarePaginator<int, TRecord>  $records
+     * @param  array{active: int, archived: int, trashed: int}|null  $counts
+     * @return array<string, mixed>
+     */
+    public function trash(LengthAwarePaginator $records, string $search, ?array $counts = null): array
+    {
+        return [
+            ...$this->envelope('trash', $search, $counts),
+            'rows' => collect($records->items())->map(function (Model $record): array {
+                $extra = $this->integrationRow($record);
+
+                return [
+                    ...$this->columns($record, $extra),
+                    'extraDate' => $this->getExtraDate($record, 'trash'),
+                    'actions' => [
+                        $this->restoreAction($record, $this->getRestoreActive($record)),
+                        $this->getForceDeleteBlockCondition($record)
+                            ? $this->blockedAction(
+                                __('basics13::messages.delete_permanently'),
+                                'lock-closed',
+                                $this->resourceKey().'-force-delete-blocked-'.$this->key($record),
+                                $this->getForceDeleteBlockHint($record),
+                            )
+                            : $this->forceDeleteAction($record),
+                    ],
+                ];
+            })->all(),
+        ];
+    }
+
+    /**
+     * Get the integration's row data for a record. Override if no integration is used.
+     *
+     * @param  TRecord  $record
+     * @return array<string, mixed>
+     */
+    protected function integrationRow(Model $record): array
+    {
+        return [];
+    }
 }

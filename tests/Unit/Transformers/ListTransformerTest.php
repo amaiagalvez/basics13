@@ -367,4 +367,39 @@ class TestListTransformer extends ListTransformer
     {
         return ['test' => $record->id];
     }
+
+    protected function columns(Model $record, array $extra): array
+    {
+        return ['test' => $record->id];
+    }
+
+    protected function getDeleteBlockCondition(Model $record): bool
+    {
+        return false;
+    }
+
+    protected function getForceDeleteBlockCondition(Model $record): bool
+    {
+        return false;
+    }
+
+    protected function getForceDeleteBlockHint(Model $record): string
+    {
+        return '';
+    }
+
+    protected function getExtraDate(Model $record, string $scope): ?string
+    {
+        return null;
+    }
+
+    protected function getRestoreActive(Model $record): bool
+    {
+        return true;
+    }
+
+    protected function integrationRow(Model $record): array
+    {
+        return [];
+    }
 }
