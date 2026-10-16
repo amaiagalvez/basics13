@@ -3,6 +3,7 @@
 namespace Basics13\Tests;
 
 use Basics13\ServiceProvider;
+use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as TestbenchTestCase;
 
 abstract class TestCase extends TestbenchTestCase
@@ -15,6 +16,7 @@ abstract class TestCase extends TestbenchTestCase
     protected function getPackageProviders($app): array
     {
         return [
+            LivewireServiceProvider::class,
             ServiceProvider::class,
         ];
     }

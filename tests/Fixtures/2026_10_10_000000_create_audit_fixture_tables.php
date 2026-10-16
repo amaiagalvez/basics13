@@ -8,12 +8,6 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('users', function (Blueprint $table): void {
-            $table->id();
-            $table->string('name');
-            $table->timestamps();
-        });
-
         Schema::create('audited_records', function (Blueprint $table): void {
             $table->id();
             $table->string('name');
@@ -41,6 +35,5 @@ return new class extends Migration
     {
         Schema::dropIfExists('plain_audited_records');
         Schema::dropIfExists('audited_records');
-        Schema::dropIfExists('users');
     }
 };

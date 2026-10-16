@@ -3,6 +3,7 @@
 namespace Basics13\Tests\Feature;
 
 use Illuminate\Support\Facades\App;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -27,6 +28,24 @@ final class PackageViewsTest extends FeatureTestCase
 
         $this->assertStringContainsString('Test Label', $html);
         $this->assertStringContainsString('testClick()', $html);
+    }
+
+    public function test_host_view_overrides_take_precedence_over_package_views(): void
+    {
+        /** @var view-string $viewName */
+        $viewName = 'basics13::pages.auth.override-test.probe';
+        $overridePath = resource_path('views/vendor/basics13/pages/auth/override-test/probe.blade.php');
+        File::ensureDirectoryExists(dirname($overridePath));
+        File::put($overridePath, 'Host override');
+
+        try {
+            $this->assertSame(
+                'Host override',
+                trim(View::make($viewName)->render()),
+            );
+        } finally {
+            File::deleteDirectory(dirname($overridePath));
+        }
     }
 
     public function test_package_validation_translations_are_available_to_the_validator(): void

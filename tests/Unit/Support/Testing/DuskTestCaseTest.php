@@ -3,7 +3,9 @@
 namespace Basics13\Tests\Unit\Support\Testing;
 
 use stdClass;
+use Basics13\ServiceProvider;
 use Illuminate\Support\Facades\DB;
+use Livewire\LivewireServiceProvider;
 use Basics13\Tests\Fixtures\AuditActor;
 use Illuminate\Database\Eloquent\Model;
 use Basics13\Support\Testing\DuskTestCase;
@@ -23,6 +25,17 @@ use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 abstract class DuskTestCaseHarness extends DuskTestCase
 {
     use CreatesApplication;
+
+    /**
+     * @return array<int, class-string>
+     */
+    protected function getPackageProviders(mixed $app): array
+    {
+        return [
+            LivewireServiceProvider::class,
+            ServiceProvider::class,
+        ];
+    }
 
     public static function prepare(): void
     {
@@ -47,7 +60,10 @@ abstract class DuskTestCaseHarness extends DuskTestCase
         // Every browser suite leans on these two methods before it opens a page, and unlike
         // prepare() and driver() they need no browser, so they are covered from here.
         $this->app->make(ConsoleKernel::class)->call('migrate', [
-            '--path' => realpath(__DIR__.'/../../../Fixtures'),
+            '--path' => [
+                dirname(__DIR__, 4).'/database/migrations',
+                dirname(__DIR__, 3).'/Fixtures',
+            ],
             '--realpath' => true,
             '--force' => true,
         ]);

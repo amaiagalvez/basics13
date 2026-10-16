@@ -1,0 +1,67 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: config/basics13.php
+
+		-
+			message: '#^Call to an undefined static method TModel of Illuminate\\Database\\Eloquent\\Model\:\:factory\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: database/factories/UserFactory.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Foundation\\Auth\\User\:\:\$two_factor_recovery_codes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: resources/views/pages/settings/two-factor/⚡recovery-codes.blade.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Foundation\\Auth\\User\:\:hasEnabledTwoFactorAuthentication\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: resources/views/pages/settings/two-factor/⚡recovery-codes.blade.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Foundation\\Auth\\User\:\:\$email_verified_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: resources/views/pages/settings/⚡profile.blade.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Foundation\\Auth\\User\:\:\$two_factor_confirmed_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: resources/views/pages/settings/⚡security.blade.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Foundation\\Auth\\User\:\:hasEnabledTwoFactorAuthentication\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: resources/views/pages/settings/⚡security.blade.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Foundation\\Auth\\User\:\:passkeys\(\)\.$#'
+			identifier: method.notFound
+			count: 3
+			path: resources/views/pages/settings/⚡security.blade.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Foundation\\Auth\\User\:\:\$two_factor_secret\.$#'
+			identifier: property.notFound
+			count: 2
+			path: resources/views/pages/settings/⚡two-factor-setup-modal.blade.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Foundation\\Auth\\User\:\:twoFactorQrCodeSvg\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: resources/views/pages/settings/⚡two-factor-setup-modal.blade.php
+
+		-
+			message: '#^Call to an undefined static method TModel of Illuminate\\Database\\Eloquent\\Model\:\:factory\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: tests/Fixtures/AuditedRecordFactory.php

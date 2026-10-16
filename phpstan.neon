@@ -1,20 +1,14 @@
 includes:
     - vendor/larastan/larastan/extension.neon
     - vendor/nesbot/carbon/extension.neon
+    - phpstan-baseline.neon
 
 parameters:
     paths:
+        - config/
+        - database/
+        - resources/
         - src/
         - tests/
 
     level: 7
-
-    ignoreErrors:
-        # `Model::factory()` comes from the `HasFactory` trait, so PHPStan cannot see it on
-        # the `TModel of Model` bound. Binding it instead is not an option: `HasFactory` is a
-        # trait, and intersecting one into a template bound resolves to `*NEVER*`. Every
-        # caller passes a model that declares a factory. Scoped so any other undefined static
-        # call is still reported.
-        -
-            identifier: staticMethod.notFound
-            path: src/Database/Factories/HasStates.php

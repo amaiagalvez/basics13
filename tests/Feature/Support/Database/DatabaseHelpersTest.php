@@ -8,9 +8,12 @@ use Illuminate\Support\Facades\Schema;
 use Basics13\Tests\Fixtures\AuditActor;
 use Illuminate\Database\QueryException;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Foundation\Testing\LazilyRefreshDatabase;
 
 class DatabaseHelpersTest extends TestCase
 {
+    use LazilyRefreshDatabase;
+
     protected function getEnvironmentSetUp($app): void
     {
         $app['config']->set('database.default', 'sqlite');

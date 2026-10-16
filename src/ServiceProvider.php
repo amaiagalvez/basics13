@@ -2,20 +2,42 @@
 
 namespace Basics13;
 
+use Livewire\Livewire;
+use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
 class ServiceProvider extends BaseServiceProvider
 {
     public function boot(): void
     {
-        $this->loadViewsFrom(__DIR__.'/../resources/views', 'basics13');
+        $viewsPath = __DIR__.'/../resources/views';
+        $publishedViewsPath = resource_path('views/vendor/basics13');
+
+        $this->loadViewsFrom($viewsPath, 'basics13');
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang', 'basics13');
         $this->loadTranslationsFrom(__DIR__.'/../resources/lang');
         $this->loadJsonTranslationsFrom(__DIR__.'/../resources/lang');
+        $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
+        $this->loadRoutesFrom(__DIR__.'/../routes/settings.php');
+
+        Blade::anonymousComponentNamespace('basics13::components', 'basics13');
+        Blade::anonymousComponentNamespace('basics13::layouts', 'basics13-layouts');
+        Blade::anonymousComponentNamespace('basics13::pages', 'basics13-pages');
+
+        $this->app->booted(function () use ($publishedViewsPath, $viewsPath): void {
+            Livewire::addNamespace(
+                'basics13',
+                is_dir($publishedViewsPath) ? $publishedViewsPath : $viewsPath,
+            );
+        });
 
         $this->publishes([
             __DIR__.'/../config/basics13.php' => config_path('basics13.php'),
         ], 'basics13-config');
+
+        $this->publishes([
+            $viewsPath => $publishedViewsPath,
+        ], 'basics13-auth-views');
 
         $this->publishes([
             __DIR__.'/../resources/js' => resource_path('js/vendor/basics13'),
@@ -48,12 +70,10 @@ class ServiceProvider extends BaseServiceProvider
         // $this->publishes([
         //     __DIR__ . '/../resources/views/vendor/pagination' => resource_path('views/vendor/pagination'),
         // ], 'basics13-pagination');
-
-        $this->mergeConfigFrom(__DIR__.'/../config/basics13.php', 'basics13');
     }
 
     public function register(): void
     {
-        //
+        $this->mergeConfigFrom(__DIR__.'/../config/basics13.php', 'basics13');
     }
 }
