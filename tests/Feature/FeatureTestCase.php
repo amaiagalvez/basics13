@@ -2,7 +2,9 @@
 
 namespace Basics13\Tests\Feature;
 
+use Basics13\Models\User;
 use Basics13\ServiceProvider;
+use Flux\FluxServiceProvider;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as TestbenchTestCase;
 
@@ -16,6 +18,8 @@ abstract class FeatureTestCase extends TestbenchTestCase
     {
         $app['config']->set('database.default', 'sqlite');
         $app['config']->set('database.connections.sqlite.database', ':memory:');
+        $app['config']->set('app.key', str_repeat('a', 32));
+        $app['config']->set('auth.providers.users.model', User::class);
     }
 
     /**
@@ -27,6 +31,7 @@ abstract class FeatureTestCase extends TestbenchTestCase
     {
         return [
             LivewireServiceProvider::class,
+            FluxServiceProvider::class,
             ServiceProvider::class,
         ];
     }
