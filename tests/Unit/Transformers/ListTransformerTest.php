@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Basics13\Tests\Fixtures\AuditedRecord;
 use Basics13\Transformers\ListTransformer;
 use PHPUnit\Framework\Attributes\DataProvider;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ListTransformerTest extends TestCase
 {
@@ -266,6 +267,91 @@ class ListTransformerTest extends TestCase
         $this->assertSame('Test Resource', $result[1]['label']);
         $this->assertSame(__('basics13::messages.archived_label'), $result[2]['label']);
     }
+
+    public function test_active_view_builds_the_envelope_and_the_editable_rows(): void
+    {
+        $transformer = new TestListTransformer;
+        $record = AuditedRecord::factory()->make(['id' => 7]);
+
+        /** @var array{resource: string, create: bool, rows: list<array{test: int, extraDate: string|null, actions: list<array<string, mixed>>}>} $result */
+        $result = $transformer->active($this->paginate($record), 'term', ['active' => 1, 'archived' => 0, 'trashed' => 0]);
+
+        $this->assertSame('Test Resource', $result['resource']);
+        $this->assertTrue($result['create']);
+        $this->assertCount(1, $result['rows']);
+        $this->assertSame(7, $result['rows'][0]['test']);
+        $this->assertNull($result['rows'][0]['extraDate']);
+        $this->assertSame(['form-modal', 'confirm-modal'], array_column($result['rows'][0]['actions'], 'type'));
+        $this->assertSame('test-delete-7', $result['rows'][0]['actions'][1]['test']);
+    }
+
+    public function test_active_view_archives_the_record_when_deleting_is_blocked(): void
+    {
+        $transformer = new BlockingListTransformer;
+        $record = AuditedRecord::factory()->make(['id' => 3]);
+
+        /** @var array{rows: list<array{actions: list<array<string, mixed>>}>} $result */
+        $result = $transformer->active($this->paginate($record), '');
+
+        $archive = $result['rows'][0]['actions'][1];
+
+        $this->assertSame(__('basics13::messages.archive'), $archive['label']);
+        $this->assertSame(__('basics13::messages.archive_instead_of_delete'), $archive['hint']);
+        $this->assertSame('test-archive-3', $archive['test']);
+    }
+
+    public function test_archived_view_lists_records_with_the_activate_action(): void
+    {
+        $transformer = new TestListTransformer;
+        $record = AuditedRecord::factory()->make(['id' => 2]);
+
+        /** @var array{create: bool, rows: list<array{actions: list<array<string, mixed>>}>} $result */
+        $result = $transformer->archived($this->paginate($record), '');
+
+        $this->assertFalse($result['create']);
+        $this->assertCount(1, $result['rows']);
+        $this->assertSame('confirm-modal', $result['rows'][0]['actions'][0]['type']);
+        $this->assertSame('test-activate-2', $result['rows'][0]['actions'][0]['test']);
+    }
+
+    public function test_trash_view_lists_records_with_restore_and_force_delete(): void
+    {
+        $transformer = new TestListTransformer;
+        $record = AuditedRecord::factory()->make(['id' => 5]);
+
+        /** @var array{create: bool, rows: list<array{actions: list<array<string, mixed>>}>} $result */
+        $result = $transformer->trash($this->paginate($record), '');
+
+        $this->assertFalse($result['create']);
+        $this->assertSame(
+            ['test-restore-5', 'test-force-delete-5'],
+            array_column($result['rows'][0]['actions'], 'test'),
+        );
+    }
+
+    public function test_trash_view_blocks_force_delete_when_the_condition_is_met(): void
+    {
+        $transformer = new BlockingListTransformer;
+        $record = AuditedRecord::factory()->make(['id' => 5]);
+
+        /** @var array{rows: list<array{actions: list<array<string, mixed>>}>} $result */
+        $result = $transformer->trash($this->paginate($record), '');
+
+        $blocked = $result['rows'][0]['actions'][1];
+
+        $this->assertSame('blocked', $blocked['type']);
+        $this->assertSame('lock-closed', $blocked['icon']);
+        $this->assertSame('test-force-delete-blocked-5', $blocked['test']);
+        $this->assertSame('The record is referenced by other data.', $blocked['hint']);
+    }
+
+    /**
+     * @return LengthAwarePaginator<int, AuditedRecord>
+     */
+    private function paginate(AuditedRecord $record): LengthAwarePaginator
+    {
+        return new LengthAwarePaginator([$record], 1, 15);
+    }
 }
 
 /**
@@ -397,9 +483,26 @@ class TestListTransformer extends ListTransformer
     {
         return true;
     }
+}
 
-    protected function integrationRow(Model $record): array
+/**
+ * Blocks both destructive actions so the archive-instead-of-delete and the blocked force-delete
+ * branches are reached through the public list views.
+ */
+final class BlockingListTransformer extends TestListTransformer
+{
+    protected function getDeleteBlockCondition(Model $record): bool
     {
-        return [];
+        return true;
+    }
+
+    protected function getForceDeleteBlockCondition(Model $record): bool
+    {
+        return true;
+    }
+
+    protected function getForceDeleteBlockHint(Model $record): string
+    {
+        return 'The record is referenced by other data.';
     }
 }

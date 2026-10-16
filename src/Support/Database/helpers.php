@@ -44,7 +44,21 @@ function addAuditColumns(Blueprint $table): void
  */
 function addUniqueActiveNameIndex(string $table, array $scope = []): void
 {
-    $index = implode('_', array_merge([$table], $scope, ['active_name', 'unique']));
+    addUniqueActiveColumnIndex($table, 'name', $scope);
+}
+
+/**
+ * Make one column unique among the rows that are not soft-deleted.
+ *
+ * The same guarantee as addUniqueActiveNameIndex(), for a table that keeps a value to be unique in
+ * a column that is not called `name`, such as one storing the value once per locale.
+ *
+ * @param  string  $column  The column whose value has to stay unique
+ * @param  list<string>  $scope  Extra columns the value is unique within, besides $column itself
+ */
+function addUniqueActiveColumnIndex(string $table, string $column, array $scope = []): void
+{
+    $index = implode('_', array_merge([$table], $scope, ['active_'.$column, 'unique']));
 
     if (isSqliteOrPgsql()) {
         $connection = DB::connection();
@@ -55,8 +69,8 @@ function addUniqueActiveNameIndex(string $table, array $scope = []): void
             $grammar->wrap($index),
             $grammar->wrapTable($table),
             implode(', ', array_map(
-                fn (string $column): string => $grammar->wrap($column),
-                [...$scope, 'name'],
+                fn (string $name): string => $grammar->wrap($name),
+                [...$scope, $column],
             )),
             $grammar->wrap('deleted_at'),
         ));
@@ -64,8 +78,10 @@ function addUniqueActiveNameIndex(string $table, array $scope = []): void
         return;
     }
 
-    Schema::table($table, static function (Blueprint $blueprint) use ($scope, $index): void {
-        $blueprint->string('active_name')->nullable()->storedAs('IF(deleted_at IS NULL, name, NULL)');
-        $blueprint->unique([...$scope, 'active_name'], $index);
+    $generated = 'active_'.$column;
+
+    Schema::table($table, static function (Blueprint $blueprint) use ($scope, $generated, $column, $index): void {
+        $blueprint->string($generated)->nullable()->storedAs('IF(deleted_at IS NULL, '.$column.', NULL)');
+        $blueprint->unique([...$scope, $generated], $index);
     });
 }
