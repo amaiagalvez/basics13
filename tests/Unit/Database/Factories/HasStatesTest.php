@@ -34,14 +34,14 @@ class HasStatesTest extends TestCase
     {
         $existing = AuditedRecord::factory()->create();
 
-        $record = AuditedRecordFactory::getRecord(AuditedRecord::class);
+        $record = AuditedRecordFactory::getRecordOrNew(AuditedRecord::class);
 
         $this->assertSame($existing->id, $record->id);
     }
 
     public function test_get_record_creates_new_when_none_exists(): void
     {
-        $record = AuditedRecordFactory::getRecord(AuditedRecord::class);
+        $record = AuditedRecordFactory::getRecordOrNew(AuditedRecord::class);
 
         $this->assertDatabaseHas('audited_records', ['id' => $record->id]);
     }
@@ -51,13 +51,13 @@ class HasStatesTest extends TestCase
         $factory = new class extends AuditedRecordFactory
         {
             /** @return array{start_date: string|null, end_date: string|null} */
-            public function callGetDateRange(): array
+            public function callgetDatesInRange(): array
             {
-                return $this->getDateRange();
+                return $this->getDatesInRange();
             }
         };
 
-        $dates = $factory->callGetDateRange();
+        $dates = $factory->callgetDatesInRange();
 
         $this->assertArrayHasKey('start_date', $dates);
         $this->assertArrayHasKey('end_date', $dates);
@@ -73,9 +73,9 @@ class HasStatesTest extends TestCase
         $factory = new class extends AuditedRecordFactory
         {
             /** @return array{start_date: string|null, end_date: string|null} */
-            public function callGetDateRange(bool $allowNull): array
+            public function callgetDatesInRange(bool $allowNull): array
             {
-                return $this->getDateRange(-1, 1, $allowNull);
+                return $this->getDatesInRange(-1, 1, $allowNull);
             }
         };
 
@@ -85,7 +85,7 @@ class HasStatesTest extends TestCase
         $this->assertIsString($locale);
         app()->instance(Generator::class.':'.$locale, $faker);
 
-        $dates = $factory->callGetDateRange(true);
+        $dates = $factory->callgetDatesInRange(true);
 
         $this->assertSame(['start_date' => null, 'end_date' => null], $dates);
     }
@@ -95,9 +95,9 @@ class HasStatesTest extends TestCase
         $factory = new class extends AuditedRecordFactory
         {
             /** @return array{start_date: string|null, end_date: string|null} */
-            public function callGetDateRange(): array
+            public function callgetDatesInRange(): array
             {
-                return $this->getDateRange(-1, 1, true);
+                return $this->getDatesInRange(-1, 1, true);
             }
         };
         $faker = Mockery::mock(Generator::class);
@@ -110,15 +110,15 @@ class HasStatesTest extends TestCase
         $this->assertIsString($locale);
         app()->instance(Generator::class.':'.$locale, $faker);
 
-        $dates = $factory->callGetDateRange();
+        $dates = $factory->callgetDatesInRange();
 
         $this->assertSame(['start_date' => '2025-10-10', 'end_date' => '2026-04-10'], $dates);
     }
 
     public function test_get_record_static_method_works_directly(): void
     {
-        // Test the static getRecord method directly on the factory (where the trait method is available)
-        $record = AuditedRecordFactory::getRecord(AuditedRecord::class);
+        // Test the static getRecordOrNew method directly on the factory (where the trait method is available)
+        $record = AuditedRecordFactory::getRecordOrNew(AuditedRecord::class);
 
         $this->assertInstanceOf(AuditedRecord::class, $record);
         $this->assertDatabaseHas('audited_records', ['id' => $record->id]);

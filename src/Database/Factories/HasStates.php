@@ -24,33 +24,20 @@ trait HasStates
     }
 
     /**
-     * Get an existing random record or create a new one.
-     *
-     * `TModel` is bound to `Model` because PHPStan cannot express "model with a factory":
-     * `HasFactory` is a trait, so intersecting it into a template bound resolves to `*NEVER*`.
-     * The `factory()` call is ignored in phpstan.neon instead; every caller passes a model
-     * that declares a factory. `createOne()` is used over `create()`, which is typed
-     * `Collection<int, TModel>|TModel` and would not satisfy `TModel`.
-     *
      * @template TModel of Model
      *
      * @param  class-string<TModel>  $modelClass
      * @return TModel
      */
-    public static function getRecord(string $modelClass): Model
+    public static function getRecordOrNew(string $modelClass): Model
     {
         return $modelClass::inRandomOrder()->first() ?? $modelClass::factory()->createOne();
     }
 
     /**
-     * Generate a random date range.
-     *
-     * @param  int  $startYearsBack  Years back for start date (e.g., -1)
-     * @param  int  $endYearsForward  Years forward from start for end date (e.g., +1)
-     * @param  bool  $allowNull  Whether to allow null dates
      * @return array{start_date: string|null, end_date: string|null}
      */
-    protected function getDateRange(int $startYearsBack = -1, int $endYearsForward = 1, bool $allowNull = false): array
+    public static function getDatesInRange(int $startYearsBack = -1, int $endYearsForward = 1, bool $allowNull = false): array
     {
         if ($allowNull && fake()->boolean(20)) {
             return ['start_date' => null, 'end_date' => null];

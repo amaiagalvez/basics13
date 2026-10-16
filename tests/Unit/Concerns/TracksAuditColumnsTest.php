@@ -61,6 +61,23 @@ class TracksAuditColumnsTest extends TestCase
      * @param  class-string<AuditedRecord|PlainAuditedRecord>  $record
      */
     #[DataProvider('auditedRecords')]
+    public function test_numeric_string_actor_ids_are_stamped_as_integers(string $record): void
+    {
+        $actor = AuditActor::factory()->create();
+        Auth::shouldReceive('id')->twice()->andReturn((string) $actor->id);
+
+        $model = $record::factory()->create();
+
+        $this->assertSame($actor->id, $model->created_by);
+        $this->assertSame($actor->id, $model->updated_by);
+        $this->assertSame($actor->id, $model->refresh()->created_by);
+        $this->assertSame($actor->id, $model->updated_by);
+    }
+
+    /**
+     * @param  class-string<AuditedRecord|PlainAuditedRecord>  $record
+     */
+    #[DataProvider('auditedRecords')]
     public function test_changing_a_record_stamps_the_new_actor_and_keeps_the_author(string $record): void
     {
         $author = AuditActor::factory()->create();
