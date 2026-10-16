@@ -33,10 +33,12 @@ final class PackageViewsTest extends FeatureTestCase
     public function test_host_view_overrides_take_precedence_over_package_views(): void
     {
         /** @var view-string $viewName */
-        $viewName = 'basics13::pages.auth.override-test.probe';
-        $overridePath = resource_path('views/vendor/basics13/pages/auth/override-test/probe.blade.php');
-        File::ensureDirectoryExists(dirname($overridePath));
+        $viewName = 'basics13::components.list.create-action';
+        $overrideDirectory = resource_path('views/vendor/basics13/components/list');
+        $overridePath = $overrideDirectory.'/create-action.blade.php';
+        File::ensureDirectoryExists($overrideDirectory);
         File::put($overridePath, 'Host override');
+        View::prependNamespace('basics13', resource_path('views/vendor/basics13'));
 
         try {
             $this->assertSame(
@@ -44,7 +46,7 @@ final class PackageViewsTest extends FeatureTestCase
                 trim(View::make($viewName)->render()),
             );
         } finally {
-            File::deleteDirectory(dirname($overridePath));
+            File::delete($overridePath);
         }
     }
 

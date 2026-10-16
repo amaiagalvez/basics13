@@ -3,13 +3,17 @@
 namespace Basics13;
 
 use Livewire\Livewire;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
 class ServiceProvider extends BaseServiceProvider
 {
     public function boot(): void
     {
+        $this->authorizeLogViewer();
+
         $viewsPath = __DIR__.'/../resources/views';
         $publishedViewsPath = resource_path('views/vendor/basics13');
 
@@ -75,5 +79,22 @@ class ServiceProvider extends BaseServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/basics13.php', 'basics13');
+    }
+
+    protected function authorizeLogViewer(): void
+    {
+        Gate::define(
+            'viewLogViewer',
+            static function (Model $user): bool {
+                $allowedEmails = config('log-viewer.allowed_emails', []);
+                $email = $user->getAttribute('email');
+
+                return is_string($email) && is_array($allowedEmails) && in_array($email, $allowedEmails, true);
+            },
+        );
+        Gate::define('downloadLogFile', fn (): bool => false);
+        Gate::define('downloadLogFolder', fn (): bool => false);
+        Gate::define('deleteLogFile', fn (): bool => false);
+        Gate::define('deleteLogFolder', fn (): bool => false);
     }
 }
