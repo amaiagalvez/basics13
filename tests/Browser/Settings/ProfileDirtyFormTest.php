@@ -13,7 +13,7 @@ class ProfileDirtyFormTest extends DuskTestCase
     protected function beforeRefreshingDatabase(): void
     {
         self::assertSame('mysql', config('database.default'));
-        self::assertSame('laravel_test', config('database.connections.mysql.database'));
+        self::assertSame('laravel_dusk', config('database.connections.mysql.database'));
         self::assertNotSame('en', app()->getLocale());
     }
 
