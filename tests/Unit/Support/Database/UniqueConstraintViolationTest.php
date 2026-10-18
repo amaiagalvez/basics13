@@ -45,6 +45,42 @@ class UniqueConstraintViolationTest extends TestCase
         $this->assertFalse(UniqueConstraintViolation::causedBy($exception));
     }
 
+    public function test_extracts_the_column_from_a_mysql_partial_index_name(): void
+    {
+        // addUniqueActiveColumnIndex names the MySQL index `<table>_active_<column>_unique`, so the
+        // generated column carries the `active_` prefix back to the caller.
+        $exception = $this->queryException([
+            '23000', 1062, "Duplicate entry 'Shared name' for key 'records_active_name_unique'",
+        ]);
+
+        $this->assertSame('active_name', UniqueConstraintViolation::getCollidingColumn($exception));
+    }
+
+    public function test_extracts_the_column_from_a_postgresql_key_name(): void
+    {
+        $exception = $this->queryException([
+            '23505', null, 'duplicate key value violates unique constraint "records_name_es_key"',
+        ]);
+
+        $this->assertSame('name_es', UniqueConstraintViolation::getCollidingColumn($exception));
+    }
+
+    public function test_extracts_the_column_from_a_sqlite_bare_column_reference(): void
+    {
+        $exception = $this->queryException([
+            '23000', 19, 'UNIQUE constraint failed: `records.email`',
+        ]);
+
+        $this->assertSame('email', UniqueConstraintViolation::getCollidingColumn($exception));
+    }
+
+    public function test_returns_null_when_no_column_can_be_detected(): void
+    {
+        $exception = $this->queryException(['23000', 1062, 'Duplicate entry']);
+
+        $this->assertNull(UniqueConstraintViolation::getCollidingColumn($exception));
+    }
+
     public function test_rethrow_as_validation_error_throws_validation_exception_for_duplicate_key(): void
     {
         $exception = $this->queryException(['23000', 1062, 'Duplicate entry']);

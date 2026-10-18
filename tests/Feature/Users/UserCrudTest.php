@@ -71,6 +71,23 @@ class UserCrudTest extends UserTestCase
         $this->assertSoftDeleted($account);
     }
 
+    public function test_a_delete_vetoed_by_a_listener_reports_that_the_account_cannot_be_deleted(): void
+    {
+        $this->actingAs(User::factory()->create(['name' => 'Zzz actor']));
+        $account = User::factory()->create();
+
+        // A `deleting` hook that returns false cancels the delete, the way a guard that finds a
+        // related record does. The trashed account keeps its audit trail and blocks nothing else,
+        // so the controller only reports the outcome.
+        User::deleting(static fn (): bool => false);
+
+        $this->delete(route('users.destroy', $account->getKey()))
+            ->assertRedirect(route('users.index'))
+            ->assertSessionHas('error', __('basics13::messages.cannot_delete_related'));
+
+        $this->assertNotSoftDeleted($account);
+    }
+
     public function test_the_password_is_hashed_and_never_stored_in_clear(): void
     {
         $this->actingAs(User::factory()->create());

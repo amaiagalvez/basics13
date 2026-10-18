@@ -124,4 +124,74 @@ class DatabaseHelpersTest extends TestCase
         $indexes = DB::select("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='test_unique_index_scoped'");
         $this->assertNotEmpty($indexes);
     }
+
+    /**
+     * SQLite and PostgreSQL use a partial index, MySQL and SQL Server need a stored generated
+     * column instead. The MariaDB integration test proves the real DDL; here the schema builder and
+     * the connection are swapped so the branch runs without a MySQL server.
+     */
+    public function test_add_unique_active_column_index_generates_a_stored_column_outside_sqlite_and_pgsql(): void
+    {
+        $connection = $this->app['db']->connection();
+
+        $schema = new class
+        {
+            /** @var array{0: string, 1: \Closure}|null */
+            public ?array $captured = null;
+
+            public function table(string $table, \Closure $callback): void
+            {
+                $this->captured = [$table, $callback];
+            }
+        };
+
+        $manager = new class
+        {
+            public object $connection;
+
+            public function connection(): object
+            {
+                return $this->connection;
+            }
+        };
+
+        $manager->connection = new class
+        {
+            public function getDriverName(): string
+            {
+                return 'mysql';
+            }
+        };
+
+        $originalSchema = Schema::getFacadeRoot();
+        $originalManager = DB::getFacadeRoot();
+
+        Schema::swap($schema);
+        DB::swap($manager);
+
+        try {
+            addUniqueActiveColumnIndex('CUM_generated_index', 'name', ['tenant_id']);
+        } finally {
+            Schema::swap($originalSchema);
+            DB::swap($originalManager);
+        }
+
+        $this->assertNotNull($schema->captured);
+
+        [$table, $callback] = $schema->captured;
+        $blueprint = new Blueprint($connection, $table, $callback);
+
+        $generated = collect($blueprint->getColumns())
+            ->first(static fn ($column): bool => $column->get('name') === 'active_name');
+
+        $this->assertNotNull($generated);
+        $this->assertTrue($generated->get('nullable'));
+        $this->assertSame('IF(deleted_at IS NULL, name, NULL)', $generated->get('storedAs'));
+
+        $unique = collect($blueprint->getCommands())->firstWhere('name', 'unique');
+
+        $this->assertNotNull($unique);
+        $this->assertSame(['tenant_id', 'active_name'], $unique['columns']);
+        $this->assertSame('CUM_generated_index_tenant_id_active_name_unique', $unique['index']);
+    }
 }

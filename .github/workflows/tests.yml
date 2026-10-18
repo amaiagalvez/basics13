@@ -67,7 +67,7 @@ jobs:
       # MariaDbUniqueActiveNameIndexTest is #[Group('mariadb')] and skips itself unless
       # BASICS13_MARIADB_DATABASE is set. It therefore only runs locally:
       # `bash testing13/phpunit.sh basics13 coverage mariadb`. Running it here would need a
-      # MariaDB service, and with it the four lines of the MySQL branch of addUniqueActiveNameIndex()
-      # that the in-memory SQLite run cannot reach.
+      # MariaDB service: the unit test covers the MySQL branch of addUniqueActiveColumnIndex()
+      # by swapping the schema builder, but only this group runs the generated DDL for real.
       - name: Run tests
         run: vendor/bin/phpunit
