@@ -6,8 +6,8 @@
 @endphp
 
 <div data-list-results
-    :data-total-results="$total"
-    :data-count-template="@js($countTemplate)"
+    data-total-results="{{ $total ?? 0 }}"
+    data-count-template="{{ $countTemplate }}"
     x-data="listSearch(@js($search['value']), @js($total ?? 0), @js($resultsTemplate))"
     x-on:input.debounce.400ms="searchInput($event)"
     x-on:submit="submitSearch($event)" x-on:click="handleClick($event)"
