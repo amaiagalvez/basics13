@@ -2,8 +2,8 @@
 
 namespace Basics13\Tests;
 
-use App\Models\User;
 use Basics13\ServiceProvider;
+use Illuminate\Support\Facades\Route;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as TestbenchTestCase;
 

@@ -94,8 +94,16 @@ abstract class ListQueryBase
         return [
             'active' => $activeTotal ?? $modelClass::query()->where('active', true)->count(),
             'archived' => $archivedTotal ?? $modelClass::query()->where('active', false)->count(),
-            'trashed' => $trashedTotal ?? $modelClass::query()->withTrashed()->whereNotNull('deleted_at')->count(),
+            'trashed' => $trashedTotal ?? self::countTrashed($modelClass),
         ];
+    }
+
+    /**
+     * Count trashed records for the given model class.
+     */
+    private static function countTrashed(string $modelClass): int
+    {
+        return $modelClass::query()->withTrashed()->whereNotNull('deleted_at')->count();
     }
 
     /**

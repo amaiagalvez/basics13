@@ -165,28 +165,9 @@ final class ListQueryBaseTest extends TestCase
         $this->callPaginate($builder, '', ['name']);
     }
 
-    public function test_count_states_uses_provided_totals(): void
+    public function test_state_counts_uses_provided_totals(): void
     {
-        $result = $this->callCountStates('stdClass', 10, 5, 2);
-
-        $this->assertSame([
-            'active' => 10,
-            'archived' => 5,
-            'trashed' => 2,
-        ], $result);
-    }
-
-    public function test_count_states_method_exists_and_is_protected(): void
-    {
-        $reflection = new \ReflectionMethod(ListQueryBase::class, 'countStates');
-        $this->assertTrue($reflection->isProtected());
-        $this->assertEquals(4, $reflection->getNumberOfParameters());
-    }
-
-    public function test_state_counts_calls_count_states_with_model_class(): void
-    {
-        $query = new TestListQueryWithCountStates;
-        $result = $this->callStateCounts($query);
+        $result = $this->callStateCounts($this->query, 10, 5, 2);
 
         $this->assertSame([
             'active' => 10,
@@ -197,7 +178,7 @@ final class ListQueryBaseTest extends TestCase
 
     public function test_state_counts_passes_through_provided_totals(): void
     {
-        $query = new TestListQueryWithCountStates;
+        $query = new TestListQuery;
         $result = $this->callStateCounts($query, 7, 3, 1);
 
         $this->assertSame([
@@ -267,19 +248,7 @@ final class ListQueryBaseTest extends TestCase
     /**
      * @return array{active: int, archived: int, trashed: int}
      */
-    private function callCountStates(string $modelClass, ?int $activeTotal, ?int $archivedTotal, ?int $trashedTotal): array
-    {
-        $reflection = new \ReflectionMethod($this->query, 'countStates');
-        $reflection->setAccessible(true);
-
-        /** @var array{active: int, archived: int, trashed: int} */
-        return $reflection->invoke($this->query, $modelClass, $activeTotal, $archivedTotal, $trashedTotal);
-    }
-
-    /**
-     * @return array{active: int, archived: int, trashed: int}
-     */
-    private function callStateCounts(TestListQueryWithCountStates $query, ?int $activeTotal = null, ?int $archivedTotal = null, ?int $trashedTotal = null): array
+    private function callStateCounts(TestListQuery $query, ?int $activeTotal = null, ?int $archivedTotal = null, ?int $trashedTotal = null): array
     {
         $reflection = new \ReflectionMethod($query, 'stateCounts');
         $reflection->setAccessible(true);
@@ -330,53 +299,6 @@ class TestListQuery extends ListQueryBase
                 return $columns;
             }
         };
-    }
-}
-
-/**
- * Test implementation that tracks countStates calls.
- *
- * @extends ListQueryBase<AuditedRecord>
- */
-class TestListQueryWithCountStates extends ListQueryBase
-{
-    /**
-     * @return class-string<AuditedRecord>
-     */
-    protected function getModelClass(): string
-    {
-        return AuditedRecord::class;
-    }
-
-    protected function integration(): object
-    {
-        return new class
-        {
-            /**
-             * @param  non-empty-list<literal-string>  $columns
-             * @return non-empty-list<literal-string>
-             */
-            public function searchColumns(string $scope, array $columns): array
-            {
-                return $columns;
-            }
-        };
-    }
-
-    /**
-     * @return array{active: int, archived: int, trashed: int}
-     */
-    protected function countStates(
-        string $modelClass,
-        ?int $activeTotal = null,
-        ?int $archivedTotal = null,
-        ?int $trashedTotal = null,
-    ): array {
-        return [
-            'active' => $activeTotal ?? 10,
-            'archived' => $archivedTotal ?? 5,
-            'trashed' => $trashedTotal ?? 2,
-        ];
     }
 }
 

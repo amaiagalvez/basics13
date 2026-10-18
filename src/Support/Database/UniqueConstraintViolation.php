@@ -41,8 +41,9 @@ final class UniqueConstraintViolation
 
         // MySQL/MariaDB/PostgreSQL: look for index pattern *_active_<column>_unique|_key or *<column>_unique|_key
         if (preg_match('/[._](active_)?([a-z_]+)_(unique|key)/i', $message, $matches)) {
-            $prefix = $matches[1] ?? '';
+            $prefix = $matches[1] ?: '';
             $column = $matches[2];
+
             return $prefix.$column;
         }
 

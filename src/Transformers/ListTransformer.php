@@ -385,9 +385,9 @@ abstract class ListTransformer
     protected function getExtraDate(Model $record, string $scope): ?string
     {
         return match ($scope) {
-            'active' => $record->created_at?->toIso8601String(),
-            'archived' => $record->updated_at?->toIso8601String(),
-            'trash' => $record->deleted_at?->toIso8601String(),
+            'active' => $record->getAttribute('created_at')?->toIso8601String(),
+            'archived' => $record->getAttribute('updated_at')?->toIso8601String(),
+            'trash' => $record->getAttribute('deleted_at')?->toIso8601String(),
         };
     }
 
@@ -399,7 +399,7 @@ abstract class ListTransformer
      */
     protected function getRestoreActive(Model $record): bool
     {
-        return $record->active;
+        return (bool) $record->getAttribute('active');
     }
 
     /**
