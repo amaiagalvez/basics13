@@ -2,15 +2,16 @@
 
 namespace Basics13\Transformers;
 
+use Illuminate\Support\Str;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * Builds the list views of every resource.
  *
- * Customers, projects and epics share the same page skeleton: the state tabs, the breadcrumbs, the
- * empty and search messages and the six row actions only differ in the resource they name. This
- * base owns all of that; a transformer only describes its own columns and edit payload.
+ * Customers, projects and epics share the same page skeleton: the state tabs, breadcrumbs, empty
+ * and search messages and the six row actions. This base owns that shared behavior; a transformer
+ * describes its resource label, columns and edit payload.
  *
  * @template TRecord of Model
  */
@@ -313,15 +314,15 @@ abstract class ListTransformer
      */
     abstract protected function resourceLabel(): string;
 
-    /**
-     * Translated message shown when a search returns nothing.
-     */
-    abstract protected function noMatchMessage(): string;
+    final protected function noMatchMessage(): string
+    {
+        return 'No records match your search.';
+    }
 
-    /**
-     * Translated message shown when the resource has no records yet.
-     */
-    abstract protected function noRecordsMessage(): string;
+    final protected function noRecordsMessage(): string
+    {
+        return 'No records yet.';
+    }
 
     /**
      * Singular slug of the resource. It names the data-test attributes of the row actions, the
@@ -330,11 +331,26 @@ abstract class ListTransformer
     abstract protected function resourceKey(): string;
 
     /**
-     * Routes this transformer links to, indexed by list state and by action.
+     * Routes this transformer links to, indexed by list state and by action. Override when a
+     * resource's route names do not follow the standard plural-prefix convention.
      *
      * @return array{active: string, archived: string, trash: string, destroy: string, archive: string, activate: string, restore: string, trashDestroy: string}
      */
-    abstract protected function routes(): array;
+    protected function routes(): array
+    {
+        $prefix = Str::plural($this->resourceKey());
+
+        return [
+            'active' => $prefix.'.index',
+            'archived' => $prefix.'.archived.index',
+            'trash' => $prefix.'.trash.index',
+            'destroy' => $prefix.'.destroy',
+            'archive' => $prefix.'.archive',
+            'activate' => $prefix.'.archived.activate',
+            'restore' => $prefix.'.trash.restore',
+            'trashDestroy' => $prefix.'.trash.destroy',
+        ];
+    }
 
     /**
      * Fields the form needs to open in edit mode. Shared by the row name button and the row edit

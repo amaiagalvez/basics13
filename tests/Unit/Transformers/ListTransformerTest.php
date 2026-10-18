@@ -88,8 +88,8 @@ class ListTransformerTest extends TestCase
     {
         $transformer = new TestListTransformer;
 
-        $this->assertSame('No test records yet.', $transformer->buildEnvelope('active', '')['emptyMessage']);
-        $this->assertSame('No test records match your search.', $transformer->buildEnvelope('active', 'search')['emptyMessage']);
+        $this->assertSame('No records yet.', $transformer->buildEnvelope('active', '')['emptyMessage']);
+        $this->assertSame('No records match your search.', $transformer->buildEnvelope('active', 'search')['emptyMessage']);
     }
 
     public function test_empty_message_for_archived_state(): void
@@ -97,7 +97,7 @@ class ListTransformerTest extends TestCase
         $transformer = new TestListTransformer;
 
         $this->assertSame(__('basics13::messages.no_archived_records'), $transformer->buildEnvelope('archived', '')['emptyMessage']);
-        $this->assertSame('No test records match your search.', $transformer->buildEnvelope('archived', 'search')['emptyMessage']);
+        $this->assertSame('No records match your search.', $transformer->buildEnvelope('archived', 'search')['emptyMessage']);
     }
 
     public function test_empty_message_for_trash_state(): void
@@ -105,7 +105,21 @@ class ListTransformerTest extends TestCase
         $transformer = new TestListTransformer;
 
         $this->assertSame(__('basics13::messages.trash_is_empty'), $transformer->buildEnvelope('trash', '')['emptyMessage']);
-        $this->assertSame('No test records match your search.', $transformer->buildEnvelope('trash', 'search')['emptyMessage']);
+        $this->assertSame('No records match your search.', $transformer->buildEnvelope('trash', 'search')['emptyMessage']);
+    }
+
+    public function test_default_routes_use_the_plural_resource_key_for_every_action(): void
+    {
+        $this->assertSame([
+            'active' => 'tests.index',
+            'archived' => 'tests.archived.index',
+            'trash' => 'tests.trash.index',
+            'destroy' => 'tests.destroy',
+            'archive' => 'tests.archive',
+            'activate' => 'tests.archived.activate',
+            'restore' => 'tests.trash.restore',
+            'trashDestroy' => 'tests.trash.destroy',
+        ], (new TestListTransformer)->buildDefaultRoutes());
     }
 
     #[DataProvider('reservedResourceKeys')]
@@ -386,6 +400,14 @@ class TestListTransformer extends ListTransformer
     }
 
     /**
+     * @return array{active: string, archived: string, trash: string, destroy: string, archive: string, activate: string, restore: string, trashDestroy: string}
+     */
+    public function buildDefaultRoutes(): array
+    {
+        return parent::routes();
+    }
+
+    /**
      * @return array<string, array<string, mixed>>
      */
     public function actions(AuditedRecord $record, bool $active = true): array
@@ -411,16 +433,6 @@ class TestListTransformer extends ListTransformer
     protected function resourceLabel(): string
     {
         return 'Test Resource';
-    }
-
-    protected function noMatchMessage(): string
-    {
-        return 'No test records match your search.';
-    }
-
-    protected function noRecordsMessage(): string
-    {
-        return 'No test records yet.';
     }
 
     protected function resourceKey(): string

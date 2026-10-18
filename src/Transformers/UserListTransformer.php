@@ -55,35 +55,8 @@ class UserListTransformer extends ListTransformer
         return __('Users');
     }
 
-    protected function noMatchMessage(): string
-    {
-        return __('No users match your search.');
-    }
-
-    protected function noRecordsMessage(): string
-    {
-        return __('No users yet.');
-    }
-
     protected function resourceKey(): string
     {
         return 'user';
-    }
-
-    /**
-     * @return array{active: string, archived: string, trash: string, destroy: string, archive: string, activate: string, restore: string, trashDestroy: string}
-     */
-    protected function routes(): array
-    {
-        return [
-            'active' => 'users.index',
-            'archived' => 'users.archived.index',
-            'trash' => 'users.trash.index',
-            'destroy' => 'users.destroy',
-            'archive' => 'users.archive',
-            'activate' => 'users.archived.activate',
-            'restore' => 'users.trash.restore',
-            'trashDestroy' => 'users.trash.destroy',
-        ];
     }
 }

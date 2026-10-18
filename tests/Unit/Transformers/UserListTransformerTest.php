@@ -49,6 +49,18 @@ final class UserListTransformerTest extends TestCase
         $this->assertSame('user-force-delete-blocked-7', $blocked['test']);
         $this->assertSame('', $blocked['hint']);
     }
+
+    public function test_routes_use_the_plural_resource_key_by_default(): void
+    {
+        $list = (new UserListTransformer)->active(new LengthAwarePaginator([], 0, 15), '');
+
+        $this->assertSame(route('users.index'), $list['search']['action']);
+        $this->assertSame([
+            route('users.index'),
+            route('users.archived.index'),
+            route('users.trash.index'),
+        ], array_column($list['tabs'], 'url'));
+    }
 }
 
 final class ForceDeleteBlockingUserListTransformer extends UserListTransformer
