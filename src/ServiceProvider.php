@@ -3,6 +3,7 @@
 namespace Basics13;
 
 use Livewire\Livewire;
+use Basics13\Policies\UserPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,7 @@ class ServiceProvider extends BaseServiceProvider
     public function boot(): void
     {
         $this->authorizeLogViewer();
+        $this->registerUserPolicy();
 
         $viewsPath = __DIR__.'/../resources/views';
         $publishedViewsPath = resource_path('views/vendor/basics13');
@@ -23,6 +25,7 @@ class ServiceProvider extends BaseServiceProvider
         $this->loadJsonTranslationsFrom(__DIR__.'/../resources/lang');
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadRoutesFrom(__DIR__.'/../routes/settings.php');
+        $this->loadRoutesFrom(__DIR__.'/../routes/users.php');
 
         Blade::anonymousComponentNamespace('basics13::components', 'basics13');
         Blade::anonymousComponentNamespace('basics13::layouts', 'basics13-layouts');
@@ -79,6 +82,22 @@ class ServiceProvider extends BaseServiceProvider
     public function register(): void
     {
         $this->mergeConfigFrom(__DIR__.'/../config/basics13.php', 'basics13');
+    }
+
+    /**
+     * Registers the account policy for the model the host configured.
+     *
+     * PHP attributes are not inherited and `#[UsePolicy]` binds one concrete class, so the default
+     * model cannot carry it: a host that replaces `auth.providers.users.model` would be left without
+     * a policy and the whole resource would deny every ability.
+     */
+    private function registerUserPolicy(): void
+    {
+        $userModel = config('auth.providers.users.model');
+
+        if (is_string($userModel) && is_subclass_of($userModel, Model::class)) {
+            Gate::policy($userModel, UserPolicy::class);
+        }
     }
 
     protected function authorizeLogViewer(): void
