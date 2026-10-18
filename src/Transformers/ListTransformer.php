@@ -9,7 +9,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 /**
  * Builds the list views of every resource.
  *
- * Customers, projects and epics share the same page skeleton: the state tabs, breadcrumbs, empty
+ * Entities, projects and epics share the same page skeleton: the state tabs, breadcrumbs, empty
  * and search messages and the six row actions. This base owns that shared behavior; a transformer
  * describes its resource label, columns and edit payload.
  *
@@ -91,7 +91,7 @@ abstract class ListTransformer
             'url' => $url,
             'current' => $state === $tab,
             'count' => $counts[$count] ?? null,
-            'test' => $this->resourceKey().'-'.$tab.'-link',
+            'test' => $this->resourceKey() . '-' . $tab . '-link',
         ];
     }
 
@@ -137,7 +137,7 @@ abstract class ListTransformer
             'type' => 'form-modal',
             'label' => __('basics13::messages.edit'),
             'icon' => 'pencil-square',
-            'test' => $this->resourceKey().'-edit-'.$this->key($record),
+            'test' => $this->resourceKey() . '-edit-' . $this->key($record),
             'payload' => $this->editPayload($record),
         ];
     }
@@ -280,7 +280,7 @@ abstract class ListTransformer
             'type' => 'confirm-modal',
             'label' => $label,
             'icon' => $icon,
-            'test' => $this->resourceKey().'-'.$action.'-'.$this->key($record),
+            'test' => $this->resourceKey() . '-' . $action . '-' . $this->key($record),
             'danger' => $danger,
             'action' => $url,
             'method' => $method,
@@ -341,14 +341,14 @@ abstract class ListTransformer
         $prefix = Str::plural($this->resourceKey());
 
         return [
-            'active' => $prefix.'.index',
-            'archived' => $prefix.'.archived.index',
-            'trash' => $prefix.'.trash.index',
-            'destroy' => $prefix.'.destroy',
-            'archive' => $prefix.'.archive',
-            'activate' => $prefix.'.archived.activate',
-            'restore' => $prefix.'.trash.restore',
-            'trashDestroy' => $prefix.'.trash.destroy',
+            'active' => $prefix . '.index',
+            'archived' => $prefix . '.archived.index',
+            'trash' => $prefix . '.trash.index',
+            'destroy' => $prefix . '.destroy',
+            'archive' => $prefix . '.archive',
+            'activate' => $prefix . '.archived.activate',
+            'restore' => $prefix . '.trash.restore',
+            'trashDestroy' => $prefix . '.trash.destroy',
         ];
     }
 
@@ -492,7 +492,7 @@ abstract class ListTransformer
                             ? $this->blockedAction(
                                 __('basics13::messages.delete_permanently'),
                                 'lock-closed',
-                                $this->resourceKey().'-force-delete-blocked-'.$this->key($record),
+                                $this->resourceKey() . '-force-delete-blocked-' . $this->key($record),
                                 $this->getForceDeleteBlockHint($record),
                             )
                             : $this->forceDeleteAction($record),

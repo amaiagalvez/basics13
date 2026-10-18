@@ -35,7 +35,7 @@ final class PackageViewsTest extends FeatureTestCase
         /** @var view-string $viewName */
         $viewName = 'basics13::components.list.create-action';
         $overrideDirectory = resource_path('views/vendor/basics13/components/list');
-        $overridePath = $overrideDirectory.'/create-action.blade.php';
+        $overridePath = $overrideDirectory . '/create-action.blade.php';
         File::ensureDirectoryExists($overrideDirectory);
         File::put($overridePath, 'Host override');
         View::prependNamespace('basics13', resource_path('views/vendor/basics13'));
@@ -79,7 +79,7 @@ final class PackageViewsTest extends FeatureTestCase
     public function test_package_table_keeps_the_pagination_summary_for_an_empty_list(): void
     {
         $html = Blade::render(
-            '<x-basics13::list.table prefix="customer" :paginator="$paginator" />',
+            '<x-basics13::list.table prefix="entity" :paginator="$paginator" />',
             ['paginator' => new LengthAwarePaginator([], 0, 15)],
         );
 

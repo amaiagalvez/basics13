@@ -191,7 +191,7 @@ final class ListQueryBaseTest extends TestCase
     public function test_search_columns_calls_integration_search_columns(): void
     {
         $query = new TestListQueryWithSearchColumns;
-        $result = $this->callSearchColumns($query, 'customers', ['name', 'email']);
+        $result = $this->callSearchColumns($query, 'entities', ['name', 'email']);
 
         $this->assertSame(['name', 'email', 'integration-column'], $result);
     }
