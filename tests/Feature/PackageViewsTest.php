@@ -35,7 +35,7 @@ final class PackageViewsTest extends FeatureTestCase
         /** @var view-string $viewName */
         $viewName = 'basics13::components.list.create-action';
         $overrideDirectory = resource_path('views/vendor/basics13/components/list');
-        $overridePath = $overrideDirectory . '/create-action.blade.php';
+        $overridePath = $overrideDirectory.'/create-action.blade.php';
         File::ensureDirectoryExists($overrideDirectory);
         File::put($overridePath, 'Host override');
         View::prependNamespace('basics13', resource_path('views/vendor/basics13'));

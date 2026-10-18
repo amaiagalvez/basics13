@@ -182,7 +182,7 @@ class DatabaseHelpersTest extends TestCase
         $blueprint = new Blueprint($connection, $table, $callback);
 
         $generated = collect($blueprint->getColumns())
-            ->first(static fn($column): bool => $column->get('name') === 'active_name');
+            ->first(static fn ($column): bool => $column->get('name') === 'active_name');
 
         $this->assertNotNull($generated);
         $this->assertTrue($generated->get('nullable'));
