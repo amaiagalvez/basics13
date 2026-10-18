@@ -2,10 +2,16 @@
 
 namespace Basics13\Tests;
 
+use App\Models\User;
 use Basics13\ServiceProvider;
 use Livewire\LivewireServiceProvider;
 use Orchestra\Testbench\TestCase as TestbenchTestCase;
 
+/**
+ * Base test case for basics13 and packages that depend on it.
+ *
+ * Packages should extend this instead of TestbenchTestCase directly.
+ */
 abstract class TestCase extends TestbenchTestCase
 {
     /**
@@ -27,5 +33,26 @@ abstract class TestCase extends TestbenchTestCase
     protected function defineDatabaseMigrations(): void
     {
         $this->loadMigrationsFrom(__DIR__.'/Fixtures');
+    }
+
+    /**
+     * Default environment setup for SQLite in-memory testing.
+     * Child classes can override if they need a different database.
+     */
+    protected function getEnvironmentSetUp($app): void
+    {
+        $app['config']->set('database.default', 'sqlite');
+        $app['config']->set('app.key', 'base64:'.base64_encode(str_repeat('a', 32)));
+        $app['config']->set('database.connections.sqlite.database', ':memory:');
+    }
+
+    /**
+     * Default route definitions. Child classes can override or add more routes.
+     */
+    protected function defineRoutes($router): void
+    {
+        Route::get('login', static fn (): string => 'Login')->name('login');
+        Route::get('email/verify', static fn (): string => 'Verify email')->name('verification.notice');
+        Route::get('dashboard', static fn (): string => 'Dashboard')->name('dashboard');
     }
 }

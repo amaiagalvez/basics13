@@ -376,20 +376,31 @@ abstract class ListTransformer
     abstract protected function getForceDeleteBlockHint(Model $record): string;
 
     /**
-     * Extra date column for the given scope.
+     * Extra date column for the given scope. Defaults to created_at/updated_at/deleted_at.
      *
      * @param  TRecord  $record
      * @param  'active'|'archived'|'trash'  $scope
      * @return string|null ISO 8601 string or null
      */
-    abstract protected function getExtraDate(Model $record, string $scope): ?string;
+    protected function getExtraDate(Model $record, string $scope): ?string
+    {
+        return match ($scope) {
+            'active' => $record->created_at?->toIso8601String(),
+            'archived' => $record->updated_at?->toIso8601String(),
+            'trash' => $record->deleted_at?->toIso8601String(),
+        };
+    }
 
     /**
      * Whether the trashed record should restore to active list (vs archived).
+     * Defaults to the record's active flag.
      *
      * @param  TRecord  $record
      */
-    abstract protected function getRestoreActive(Model $record): bool;
+    protected function getRestoreActive(Model $record): bool
+    {
+        return $record->active;
+    }
 
     /**
      * Active list view: rows with edit + delete/archive actions and created_at date.

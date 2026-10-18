@@ -80,28 +80,7 @@ abstract class ListQueryBase
     }
 
     /**
-     * Number of records in each list state, shown as the badge of the state tabs. A caller that
-     * already paginated an unfiltered list passes the total it has, so the same count is not run
-     * twice for the same request. Each state is counted on its own table, so the "active" column
-     * needs no qualifier.
-     *
-     * @return array{active: int, archived: int, trashed: int}
-     */
-    protected function countStates(
-        string $modelClass,
-        ?int $activeTotal = null,
-        ?int $archivedTotal = null,
-        ?int $trashedTotal = null,
-    ): array {
-        return [
-            'active' => $activeTotal ?? $modelClass::query()->where('active', true)->count(),
-            'archived' => $archivedTotal ?? $modelClass::query()->where('active', false)->count(),
-            'trashed' => $trashedTotal ?? $modelClass::query()->withTrashed()->whereNotNull('deleted_at')->count(),
-        ];
-    }
-
-    /**
-     * Public accessor for state counts using the concrete model class.
+     * Number of records in each list state, shown as the badge of the state tabs.
      *
      * @return array{active: int, archived: int, trashed: int}
      */
@@ -110,7 +89,13 @@ abstract class ListQueryBase
         ?int $archivedTotal = null,
         ?int $trashedTotal = null,
     ): array {
-        return $this->countStates($this->getModelClass(), $activeTotal, $archivedTotal, $trashedTotal);
+        $modelClass = $this->getModelClass();
+
+        return [
+            'active' => $activeTotal ?? $modelClass::query()->where('active', true)->count(),
+            'archived' => $archivedTotal ?? $modelClass::query()->where('active', false)->count(),
+            'trashed' => $trashedTotal ?? $modelClass::query()->withTrashed()->whereNotNull('deleted_at')->count(),
+        ];
     }
 
     /**
