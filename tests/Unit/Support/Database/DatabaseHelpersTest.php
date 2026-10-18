@@ -92,19 +92,19 @@ class DatabaseHelpersTest extends TestCase
             }
         });
 
-        Schema::create('CUM_test_unique_index', function (Blueprint $table) {
+        Schema::create('BAS_test_unique_index', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             // addCommonColumns adds deleted_at which is required for the partial index
             addCommonColumns($table);
         });
 
-        addUniqueActiveNameIndex('CUM_test_unique_index');
+        addUniqueActiveNameIndex('BAS_test_unique_index');
 
-        $indexes = DB::select("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='CUM_test_unique_index'");
+        $indexes = DB::select("SELECT name FROM sqlite_master WHERE type='index' AND tbl_name='BAS_test_unique_index'");
         $this->assertNotEmpty($indexes);
         $this->assertSame(
-            'CREATE UNIQUE INDEX "CUM_test_unique_index_active_name_unique" ON "CUM_test_unique_index" ("name") WHERE "deleted_at" IS NULL',
+            'CREATE UNIQUE INDEX "BAS_test_unique_index_active_name_unique" ON "BAS_test_unique_index" ("name") WHERE "deleted_at" IS NULL',
             $statement,
         );
     }
@@ -170,7 +170,7 @@ class DatabaseHelpersTest extends TestCase
         DB::swap($manager);
 
         try {
-            addUniqueActiveColumnIndex('CUM_generated_index', 'name', ['tenant_id']);
+            addUniqueActiveColumnIndex('ENT_generated_index', 'name', ['tenant_id']);
         } finally {
             Schema::swap($originalSchema);
             DB::swap($originalManager);
@@ -182,7 +182,7 @@ class DatabaseHelpersTest extends TestCase
         $blueprint = new Blueprint($connection, $table, $callback);
 
         $generated = collect($blueprint->getColumns())
-            ->first(static fn ($column): bool => $column->get('name') === 'active_name');
+            ->first(static fn($column): bool => $column->get('name') === 'active_name');
 
         $this->assertNotNull($generated);
         $this->assertTrue($generated->get('nullable'));
@@ -192,6 +192,6 @@ class DatabaseHelpersTest extends TestCase
 
         $this->assertNotNull($unique);
         $this->assertSame(['tenant_id', 'active_name'], $unique['columns']);
-        $this->assertSame('CUM_generated_index_tenant_id_active_name_unique', $unique['index']);
+        $this->assertSame('ENT_generated_index_tenant_id_active_name_unique', $unique['index']);
     }
 }
