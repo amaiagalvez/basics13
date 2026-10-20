@@ -33,13 +33,14 @@ class UserCrudTest extends UserTestCase
     public function test_the_list_shows_every_active_account(): void
     {
         $this->actingAs(User::factory()->create(['name' => 'Actor account']));
-        User::factory()->create(['name' => 'Listed account']);
+        $listedAccount = User::factory()->create(['name' => 'Listed account']);
         User::factory()->archived()->create(['name' => 'Archived account']);
 
         $this->get(route('users.index'))
             ->assertOk()
             ->assertSee('Actor account')
             ->assertSee('Listed account')
+            ->assertSee('data-test="user-name-'.$listedAccount->id.'"', false)
             ->assertDontSee('Archived account');
     }
 

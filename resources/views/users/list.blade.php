@@ -85,7 +85,10 @@
                             <flux:table.row :key="$row['id']"
                                 class="transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50">
                                 <flux:table.cell class="max-w-[16rem]">
-                                    {{ $row['name'] }}
+                                    <span class="block max-w-full truncate" title="{{ $row['name'] }}"
+                                        data-test="user-name-{{ $row['id'] }}">
+                                        {{ $row['name'] }}
+                                    </span>
                                 </flux:table.cell>
                                 <flux:table.cell class="max-w-[16rem]">
                                     <span class="block max-w-full truncate text-zinc-600 dark:text-zinc-300"
