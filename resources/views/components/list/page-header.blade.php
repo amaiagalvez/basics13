@@ -5,7 +5,68 @@
     The breadcrumbs already name the page, so the H1 is only there for the document outline and for
     screen readers: it is announced once, not repeated on screen.
 --}}
-@props(['list', 'prefix'])
+@props(['list', 'prefix', 'scope' => 'active', 'searchableFields' => [], 'filters' => []])
+
+@php
+    // Determine if advanced search button should be shown
+    $showAdvancedSearch = false;
+    if (!empty($searchableFields)) {
+        foreach ($searchableFields as $field) {
+            $visible = $field['visible'] ?? true;
+            if (isset($field['condition']) && is_callable($field['condition'])) {
+                $visible = $visible && $field['condition']($scope);
+            }
+            if ($visible) {
+                $showAdvancedSearch = true;
+                break;
+            }
+        }
+    }
+
+    // Build active filter badges
+    $activeFilters = [];
+    foreach ($filters as $fieldKey => $filter) {
+        $field = $searchableFields[$fieldKey] ?? null;
+        if (!$field) continue;
+
+        $operator = $filter['operator'] ?? '';
+        $value = $filter['value'] ?? null;
+
+        if ($value === '' || $value === [] || $value === null) {
+            if ($operator !== 'is_empty' && ($field['type'] ?? '') !== 'boolean') {
+                continue;
+            }
+        }
+
+        $operatorLabel = __('basics13::messages.operator_'.$operator) ?? ucfirst(str_replace('_', ' ', $operator));
+        $fieldLabel = __($field['label']) ?? $field['label'] ?? $fieldKey;
+
+        $valueLabel = '';
+        if (is_array($value)) {
+            $valueLabel = implode(', ', array_map(function ($v) use ($field) {
+                if (($field['type'] ?? '') === 'select' && isset($field['options']) && is_callable($field['options'])) {
+                    $options = $field['options']($scope);
+                    return $options[$v] ?? $v;
+                }
+                return $v;
+            }, $value));
+        } elseif ($value !== null && $value !== '') {
+            $valueLabel = (string) $value;
+        } elseif ($operator === 'is_empty') {
+            $valueLabel = __('basics13::messages.is_empty');
+        }
+
+        $activeFilters[] = [
+            'key' => $fieldKey,
+            'label' => $fieldLabel,
+            'operator' => $operatorLabel,
+            'value' => $valueLabel,
+        ];
+    }
+
+    // Prepare base64 encoded JSON for Alpine.js
+    $filtersB64 = base64_encode(json_encode($activeFilters, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
+@endphp
 
 <div {{ $attributes->class('flex flex-col gap-4') }}>
     <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
@@ -38,9 +99,29 @@
         </flux:heading>
     </div>
 
+    {{-- Active filter badges --}}
+    @if (!empty($activeFilters))
+        <x-basics13::list.filter-badges :filters="$activeFilters" :prefix="$prefix" />
+    @endif
+
     <x-basics13::list.tabs :tabs="$list['tabs']" :prefix="$prefix">
-        @isset($actions)
-            <x-slot:actions>{{ $actions }}</x-slot:actions>
-        @endisset
+        @if (isset($actions) || $showAdvancedSearch)
+            <x-slot:actions>
+                <div class="flex items-center gap-2">
+                    @isset($actions)
+                        {{ $actions }}
+                    @endisset
+
+                    @if ($showAdvancedSearch)
+                        <flux:modal.trigger name="advanced-search">
+                            <flux:button variant="outline" size="sm" icon="funnel"
+                                :data-test="$prefix.'-advanced-search'">
+                                {{ __('basics13::messages.advanced_search') }}
+                            </flux:button>
+                        </flux:modal.trigger>
+                    @endif
+                </div>
+            </x-slot:actions>
+        @endif
     </x-basics13::list.tabs>
 </div>

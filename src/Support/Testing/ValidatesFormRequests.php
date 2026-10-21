@@ -18,6 +18,8 @@ use Illuminate\Validation\Validator as LaravelValidator;
  * This trait lives in src/ rather than in a package's tests/ because Composer does not autoload a
  * dependency's `autoload-dev` namespaces: `Basics13\Tests\` resolves only inside basics13 itself, so
  * a trait placed there would be "class not found" for the packages that build on basics13.
+ *
+ * @phpstan-ignore trait.unused
  */
 trait ValidatesFormRequests
 {

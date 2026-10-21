@@ -2,10 +2,12 @@
 
 namespace Basics13\Tests\Feature;
 
+use Livewire\Livewire;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\Facades\Blade;
+use Basics13\Livewire\AdvancedSearchModal;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 final class PackageViewsTest extends FeatureTestCase
@@ -28,6 +30,65 @@ final class PackageViewsTest extends FeatureTestCase
 
         $this->assertStringContainsString('Test Label', $html);
         $this->assertStringContainsString('testClick()', $html);
+    }
+
+    public function test_list_header_renders_create_and_advanced_search_actions_together(): void
+    {
+        $html = Blade::render(
+            <<<'BLADE'
+            <x-basics13::list.page-header
+                :list="$list"
+                prefix="entity"
+                :searchableFields="$searchableFields"
+            >
+                <x-slot:actions>
+                    <button type="button">Create resource</button>
+                </x-slot:actions>
+            </x-basics13::list.page-header>
+            BLADE,
+            [
+                'list' => [
+                    'breadcrumbs' => [
+                        ['label' => 'Entities', 'url' => '/entities'],
+                    ],
+                    'tabs' => [
+                        [
+                            'current' => true,
+                            'url' => '/entities',
+                            'test' => 'entity-active',
+                            'label' => 'Active',
+                            'count' => 1,
+                        ],
+                    ],
+                ],
+                'searchableFields' => [
+                    'name' => [
+                        'label' => 'Name',
+                        'type' => 'text',
+                        'visible' => true,
+                    ],
+                ],
+            ],
+        );
+
+        $this->assertStringContainsString('Create resource', $html);
+        $this->assertStringContainsString('data-test="entity-advanced-search"', $html);
+    }
+
+    public function test_advanced_search_resolves_scope_dependent_field_callbacks_before_livewire_persistence(): void
+    {
+        Livewire::test(AdvancedSearchModal::class, [
+            'fields' => [
+                'entity_type_ids' => [
+                    'label' => 'Entity types',
+                    'type' => 'select',
+                    'visible' => true,
+                    'condition' => fn (string $scope): bool => $scope === 'archived',
+                    'options' => fn (string $scope): array => [$scope => ucfirst($scope).' entity type'],
+                ],
+            ],
+            'scope' => 'archived',
+        ])->assertSee('Archived entity type');
     }
 
     public function test_host_view_overrides_take_precedence_over_package_views(): void

@@ -12,6 +12,9 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * Lists user accounts in each of their states, over the model the host configures.
  *
  * @extends ListQueryBase<Model>
+ *
+ * @phpstan-import-type SearchFields from ListQueryBase
+ * @phpstan-import-type SearchFilters from ListQueryBase
  */
 final class UserListQuery extends ListQueryBase
 {
@@ -27,35 +30,42 @@ final class UserListQuery extends ListQueryBase
     private const SCOPE_TRASHED = 'trashed';
 
     /**
+     * @param  SearchFilters  $filters
      * @return LengthAwarePaginator<int, Model>
      */
-    public function active(string $search): LengthAwarePaginator
+    public function active(string $search, array $filters = []): LengthAwarePaginator
     {
         return $this->paginate(
             $this->ordered()->where('active', true),
             $search,
             /** @phpstan-ignore argument.type */
             $this->searchColumns(self::SCOPE_ACTIVE, ['name', 'email']),
+            filters: $filters,
+            scope: self::SCOPE_ACTIVE,
         );
     }
 
     /**
+     * @param  SearchFilters  $filters
      * @return LengthAwarePaginator<int, Model>
      */
-    public function archived(string $search): LengthAwarePaginator
+    public function archived(string $search, array $filters = []): LengthAwarePaginator
     {
         return $this->paginate(
             $this->ordered()->where('active', false),
             $search,
             /** @phpstan-ignore argument.type */
             $this->searchColumns(self::SCOPE_ARCHIVED, ['name', 'email', 'updated_at']),
+            filters: $filters,
+            scope: self::SCOPE_ARCHIVED,
         );
     }
 
     /**
+     * @param  SearchFilters  $filters
      * @return LengthAwarePaginator<int, Model>
      */
-    public function trashed(string $search): LengthAwarePaginator
+    public function trashed(string $search, array $filters = []): LengthAwarePaginator
     {
         $modelClass = $this->userModelClass();
 
@@ -67,7 +77,53 @@ final class UserListQuery extends ListQueryBase
             $search,
             /** @phpstan-ignore argument.type */
             $this->searchColumns(self::SCOPE_TRASHED, ['name', 'email', 'deleted_at']),
+            filters: $filters,
+            scope: self::SCOPE_TRASHED,
         );
+    }
+
+    /**
+     * Get the searchable field definitions for the current scope.
+     *
+     * @param  string  $scope  One of 'active', 'archived', 'trashed'
+     * @return SearchFields
+     */
+    public function searchableFields(string $scope): array
+    {
+        return [
+            'name' => [
+                'column' => 'name',
+                'label' => 'basics13::messages.name',
+                'type' => 'text',
+                'visible' => true,
+                'order' => 10,
+                'group' => 'basic',
+            ],
+            'email' => [
+                'column' => 'email',
+                'label' => 'basics13::messages.email',
+                'type' => 'text',
+                'visible' => true,
+                'order' => 20,
+                'group' => 'basic',
+            ],
+            'active' => [
+                'column' => 'active',
+                'label' => 'basics13::messages.active',
+                'type' => 'boolean',
+                'visible' => true,
+                'order' => 10,
+                'group' => 'status',
+            ],
+            'created_at' => [
+                'column' => 'created_at',
+                'label' => 'basics13::messages.created_at',
+                'type' => 'date',
+                'visible' => true,
+                'order' => 20,
+                'group' => 'dates',
+            ],
+        ];
     }
 
     /**

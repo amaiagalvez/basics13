@@ -7,6 +7,7 @@ use Basics13\Policies\UserPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Database\Eloquent\Model;
+use Basics13\Livewire\AdvancedSearchModal;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
 class ServiceProvider extends BaseServiceProvider
@@ -36,6 +37,9 @@ class ServiceProvider extends BaseServiceProvider
                 'basics13',
                 is_dir($publishedViewsPath) ? $publishedViewsPath : $viewsPath,
             );
+
+            // Register Livewire components
+            Livewire::component('basics13.advanced-search-modal', AdvancedSearchModal::class);
         });
 
         $this->publishes([

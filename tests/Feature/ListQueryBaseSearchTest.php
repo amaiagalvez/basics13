@@ -124,9 +124,11 @@ class ListQueryBaseSearchTest extends TestCase
         AuditedRecord::factory()->create(['name' => 'Archived 2', 'active' => false]);
 
         // Create and delete trashed records
-        $trashed = AuditedRecord::factory()->count(4)->create(['active' => true]);
-        foreach ($trashed as $index => $record) {
-            $record->update(['name' => "Trashed Record {$index}"]);
+        for ($index = 0; $index < 4; $index++) {
+            $record = AuditedRecord::factory()->create([
+                'name' => "Trashed Record {$index}",
+                'active' => true,
+            ]);
             $record->delete();
         }
 
@@ -183,6 +185,22 @@ class SearchListQuery extends ListQueryBase
             }
         };
     }
+
+    public function searchableFields(string $scope): array
+    {
+        return [
+            'name' => [
+                'column' => 'name',
+                'label' => 'test.name',
+                'type' => 'text',
+                'operators' => ['contains', 'equals'],
+                'default_operator' => 'contains',
+                'visible' => true,
+                'order' => 10,
+                'group' => 'basic',
+            ],
+        ];
+    }
 }
 
 /** @extends ListQueryBase<AuditedRecord> */
@@ -209,5 +227,21 @@ class FindTrashedListQuery extends ListQueryBase
                 return $columns;
             }
         };
+    }
+
+    public function searchableFields(string $scope): array
+    {
+        return [
+            'name' => [
+                'column' => 'name',
+                'label' => 'test.name',
+                'type' => 'text',
+                'operators' => ['contains', 'equals'],
+                'default_operator' => 'contains',
+                'visible' => true,
+                'order' => 10,
+                'group' => 'basic',
+            ],
+        ];
     }
 }

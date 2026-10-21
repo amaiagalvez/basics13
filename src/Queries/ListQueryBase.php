@@ -9,6 +9,25 @@ use Illuminate\Pagination\LengthAwarePaginator;
 /**
  * @template TModel of Model
  *
+ * @phpstan-type SearchField array{
+ *     column: string,
+ *     label: string,
+ *     type: string,
+ *     operators?: list<string>,
+ *     default_operator?: string,
+ *     visible?: bool,
+ *     order?: int,
+ *     group?: string,
+ *     nullable?: bool,
+ *     placeholder?: string,
+ *     help?: string,
+ *     condition?: callable(string): bool,
+ *     options?: array<int, string>|callable(string): array<int, string>,
+ *     multiple?: bool
+ * }
+ * @phpstan-type SearchFields array<string, SearchField>
+ * @phpstan-type SearchFilters array<string, array{operator: string, value: mixed}>
+ *
  * @method array<literal-string> searchColumns(string $scope, array<literal-string> $columns)
  */
 abstract class ListQueryBase
@@ -30,19 +49,31 @@ abstract class ListQueryBase
     /**
      * @param  Builder<TModel>  $query
      * @param  non-empty-list<literal-string>  $searchColumns
+     * @param  SearchFilters  $filters
      * @return LengthAwarePaginator<int, TModel>
      */
     protected function paginate(
         Builder $query,
         string $search,
         array $searchColumns,
+        array $filters = [],
+        string $scope = 'active',
     ): LengthAwarePaginator {
         $this->whereMatches($query, $search, $searchColumns);
+
+        if ($filters !== []) {
+            $searchableFields = $this->searchableFields($scope);
+            $this->applyFilters($query, $filters, $searchableFields, $scope);
+        }
 
         $items = $query->paginate(static::PER_PAGE);
 
         if ($search !== '') {
             $items->appends(['search' => $search]);
+        }
+
+        if ($filters !== []) {
+            $items->appends(['filters' => $filters]);
         }
 
         return $items;
@@ -77,6 +108,225 @@ abstract class ListQueryBase
                 $query->orWhereRaw($column.$clause, [$pattern]);
             }
         });
+    }
+
+    /**
+     * Apply advanced filters to the query based on field configuration.
+     *
+     * @param  Builder<TModel>  $query
+     * @param  SearchFilters  $filters
+     * @param  SearchFields  $fields
+     */
+    protected function applyFilters(Builder $query, array $filters, array $fields, string $scope): void
+    {
+        foreach ($filters as $fieldKey => $filter) {
+            $field = $fields[$fieldKey] ?? null;
+            if (! $field) {
+                continue;
+            }
+
+            $operator = $filter['operator'];
+            $value = $filter['value'];
+
+            if ($value === '' || $value === [] || $value === null) {
+                // Allow is_empty operator and boolean fields to pass through with null/empty
+                if ($operator !== 'is_empty' && $field['type'] !== 'boolean') {
+                    continue;
+                }
+            }
+
+            $column = $field['column'];
+            $type = $field['type'];
+            $isMultiSelect = ($field['multiple'] ?? true) && $type === 'select';
+            $nullable = $field['nullable'] ?? false;
+
+            $this->applyFilterOperator($query, $column, $operator, $value, $type, $isMultiSelect, $nullable);
+        }
+    }
+
+    /**
+     * Apply a single filter operator to the query.
+     *
+     * @param  Builder<TModel>  $query
+     */
+    protected function applyFilterOperator(
+        Builder $query,
+        string $column,
+        string $operator,
+        mixed $value,
+        string $type,
+        bool $isMultiSelect,
+        bool $nullable
+    ): void {
+        switch ($type) {
+            case 'text':
+                $this->applyTextFilter($query, $column, $operator, $value);
+                break;
+            case 'date':
+                $this->applyDateFilter($query, $column, $operator, $value);
+                break;
+            case 'boolean':
+                $this->applyBooleanFilter($query, $column, $operator, $value);
+                break;
+            case 'number':
+                $this->applyNumberFilter($query, $column, $operator, $value);
+                break;
+            case 'select':
+                $this->applySelectFilter($query, $column, $operator, $value, $isMultiSelect, $nullable);
+                break;
+        }
+    }
+
+    /**
+     * Apply text filter operators.
+     *
+     * @param  Builder<TModel>  $query
+     */
+    protected function applyTextFilter(Builder $query, string $column, string $operator, mixed $value): void
+    {
+        if ($value === null || $value === '') {
+            return;
+        }
+
+        $escapedValue = $this->escapeLikeValue((string) $value);
+
+        match ($operator) {
+            'contains' => $query->where($column, 'LIKE', "%{$escapedValue}%"),
+            'equals' => $query->where($column, '=', $value),
+            'not_equals' => $query->where($column, '!=', $value),
+            'starts_with' => $query->where($column, 'LIKE', "{$escapedValue}%"),
+            'ends_with' => $query->where($column, 'LIKE', "%{$escapedValue}"),
+            default => null,
+        };
+    }
+
+    /**
+     * Apply date filter operators.
+     *
+     * @param  Builder<TModel>  $query
+     */
+    protected function applyDateFilter(Builder $query, string $column, string $operator, mixed $value): void
+    {
+        match ($operator) {
+            'equals' => $value !== null && $value !== '' ? $query->whereDate($column, '=', $value) : null,
+            'before' => $value !== null && $value !== '' ? $query->whereDate($column, '<', $value) : null,
+            'after' => $value !== null && $value !== '' ? $query->whereDate($column, '>', $value) : null,
+            'between' => is_array($value) && count($value) === 2 && $value[0] !== '' && $value[1] !== ''
+                ? $query->whereDate($column, '>=', $value[0])->whereDate($column, '<=', $value[1]) : null,
+            'is_empty' => $query->whereNull($column),
+            default => null,
+        };
+    }
+
+    /**
+     * Apply boolean filter operators.
+     *
+     * @param  Builder<TModel>  $query
+     */
+    protected function applyBooleanFilter(Builder $query, string $column, string $operator, mixed $value): void
+    {
+        $boolValue = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+
+        match ($operator) {
+            'is_true' => $query->where($column, '=', true),
+            'is_false' => $query->where($column, '=', false),
+            default => $query->where($column, '=', $boolValue),
+        };
+    }
+
+    /**
+     * Apply number filter operators.
+     *
+     * @param  Builder<TModel>  $query
+     */
+    protected function applyNumberFilter(Builder $query, string $column, string $operator, mixed $value): void
+    {
+        if ($operator === 'between') {
+            if (
+                ! is_array($value)
+                || ! array_is_list($value)
+                || count($value) !== 2
+                || ! is_numeric($value[0])
+                || ! is_numeric($value[1])
+            ) {
+                return;
+            }
+
+            $query->where($column, '>=', $value[0])->where($column, '<=', $value[1]);
+
+            return;
+        }
+
+        if ($value === null || $value === '') {
+            return;
+        }
+
+        $numValue = is_numeric($value) ? $value : null;
+        if ($numValue === null) {
+            return;
+        }
+
+        match ($operator) {
+            'equals' => $query->where($column, '=', $numValue),
+            'not_equals' => $query->where($column, '!=', $numValue),
+            'greater_than' => $query->where($column, '>', $numValue),
+            'greater_than_or_equal' => $query->where($column, '>=', $numValue),
+            'less_than' => $query->where($column, '<', $numValue),
+            'less_than_or_equal' => $query->where($column, '<=', $numValue),
+            default => null,
+        };
+    }
+
+    /**
+     * Apply select filter operators.
+     *
+     * @param  Builder<TModel>  $query
+     */
+    protected function applySelectFilter(Builder $query, string $column, string $operator, mixed $value, bool $isMultiSelect, bool $nullable): void
+    {
+        if ($operator === 'is_empty' && $nullable) {
+            $query->whereNull($column);
+
+            return;
+        }
+
+        if ($value === null || $value === '' || (is_array($value) && $value === [])) {
+            return;
+        }
+
+        $values = is_array($value) ? $value : [$value];
+        $values = array_filter($values, fn ($v) => $v !== null && $v !== '');
+
+        if ($values === []) {
+            return;
+        }
+
+        if ($isMultiSelect) {
+            match ($operator) {
+                'equals', 'in' => $query->whereIn($column, $values),
+                'not_equals', 'not_in' => $query->whereNotIn($column, $values),
+                default => $query->whereIn($column, $values),
+            };
+        } else {
+            $singleValue = array_values($values)[0];
+            match ($operator) {
+                'equals' => $query->where($column, '=', $singleValue),
+                'not_equals' => $query->where($column, '!=', $singleValue),
+                default => $query->where($column, '=', $singleValue),
+            };
+        }
+    }
+
+    /**
+     * Escape LIKE wildcards and the escape character itself in a value.
+     */
+    protected function escapeLikeValue(string $value): string
+    {
+        return strtr($value, [
+            '%' => self::LIKE_ESCAPE.'%',
+            '_' => self::LIKE_ESCAPE.'_',
+            self::LIKE_ESCAPE => self::LIKE_ESCAPE.self::LIKE_ESCAPE,
+        ]);
     }
 
     /**
@@ -150,6 +400,56 @@ abstract class ListQueryBase
 
         return $columns;
     }
+
+    /**
+     * Get the default operators for a given field type.
+     *
+     * @param  string  $type  One of 'text', 'date', 'boolean', 'number', 'select'
+     * @param  bool  $nullable  Whether the field is nullable (affects date/select)
+     * @return array<int, string>
+     */
+    protected function getDefaultOperatorsForType(string $type, bool $nullable = false): array
+    {
+        return match ($type) {
+            'text' => ['contains', 'equals', 'not_equals', 'starts_with', 'ends_with'],
+            'date' => $nullable
+                ? ['equals', 'before', 'after', 'between', 'is_empty']
+                : ['equals', 'before', 'after', 'between'],
+            'boolean' => ['is_true', 'is_false'],
+            'number' => ['equals', 'not_equals', 'greater_than', 'greater_than_or_equal', 'less_than', 'less_than_or_equal', 'between'],
+            'select' => $nullable
+                ? ['equals', 'not_equals', 'is_empty']
+                : ['equals', 'not_equals'],
+            default => ['equals', 'not_equals'],
+        };
+    }
+
+    /**
+     * Get the default operator for a given field type.
+     *
+     * @param  string  $type  One of 'text', 'date', 'boolean', 'number', 'select'
+     */
+    protected function getDefaultOperatorForType(string $type): string
+    {
+        return match ($type) {
+            'text' => 'contains',
+            'date' => 'between',
+            'boolean' => 'is_true',
+            'number' => 'equals',
+            'select' => 'equals',
+            default => 'equals',
+        };
+    }
+
+    /**
+     * Get the searchable field definitions for the current scope.
+     * Each field defines: column, label, type, operators, default_operator, visible, order, group, nullable, placeholder, help, condition, options, multiple.
+     * The operators and default_operator will use type-aware defaults if not explicitly provided.
+     *
+     * @param  string  $scope  One of 'active', 'archived', 'trashed'
+     * @return SearchFields
+     */
+    abstract public function searchableFields(string $scope): array;
 
     /**
      * The fully qualified model class name for this query.

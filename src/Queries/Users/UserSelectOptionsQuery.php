@@ -67,4 +67,30 @@ final class UserSelectOptionsQuery extends ListQueryBase
             }
         };
     }
+
+    public function searchableFields(string $scope): array
+    {
+        return [
+            'name' => [
+                'column' => 'name',
+                'label' => 'basics13::messages.name',
+                'type' => 'text',
+                'operators' => ['contains', 'equals', 'starts_with', 'ends_with'],
+                'default_operator' => 'contains',
+                'visible' => true,
+                'order' => 10,
+                'group' => 'basic',
+            ],
+            'email' => [
+                'column' => 'email',
+                'label' => 'basics13::messages.email',
+                'type' => 'text',
+                'operators' => ['contains', 'equals', 'starts_with', 'ends_with'],
+                'default_operator' => 'contains',
+                'visible' => true,
+                'order' => 20,
+                'group' => 'basic',
+            ],
+        ];
+    }
 }
