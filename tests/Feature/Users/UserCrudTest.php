@@ -44,6 +44,29 @@ class UserCrudTest extends UserTestCase
             ->assertDontSee('Archived account');
     }
 
+    public function test_the_lists_offer_advanced_filters(): void
+    {
+        $this->actingAs(User::factory()->create(['name' => 'Actor account', 'email' => 'actor@example.test']));
+        User::factory()->create(['name' => 'Ane account', 'email' => 'ane@client.test']);
+        User::factory()->archived()->create(['name' => 'Archived ane', 'email' => 'archived@client.test']);
+        User::factory()->archived()->create(['name' => 'Archived other', 'email' => 'other@example.test']);
+        $emailFilter = ['filters' => ['email' => ['operator' => 'ends_with', 'value' => 'client.test']]];
+
+        $this->get(route('users.index', $emailFilter))
+            ->assertOk()
+            ->assertSee('data-test="user-advanced-search"', false)
+            ->assertSeeText(__('basics13::messages.created_at'))
+            ->assertSeeText(__('Status'))
+            ->assertSee('data-test="user-filter-remove-email"', false)
+            ->assertSee('Ane account')
+            ->assertDontSee('Actor account');
+
+        $this->get(route('users.archived.index', $emailFilter))
+            ->assertOk()
+            ->assertSee('Archived ane')
+            ->assertDontSee('Archived other');
+    }
+
     public function test_an_account_can_be_created_updated_and_trashed(): void
     {
         $this->actingAs(User::factory()->create());

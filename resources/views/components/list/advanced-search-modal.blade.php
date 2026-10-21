@@ -5,7 +5,7 @@
 <flux:modal wire:model="show" name="advanced-search" aria-labelledby="advanced-search-heading" variant="flyout"
     :closable="false"
     position="right" class="form-drawer max-w-none"
-    x-on:close="window.clearForm($el.querySelector('form')); window.resetTrackedForms($el)"
+    x-on:close="window.resetTrackedForms($el)"
     x-on:cancel.prevent="window.requestTrackedModalClose($el)">
     <form wire:submit="applyFilters" class="flex flex-col h-full">
         <div class="flex items-center justify-between border-b border-zinc-200 dark:border-zinc-700 px-4 py-3">
@@ -52,11 +52,23 @@
                 <div class="space-y-2" x-show="{{ $showField ? 'true' : 'false' }}">
                     {{-- Operator select --}}
                     <flux:field>
-                        <flux:label>{{ __($field['label']) }}</flux:label>
-                        <div class="flex gap-2">
-                            <flux:select wire:model="filters.{{ $fieldKey }}.operator" class="w-36 shrink-0"
+                        <div class="flex items-center gap-1">
+                            <flux:label>{{ __($field['label']) }}</flux:label>
+                            @isset($field['help'])
+                                <flux:tooltip toggleable :content="__($field['help'])">
+                                    <flux:button type="button" icon="information-circle" size="xs" variant="ghost"
+                                        :aria-label="__($field['help'])" :data-test="$fieldKey.'-advanced-search-info'" />
+                                </flux:tooltip>
+                            @endisset
+                        </div>
+                        <div @class(['flex gap-2', 'items-start' => $isMultiSelect])>
+                            {{-- Live: a date operator switches between one input and a from/to pair. --}}
+                            <flux:select wire:model.live="filters.{{ $fieldKey }}.operator" class="w-36 shrink-0"
                                 :data-test="$fieldKey.'-advanced-search-operator'"
                                 :aria-label="__('basics13::messages.filter_operator')">
+                                @if ($fieldType === 'boolean')
+                                    <option value="">{{ __('basics13::messages.any_value') }}</option>
+                                @endif
                                 @foreach ($operators as $opKey => $opLabel)
                                     <option value="{{ $opKey }}">{{ $opLabel }}</option>
                                 @endforeach
@@ -90,21 +102,22 @@
                                             class="flex-1 min-w-0" />
                                     @endif
                                     @break
-                                @case('boolean')
-                                    <flux:select wire:model="filters.{{ $fieldKey }}.value"
-                                        class="flex-1 min-w-0" :aria-label="__('basics13::messages.boolean_value')">
-                                        <option value="1">{{ __('basics13::messages.true') }}</option>
-                                        <option value="0">{{ __('basics13::messages.false') }}</option>
-                                    </flux:select>
-                                    @break
                                 @case('select')
                                     @if ($isMultiSelect)
-                                        <flux:select wire:model="filters.{{ $fieldKey }}.value[]" multiple
-                                            class="flex-1 min-w-0" :aria-label="__('basics13::messages.select_multiple')">
+                                        {{-- Same checkbox list as the resource forms: every option visible, no Ctrl/Cmd. --}}
+                                        <div role="group" aria-label="{{ __($field['label']) }}"
+                                            data-test="{{ $fieldKey }}-advanced-search-options"
+                                            class="max-h-64 min-w-0 flex-1 divide-y divide-zinc-100 overflow-y-auto rounded-lg border border-zinc-200 border-b-zinc-300/80 bg-white shadow-xs dark:divide-white/5 dark:border-white/10 dark:bg-white/10">
                                             @foreach ($selectOptions as $optValue => $optLabel)
-                                                <option value="{{ $optValue }}">{{ $optLabel }}</option>
+                                                <label wire:key="{{ $fieldKey }}-option-{{ $optValue }}"
+                                                    class="flex cursor-pointer items-center gap-3 px-3 py-2.5 text-sm text-zinc-700 transition-colors hover:bg-zinc-50 has-[:checked]:bg-brand-50 dark:text-zinc-300 dark:hover:bg-white/5 dark:has-[:checked]:bg-brand-500/10">
+                                                    <input type="checkbox" value="{{ $optValue }}"
+                                                        wire:model="filters.{{ $fieldKey }}.value"
+                                                        class="size-4 shrink-0 rounded accent-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus dark:accent-brand-400" />
+                                                    <span class="min-w-0 flex-1 truncate">{{ $optLabel }}</span>
+                                                </label>
                                             @endforeach
-                                        </flux:select>
+                                        </div>
                                     @else
                                         <flux:select wire:model="filters.{{ $fieldKey }}.value"
                                             class="flex-1 min-w-0" :aria-label="__('basics13::messages.select_single')">
@@ -118,10 +131,6 @@
                             @endswitch
                         </div>
 
-                        {{-- Help text --}}
-                        @isset($field['help'])
-                            <span data-flux-description>{{ __($field['help']) }}</span>
-                        @endisset
                     </flux:field>
                 </div>
             @endforeach

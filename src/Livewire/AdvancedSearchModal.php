@@ -3,6 +3,7 @@
 namespace Basics13\Livewire;
 
 use Livewire\Component;
+use Livewire\Attributes\Locked;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Contracts\View\View;
 
@@ -18,12 +19,19 @@ use Illuminate\Contracts\View\View;
  */
 class AdvancedSearchModal extends Component
 {
-    /** @var SearchFields */
+    /**
+     * Resolved once in mount: no callable survives into the snapshot, and the client cannot change
+     * the definitions, so nothing taken from component state is ever invoked.
+     *
+     * @var SearchFields
+     */
+    #[Locked]
     public array $fields = [];
 
     /** @var SearchFilters */
     public array $filters = [];
 
+    #[Locked]
     public string $scope = 'active';
 
     public bool $show = false;
@@ -57,8 +65,13 @@ class AdvancedSearchModal extends Component
         /** @var SearchFields $processedFields */
         $processedFields = [];
         foreach ($fields as $key => $field) {
-            $field = $this->normalizeField($field, $scope);
-            $processedFields[$key] = $field;
+            // A field whose condition fails does not apply to this list at all, not even as an
+            // advanced one.
+            if (isset($field['condition']) && ! $field['condition']($scope)) {
+                continue;
+            }
+
+            $processedFields[$key] = $this->normalizeField($field, $scope);
         }
 
         $this->fields = $processedFields;
@@ -68,19 +81,20 @@ class AdvancedSearchModal extends Component
         $this->fieldTypeLabels = $fieldTypeLabels;
         $this->groupLabels = $groupLabels;
 
-        // Initialize filter fields with default operators
-        foreach ($this->getVisibleFields() as $fieldKey => $field) {
+        // Initialize filter fields with default operators. A multi-select starts as an empty list:
+        // Livewire binds its checkboxes to an array only when the property already holds one.
+        foreach ($this->fields as $fieldKey => $field) {
             if (! isset($this->filters[$fieldKey])) {
                 $this->filters[$fieldKey] = [
                     'operator' => $field['default_operator'] ?? $field['operators'][0] ?? 'contains',
-                    'value' => null,
+                    'value' => $this->fieldIsMultiSelect($field) ? [] : null,
                 ];
             }
         }
     }
 
     /**
-     * Get fields filtered by visibility and condition, grouped and ordered.
+     * Get fields filtered by visibility, grouped and ordered.
      *
      * @return SearchFields
      */
@@ -89,14 +103,7 @@ class AdvancedSearchModal extends Component
         $visible = [];
 
         foreach ($this->fields as $key => $field) {
-            $visibleFlag = $field['visible'] ?? true;
-
-            // Evaluate condition callable if present
-            if (isset($field['condition'])) {
-                $visibleFlag = $visibleFlag && $field['condition']($this->scope);
-            }
-
-            if ($visibleFlag || $this->showAdvanced) {
+            if (($field['visible'] ?? true) || $this->showAdvanced) {
                 $visible[$key] = $field;
             }
         }
@@ -194,11 +201,31 @@ class AdvancedSearchModal extends Component
      */
     public function getSelectOptions(array $field): array
     {
-        if (isset($field['options']) && is_callable($field['options'])) {
-            return $field['options']($this->scope);
+        $options = $field['options'] ?? [];
+
+        if (! is_array($options)) {
+            return [];
         }
 
-        return $field['options'] ?? [];
+        /** @var array<int, string> $options Mount already resolved any callable into its list. */
+        return $options;
+    }
+
+    /**
+     * A date operator decides between one input and a from/to pair, so its value starts over when
+     * the operator changes: a pair left behind would reach a single-date operator and the other way.
+     */
+    public function updatedFilters(mixed $value, ?string $key = null): void
+    {
+        if ($key === null) {
+            return;
+        }
+
+        [$fieldKey, $property] = array_pad(explode('.', $key, 2), 2, null);
+
+        if ($property === 'operator' && ($this->fields[$fieldKey]['type'] ?? null) === 'date') {
+            $this->filters[$fieldKey]['value'] = null;
+        }
     }
 
     /**
@@ -222,6 +249,11 @@ class AdvancedSearchModal extends Component
             $isEmpty = $value === '' || $value === [] || $value === null;
             $isBoolean = $field['type'] === 'boolean';
             $isIsEmptyOperator = $operator === 'is_empty';
+
+            // A boolean without operator is "any": nothing to filter.
+            if ($isBoolean && $operator === '') {
+                continue;
+            }
 
             if ($isEmpty && ! $isBoolean && ! $isIsEmptyOperator) {
                 continue;
@@ -249,7 +281,15 @@ class AdvancedSearchModal extends Component
     {
         foreach ($this->filters as $key => &$filter) {
             $field = $this->fields[$key] ?? null;
-            $filter['value'] = ($field['type'] ?? '') === 'boolean' ? false : null;
+            if (($field['type'] ?? '') === 'boolean') {
+                $filter['operator'] = $field['default_operator'] ?? '';
+            }
+
+            $filter['value'] = match (true) {
+                ($field['type'] ?? '') === 'boolean' => false,
+                $field !== null && $this->fieldIsMultiSelect($field) => [],
+                default => null,
+            };
         }
 
         $this->applyFilters();
@@ -269,7 +309,7 @@ class AdvancedSearchModal extends Component
     }
 
     /**
-     * Normalize a field definition with defaults and condition evaluation.
+     * Normalize a field definition with defaults, resolving its options for the scope.
      *
      * @param  SearchField  $field
      * @return SearchField
@@ -281,11 +321,7 @@ class AdvancedSearchModal extends Component
             $field['nullable'] ?? false,
         );
         $field['default_operator'] ??= ListQueryBase::getDefaultOperatorForType($field['type']);
-
-        if (isset($field['condition'])) {
-            $field['visible'] = ($field['visible'] ?? true) && $field['condition']($scope);
-            unset($field['condition']);
-        }
+        unset($field['condition']);
 
         if (isset($field['options']) && is_callable($field['options'])) {
             $field['options'] = $field['options']($scope);

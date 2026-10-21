@@ -18,6 +18,8 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property int|null $project_id
  * @property string|null $notes
  * @property bool $active
+ * @property int|null $priority
+ * @property CarbonImmutable|null $published_at
  * @property int|null $created_by
  * @property int|null $updated_by
  * @property int|null $deleted_by
@@ -25,7 +27,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
  * @property CarbonImmutable|null $updated_at
  * @property CarbonImmutable|null $deleted_at
  */
-#[Fillable(['name', 'project_id', 'notes'])]
+#[Fillable(['name', 'project_id', 'notes', 'priority', 'published_at'])]
 class AuditedRecord extends Model
 {
     /** @use HasFactory<AuditedRecordFactory> */

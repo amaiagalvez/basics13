@@ -16,6 +16,10 @@ return new class extends Migration
             // on purpose: the package has no domain model, only the column the query looks for.
             $table->unsignedBigInteger('project_id')->nullable();
 
+            // Columns for filter testing
+            $table->integer('priority')->nullable();
+            $table->date('published_at')->nullable();
+
             addCommonColumns($table);
             addAuditColumns($table);
         });

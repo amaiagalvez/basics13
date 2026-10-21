@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\DB;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Database\Eloquent\Builder;
 use Basics13\Tests\Fixtures\AuditedRecord;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -636,7 +637,7 @@ final class ListQueryBaseTest extends TestCase
         $this->callApplyFilters(
             $builder,
             ['project_id' => ['operator' => 'in', 'value' => [1, 3]]],
-            ['project_id' => ['column' => 'project_id', 'label' => 'test.project', 'type' => 'select', 'multiple' => true]],
+            ['project_id' => ['column' => 'project_id', 'label' => 'test.project', 'type' => 'select', 'operators' => ['in'], 'multiple' => true]],
         );
 
         $this->assertSame(3, $builder->count());
@@ -660,7 +661,7 @@ final class ListQueryBaseTest extends TestCase
         $this->callApplyFilters(
             $builder,
             ['project_id' => ['operator' => 'not_in', 'value' => [1, 3]]],
-            ['project_id' => ['column' => 'project_id', 'label' => 'test.project', 'type' => 'select', 'multiple' => true]],
+            ['project_id' => ['column' => 'project_id', 'label' => 'test.project', 'type' => 'select', 'operators' => ['not_in'], 'multiple' => true]],
         );
 
         $this->assertSame(1, $builder->count());
@@ -715,6 +716,661 @@ final class ListQueryBaseTest extends TestCase
 
         $this->assertSame(1, $builder->count());
         $this->assertSame('Ana', $builder->first()->name);
+    }
+
+    // =========================================================================
+    // Additional filter operator coverage
+    // =========================================================================
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_apply_filters_number_greater_than(): void
+    {
+        DB::table('audited_records')->insert([
+            ['name' => 'Record 1', 'priority' => 5, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+            ['name' => 'Record 2', 'priority' => 15, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+            ['name' => 'Record 3', 'priority' => 25, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+        ]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['priority' => ['operator' => 'greater_than', 'value' => 10]],
+            ['priority' => ['column' => 'priority', 'label' => 'test.priority', 'type' => 'number']],
+        );
+
+        $this->assertSame(2, $builder->count());
+        $priorities = $builder->pluck('priority')->all();
+        $this->assertTrue(in_array(15, $priorities));
+        $this->assertTrue(in_array(25, $priorities));
+    }
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_apply_filters_number_less_than(): void
+    {
+        DB::table('audited_records')->insert([
+            ['name' => 'Record 1', 'priority' => 5, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+            ['name' => 'Record 2', 'priority' => 15, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+            ['name' => 'Record 3', 'priority' => 25, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+        ]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['priority' => ['operator' => 'less_than', 'value' => 20]],
+            ['priority' => ['column' => 'priority', 'label' => 'test.priority', 'type' => 'number']],
+        );
+
+        $this->assertSame(2, $builder->count());
+        $priorities = $builder->pluck('priority')->all();
+        $this->assertTrue(in_array(5, $priorities));
+        $this->assertTrue(in_array(15, $priorities));
+    }
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_apply_filters_number_greater_than_or_equal(): void
+    {
+        DB::table('audited_records')->insert([
+            ['name' => 'Record 1', 'priority' => 10, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+            ['name' => 'Record 2', 'priority' => 15, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+            ['name' => 'Record 3', 'priority' => 20, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+        ]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['priority' => ['operator' => 'greater_than_or_equal', 'value' => 15]],
+            ['priority' => ['column' => 'priority', 'label' => 'test.priority', 'type' => 'number']],
+        );
+
+        $this->assertSame(2, $builder->count());
+        $priorities = $builder->pluck('priority')->all();
+        $this->assertTrue(in_array(15, $priorities));
+        $this->assertTrue(in_array(20, $priorities));
+    }
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_apply_filters_number_less_than_or_equal(): void
+    {
+        DB::table('audited_records')->insert([
+            ['name' => 'Record 1', 'priority' => 10, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+            ['name' => 'Record 2', 'priority' => 15, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+            ['name' => 'Record 3', 'priority' => 20, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+        ]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['priority' => ['operator' => 'less_than_or_equal', 'value' => 15]],
+            ['priority' => ['column' => 'priority', 'label' => 'test.priority', 'type' => 'number']],
+        );
+
+        $this->assertSame(2, $builder->count());
+        $priorities = $builder->pluck('priority')->all();
+        $this->assertTrue(in_array(10, $priorities));
+        $this->assertTrue(in_array(15, $priorities));
+    }
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_apply_filters_number_not_equals(): void
+    {
+        DB::table('audited_records')->insert([
+            ['name' => 'Record 1', 'priority' => 10, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+            ['name' => 'Record 2', 'priority' => 15, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+            ['name' => 'Record 3', 'priority' => 20, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+        ]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['priority' => ['operator' => 'not_equals', 'value' => 15]],
+            ['priority' => ['column' => 'priority', 'label' => 'test.priority', 'type' => 'number']],
+        );
+
+        $this->assertSame(2, $builder->count());
+        $priorities = $builder->pluck('priority')->all();
+        $this->assertTrue(in_array(10, $priorities));
+        $this->assertTrue(in_array(20, $priorities));
+        $this->assertFalse(in_array(15, $priorities));
+    }
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_apply_filters_date_is_empty(): void
+    {
+        DB::table('audited_records')->insert([
+            ['name' => 'Record 1', 'published_at' => '2024-01-15', 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+            ['name' => 'Record 2', 'published_at' => null, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+            ['name' => 'Record 3', 'published_at' => '2024-03-15', 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+        ]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['published_at' => ['operator' => 'is_empty', 'value' => null]],
+            ['published_at' => ['column' => 'published_at', 'label' => 'test.published_at', 'type' => 'date', 'nullable' => true]],
+        );
+
+        $this->assertSame(1, $builder->count());
+        $this->assertNull($builder->first()->published_at);
+    }
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_apply_filters_boolean_default_operator(): void
+    {
+        AuditedRecord::factory()->create(['name' => 'Record One', 'active' => true]);
+        AuditedRecord::factory()->create(['name' => 'Record Two', 'active' => false]);
+        AuditedRecord::factory()->create(['name' => 'Record Three', 'active' => true]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['active' => ['operator' => 'is_true', 'value' => 'true']],
+            ['active' => ['column' => 'active', 'label' => 'test.active', 'type' => 'boolean']],
+        );
+
+        $this->assertSame(2, $builder->count());
+    }
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_apply_filters_text_equals_exact_match(): void
+    {
+        AuditedRecord::factory()->create(['name' => 'Juan Perez', 'active' => true]);
+        AuditedRecord::factory()->create(['name' => 'Maria Garcia', 'active' => true]);
+        AuditedRecord::factory()->create(['name' => 'Pedro Lopez', 'active' => true]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['name' => ['operator' => 'equals', 'value' => 'Juan Perez']],
+            ['name' => ['column' => 'name', 'label' => 'test.name', 'type' => 'text']],
+        );
+
+        $this->assertSame(1, $builder->count());
+        $this->assertSame('Juan Perez', $builder->first()->name);
+    }
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_apply_filters_select_multiple_equals_single_value_as_array(): void
+    {
+        AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
+        AuditedRecord::factory()->create(['name' => 'Project B', 'project_id' => 2]);
+        AuditedRecord::factory()->create(['name' => 'Project C', 'project_id' => 1]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['project_id' => ['operator' => 'equals', 'value' => [1]]],
+            ['project_id' => ['column' => 'project_id', 'label' => 'test.project', 'type' => 'select', 'multiple' => true]],
+        );
+
+        $this->assertSame(2, $builder->count());
+        $this->assertTrue($builder->pluck('project_id')->every(fn ($v) => $v === 1));
+    }
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_apply_filters_select_multiple_not_equals_single_value_as_array(): void
+    {
+        AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
+        AuditedRecord::factory()->create(['name' => 'Project B', 'project_id' => 2]);
+        AuditedRecord::factory()->create(['name' => 'Project C', 'project_id' => 1]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['project_id' => ['operator' => 'not_equals', 'value' => [1]]],
+            ['project_id' => ['column' => 'project_id', 'label' => 'test.project', 'type' => 'select', 'multiple' => true]],
+        );
+
+        $this->assertSame(1, $builder->count());
+        $this->assertSame(2, $builder->first()->project_id);
+    }
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_apply_filters_select_is_empty_non_nullable_skips(): void
+    {
+        AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
+        AuditedRecord::factory()->create(['name' => 'Project B', 'project_id' => 2]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['project_id' => ['operator' => 'is_empty', 'value' => null]],
+            ['project_id' => ['column' => 'project_id', 'label' => 'test.project', 'type' => 'select', 'nullable' => false]],
+        );
+
+        // Should not filter since field is not nullable
+        $this->assertSame(2, $builder->count());
+    }
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_apply_filters_select_multiple_in_with_empty_array(): void
+    {
+        AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
+        AuditedRecord::factory()->create(['name' => 'Project B', 'project_id' => 2]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['project_id' => ['operator' => 'in', 'value' => []]],
+            ['project_id' => ['column' => 'project_id', 'label' => 'test.project', 'type' => 'select', 'multiple' => true]],
+        );
+
+        // Empty array should result in no filtering (or empty result depending on implementation)
+        $this->assertSame(2, $builder->count());
+    }
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_apply_filters_skips_unknown_field(): void
+    {
+        AuditedRecord::factory()->create(['name' => 'Record 1', 'active' => true]);
+        AuditedRecord::factory()->create(['name' => 'Record 2', 'active' => true]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['unknown_field' => ['operator' => 'equals', 'value' => 'test']],
+            ['name' => ['column' => 'name', 'label' => 'test.name', 'type' => 'text']],
+        );
+
+        // Should not filter since field is unknown
+        $this->assertSame(2, $builder->count());
+    }
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_apply_filters_number_between_invalid_value_skips(): void
+    {
+        DB::table('audited_records')->insert([
+            ['name' => 'Record 1', 'priority' => 10, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+            ['name' => 'Record 2', 'priority' => 20, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+        ]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['priority' => ['operator' => 'between', 'value' => 'not-an-array']],
+            ['priority' => ['column' => 'priority', 'label' => 'test.priority', 'type' => 'number']],
+        );
+
+        // Invalid value should skip filter
+        $this->assertSame(2, $builder->count());
+    }
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_apply_filters_number_between_non_numeric_skips(): void
+    {
+        DB::table('audited_records')->insert([
+            ['name' => 'Record 1', 'priority' => 10, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+            ['name' => 'Record 2', 'priority' => 20, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+        ]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['priority' => ['operator' => 'between', 'value' => ['a', 'b']]],
+            ['priority' => ['column' => 'priority', 'label' => 'test.priority', 'type' => 'number']],
+        );
+
+        // Non-numeric values should skip filter
+        $this->assertSame(2, $builder->count());
+    }
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_apply_filters_text_empty_value_skips(): void
+    {
+        AuditedRecord::factory()->create(['name' => 'Record 1', 'active' => true]);
+        AuditedRecord::factory()->create(['name' => 'Record 2', 'active' => true]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['name' => ['operator' => 'contains', 'value' => '']],
+            ['name' => ['column' => 'name', 'label' => 'test.name', 'type' => 'text']],
+        );
+
+        // Empty value should skip filter
+        $this->assertSame(2, $builder->count());
+    }
+
+    /**
+     * `%`, `_` and the escape character itself match literally, as they do in the simple search.
+     *
+     * @return array<string, array{string, string, list<string>}>
+     */
+    public static function likeWildcardFilters(): array
+    {
+        return [
+            'contains percent' => ['contains', '50%', ['Save 50% now', 'Save 50%']],
+            'contains underscore' => ['contains', 'a_b', ['x a_b y', 'a_b']],
+            'contains escape character' => ['contains', 'Hi!', ['Hi! there']],
+            'starts with underscore' => ['starts_with', 'a_', ['a_b']],
+            'ends with percent' => ['ends_with', '0%', ['Save 50%']],
+        ];
+    }
+
+    /**
+     * @param  list<string>  $expected
+     */
+    #[DataProvider('likeWildcardFilters')]
+    public function test_apply_filters_text_matches_like_wildcards_literally(string $operator, string $value, array $expected): void
+    {
+        foreach (['Save 50% now', 'Save 500 now', 'x a_b y', 'x axb y', 'Hi! there', 'Hi there', 'a_b', 'axb', 'Save 50%', 'Save 500'] as $name) {
+            AuditedRecord::create(['name' => $name, 'notes' => 'test']);
+        }
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['name' => ['operator' => $operator, 'value' => $value]],
+            ['name' => ['column' => 'name', 'label' => 'test.name', 'type' => 'text']],
+        );
+
+        $this->assertEqualsCanonicalizing($expected, $builder->pluck('name')->all());
+    }
+
+    public function test_apply_filters_skips_an_operator_the_field_does_not_declare(): void
+    {
+        AuditedRecord::create(['name' => 'Alpha', 'notes' => 'test']);
+        AuditedRecord::create(['name' => 'Beta', 'notes' => 'test']);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            [
+                'name' => ['operator' => 'starts_with', 'value' => 'Al'],
+                'active' => ['operator' => 'anything', 'value' => '0'],
+            ],
+            [
+                'name' => ['column' => 'name', 'label' => 'test.name', 'type' => 'text', 'operators' => ['contains', 'equals']],
+                'active' => ['column' => 'active', 'label' => 'test.active', 'type' => 'boolean'],
+            ],
+        );
+
+        $this->assertSame(2, $builder->count());
+    }
+
+    public function test_apply_filters_skips_a_value_shaped_for_another_operator(): void
+    {
+        AuditedRecord::create(['name' => 'Alpha', 'notes' => 'test']);
+        AuditedRecord::create(['name' => 'Beta', 'notes' => 'test']);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            [
+                'name' => ['operator' => 'contains', 'value' => ['Al']],
+                'created_at' => ['operator' => 'before', 'value' => ['2000-01-01', '2000-02-01']],
+            ],
+            [
+                'name' => ['column' => 'name', 'label' => 'test.name', 'type' => 'text'],
+                'created_at' => ['column' => 'created_at', 'label' => 'test.created_at', 'type' => 'date'],
+            ],
+        );
+
+        $this->assertSame(2, $builder->count());
+    }
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_apply_filters_number_empty_value_skips(): void
+    {
+        DB::table('audited_records')->insert([
+            ['name' => 'Record 1', 'priority' => 10, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+            ['name' => 'Record 2', 'priority' => 20, 'active' => true, 'updated_at' => now(), 'notes' => 'test'],
+        ]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['priority' => ['operator' => 'equals', 'value' => '']],
+            ['priority' => ['column' => 'priority', 'label' => 'test.priority', 'type' => 'number']],
+        );
+
+        // Empty value should skip filter
+        $this->assertSame(2, $builder->count());
+    }
+
+    // =========================================================================
+    // stateCounts with default null parameters
+    // =========================================================================
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_state_counts_calculates_when_not_provided(): void
+    {
+        AuditedRecord::factory()->create(['name' => 'Active 1', 'active' => true]);
+        AuditedRecord::factory()->create(['name' => 'Active 2', 'active' => true]);
+        $archived = AuditedRecord::factory()->create(['name' => 'Archived 1', 'active' => false]);
+        $archived->delete();
+        AuditedRecord::factory()->create(['name' => 'Archived 2', 'active' => false]);
+        $trashed = AuditedRecord::factory()->create(['name' => 'Trashed 1', 'active' => true]);
+        $trashed->delete();
+
+        $query = new TestListQuery;
+        $result = $this->callStateCounts($query);
+
+        // Active: 2 (Active 1, Active 2)
+        // Archived: 1 (Archived 2 - not deleted, active=false)
+        // Trashed: 2 (Archived 1 - deleted, active=false; Trashed 1 - deleted, active=true)
+        $this->assertSame(2, $result['active']);
+        $this->assertSame(1, $result['archived']);
+        $this->assertSame(2, $result['trashed']);
+    }
+
+    // =========================================================================
+    // findTrashedByName
+    // =========================================================================
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_find_trashed_by_name_returns_most_recently_deleted(): void
+    {
+        $record1 = AuditedRecord::factory()->create(['name' => 'Test Record', 'active' => true]);
+        $record1->delete();
+
+        $record2 = AuditedRecord::factory()->create(['name' => 'Test Record', 'active' => true]);
+        $record2->delete();
+
+        $query = new TestListQuery;
+        $result = $query->findTrashedByName('Test Record');
+
+        $this->assertNotNull($result);
+        $this->assertSame($record2->id, $result->id);
+    }
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_find_trashed_by_name_with_project_id(): void
+    {
+        $record1 = AuditedRecord::factory()->create(['name' => 'Test Record', 'active' => true, 'project_id' => 1]);
+        $record1->delete();
+
+        $record2 = AuditedRecord::factory()->create(['name' => 'Test Record', 'active' => true, 'project_id' => 2]);
+        $record2->delete();
+
+        $query = new TestListQuery;
+        $result = $query->findTrashedByName('Test Record', 1);
+
+        $this->assertNotNull($result);
+        $this->assertSame(1, $result->project_id);
+    }
+
+    /**
+     * @requires extension pdo_sqlite
+     */
+    public function test_find_trashed_by_name_returns_null_when_not_found(): void
+    {
+        AuditedRecord::factory()->create(['name' => 'Other Record', 'active' => true]);
+
+        $query = new TestListQuery;
+        $result = $query->findTrashedByName('Test Record');
+
+        $this->assertNull($result);
+    }
+
+    // =========================================================================
+    // escapeLikeValue
+    // =========================================================================
+
+    public function test_escape_like_value_escapes_percent(): void
+    {
+        $result = $this->callEscapeLikeValue('100%');
+
+        $this->assertSame('100!%', $result);
+    }
+
+    public function test_escape_like_value_escapes_underscore(): void
+    {
+        $result = $this->callEscapeLikeValue('a_b');
+
+        $this->assertSame('a!_b', $result);
+    }
+
+    public function test_escape_like_value_escapes_escape_character(): void
+    {
+        $result = $this->callEscapeLikeValue('!test');
+
+        $this->assertSame('!!test', $result);
+    }
+
+    public function test_escape_like_value_escapes_multiple(): void
+    {
+        $result = $this->callEscapeLikeValue('a%_b!c');
+
+        $this->assertSame('a!%!_b!!c', $result);
+    }
+
+    public function test_escape_like_value_no_special_chars(): void
+    {
+        $result = $this->callEscapeLikeValue('normal');
+
+        $this->assertSame('normal', $result);
+    }
+
+    // =========================================================================
+    // getDefaultOperatorsForType static method
+    // =========================================================================
+
+    public function test_get_default_operators_for_type_text(): void
+    {
+        $operators = ListQueryBase::getDefaultOperatorsForType('text');
+        $this->assertSame(['contains', 'equals', 'not_equals', 'starts_with', 'ends_with'], $operators);
+    }
+
+    public function test_get_default_operators_for_type_date_nullable(): void
+    {
+        $operators = ListQueryBase::getDefaultOperatorsForType('date', true);
+        $this->assertSame(['equals', 'before', 'after', 'between', 'is_empty'], $operators);
+    }
+
+    public function test_get_default_operators_for_type_date_not_nullable(): void
+    {
+        $operators = ListQueryBase::getDefaultOperatorsForType('date', false);
+        $this->assertSame(['equals', 'before', 'after', 'between'], $operators);
+    }
+
+    public function test_get_default_operators_for_type_boolean(): void
+    {
+        $operators = ListQueryBase::getDefaultOperatorsForType('boolean');
+        $this->assertSame(['is_true', 'is_false'], $operators);
+    }
+
+    public function test_get_default_operators_for_type_number(): void
+    {
+        $operators = ListQueryBase::getDefaultOperatorsForType('number');
+        $this->assertSame(['equals', 'not_equals', 'greater_than', 'greater_than_or_equal', 'less_than', 'less_than_or_equal', 'between'], $operators);
+    }
+
+    public function test_get_default_operators_for_type_select_nullable(): void
+    {
+        $operators = ListQueryBase::getDefaultOperatorsForType('select', true);
+        $this->assertSame(['equals', 'not_equals', 'is_empty'], $operators);
+    }
+
+    public function test_get_default_operators_for_type_select_not_nullable(): void
+    {
+        $operators = ListQueryBase::getDefaultOperatorsForType('select', false);
+        $this->assertSame(['equals', 'not_equals'], $operators);
+    }
+
+    public function test_get_default_operators_for_type_unknown(): void
+    {
+        $operators = ListQueryBase::getDefaultOperatorsForType('unknown');
+        $this->assertSame(['equals', 'not_equals'], $operators);
+    }
+
+    // =========================================================================
+    // getDefaultOperatorForType static method
+    // =========================================================================
+
+    public function test_get_default_operator_for_type_text(): void
+    {
+        $operator = ListQueryBase::getDefaultOperatorForType('text');
+        $this->assertSame('contains', $operator);
+    }
+
+    public function test_get_default_operator_for_type_date(): void
+    {
+        $operator = ListQueryBase::getDefaultOperatorForType('date');
+        $this->assertSame('between', $operator);
+    }
+
+    public function test_get_default_operator_for_type_boolean(): void
+    {
+        $operator = ListQueryBase::getDefaultOperatorForType('boolean');
+        $this->assertSame('', $operator);
+    }
+
+    public function test_get_default_operator_for_type_number(): void
+    {
+        $operator = ListQueryBase::getDefaultOperatorForType('number');
+        $this->assertSame('equals', $operator);
+    }
+
+    public function test_get_default_operator_for_type_select(): void
+    {
+        $operator = ListQueryBase::getDefaultOperatorForType('select');
+        $this->assertSame('equals', $operator);
+    }
+
+    public function test_get_default_operator_for_type_unknown(): void
+    {
+        $operator = ListQueryBase::getDefaultOperatorForType('unknown');
+        $this->assertSame('equals', $operator);
     }
 
     // =========================================================================
@@ -805,6 +1461,15 @@ final class ListQueryBaseTest extends TestCase
 
         /** @var non-empty-list<literal-string> */
         return $reflection->invoke($query, $scope, $columns);
+    }
+
+    private function callEscapeLikeValue(string $value): string
+    {
+        $reflection = new \ReflectionMethod($this->query, 'escapeLikeValue');
+        $reflection->setAccessible(true);
+
+        /** @var string */
+        return $reflection->invoke($this->query, $value);
     }
 }
 

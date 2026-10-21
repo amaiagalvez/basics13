@@ -17,15 +17,19 @@ class UserArchivedController extends ArchivedController
         UserListTransformer $transformer,
     ): View|string {
         $search = $request->search();
-        $users = $query->archived($search);
+        $filters = $request->filters() ?? [];
+        $users = $query->archived($search, $filters);
 
         return $this->listView($request, 'basics13::users.list', [
             'users' => $users,
             'list' => $transformer->archived(
                 $users,
                 $search,
-                $query->stateCounts(archivedTotal: $search === '' ? $users->total() : null),
+                $query->stateCounts(archivedTotal: $search === '' && $filters === [] ? $users->total() : null),
             ),
+            'searchableFields' => $query->searchableFields('archived'),
+            'filters' => $filters,
+            'scope' => 'archived',
         ]);
     }
 

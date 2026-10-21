@@ -48,7 +48,7 @@ abstract class SearchableListRequest extends FormRequest
             $operator = $filter['operator'] ?? '';
             $value = $filter['value'] ?? null;
 
-            if ($operator === '') {
+            if (! is_string($operator) || $operator === '' || ! self::isFilterValue($value)) {
                 continue;
             }
 
@@ -59,5 +59,19 @@ abstract class SearchableListRequest extends FormRequest
         }
 
         return $normalized ?: null;
+    }
+
+    /**
+     * A filter value is a scalar or a flat list of scalars; anything nested is a crafted URL and is
+     * dropped, so neither the query nor the filter badges ever receive it.
+     */
+    private static function isFilterValue(mixed $value): bool
+    {
+        if ($value === null || is_scalar($value)) {
+            return true;
+        }
+
+        return is_array($value) && array_is_list($value)
+            && array_filter($value, fn (mixed $item): bool => ! is_scalar($item)) === [];
     }
 }

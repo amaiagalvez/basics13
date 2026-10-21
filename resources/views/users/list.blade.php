@@ -17,6 +17,11 @@
             'submitLabel' => $editingUser ? __('Update user') : __('Save user'),
         ]
         : null;
+
+    // Get searchable fields for advanced search modal
+    $searchableFields = $searchableFields ?? [];
+    $filters = $filters ?? [];
+    $scope = $scope ?? 'active';
 @endphp
 
 <x-layouts::app :title="$list['resource']">
@@ -56,7 +61,7 @@
         @elseif ($list['create'] && request()->boolean('create'))
             x-init="createUser(); $nextTick(() => $dispatch('modal-show', { name: 'user-form' }))" @endif
         class="flex flex-col gap-y-2 sm:gap-y-3">
-        <x-basics13::list.page-header :list="$list" prefix="user">
+        <x-basics13::list.page-header :list="$list" prefix="user" :scope="$scope" :searchableFields="$searchableFields" :filters="$filters">
             <x-slot:actions>
                 @if ($list['create'])
                     <x-basics13::list.create-action prefix="user" :label="__('New user')"
@@ -68,7 +73,7 @@
         <x-basics13::list.flash prefix="user" />
 
         @fragment('list-results')
-            <x-basics13::list.searchable-results :search="$list['search']" :total="$users->total()">
+            <x-basics13::list.searchable-results :search="$list['search']" :total="$users->total()" :scope="$scope" :filters="$filters">
                 <x-basics13::list.search :search="$list['search']" prefix="user" />
 
                 <x-basics13::list.table prefix="user" :paginator="$users">
@@ -128,6 +133,14 @@
                 @include('basics13::users.form')
             </flux:modal>
         @endif
+
+        <livewire:basics13.advanced-search-modal
+            :fields="$searchableFields"
+            :filters="$filters"
+            :scope="$scope"
+            :operatorLabels="__('basics13::messages')"
+            :fieldTypeLabels="__('basics13::messages')"
+            :groupLabels="__('basics13::messages')" />
 
         <x-basics13::list.confirm-modal prefix="user" />
     </div>

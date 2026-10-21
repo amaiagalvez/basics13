@@ -93,7 +93,7 @@ final class UserListQuery extends ListQueryBase
         return [
             'name' => [
                 'column' => 'name',
-                'label' => 'basics13::messages.name',
+                'label' => 'Name',
                 'type' => 'text',
                 'visible' => true,
                 'order' => 10,
@@ -101,7 +101,7 @@ final class UserListQuery extends ListQueryBase
             ],
             'email' => [
                 'column' => 'email',
-                'label' => 'basics13::messages.email',
+                'label' => 'Email',
                 'type' => 'text',
                 'visible' => true,
                 'order' => 20,
@@ -109,7 +109,7 @@ final class UserListQuery extends ListQueryBase
             ],
             'active' => [
                 'column' => 'active',
-                'label' => 'basics13::messages.active',
+                'label' => 'Status',
                 'type' => 'boolean',
                 'visible' => true,
                 'order' => 10,

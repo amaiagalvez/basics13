@@ -23,7 +23,18 @@
         }
     }
 
-    // Build active filter badges
+    // Build active filter badges. Each one links to the list without its filter, back to page one.
+    $listUrlWithout = function (?string $fieldKey = null): string {
+        $query = request()->except(['page', 'filters']);
+        if ($fieldKey !== null) {
+            $remaining = \Illuminate\Support\Arr::except((array) request()->query('filters', []), $fieldKey);
+            if ($remaining !== []) {
+                $query['filters'] = $remaining;
+            }
+        }
+
+        return request()->url().($query === [] ? '' : '?'.\Illuminate\Support\Arr::query($query));
+    };
     $activeFilters = [];
     foreach ($filters as $fieldKey => $filter) {
         $field = $searchableFields[$fieldKey] ?? null;
@@ -32,24 +43,28 @@
         $operator = $filter['operator'] ?? '';
         $value = $filter['value'] ?? null;
 
-        if ($value === '' || $value === [] || $value === null) {
-            if ($operator !== 'is_empty' && ($field['type'] ?? '') !== 'boolean') {
-                continue;
-            }
+        $isBoolean = ($field['type'] ?? '') === 'boolean';
+
+        // A boolean filter only applies with one of its operators; the empty one means "any".
+        if ($isBoolean && ! in_array($operator, ['is_true', 'is_false'], true)) {
+            continue;
+        }
+
+        if (! $isBoolean && ($value === '' || $value === [] || $value === null) && $operator !== 'is_empty') {
+            continue;
         }
 
         $operatorLabel = __('basics13::messages.operator_'.$operator) ?? ucfirst(str_replace('_', ' ', $operator));
         $fieldLabel = __($field['label']) ?? $field['label'] ?? $fieldKey;
 
         $valueLabel = '';
-        if (is_array($value)) {
-            $valueLabel = implode(', ', array_map(function ($v) use ($field) {
-                if (($field['type'] ?? '') === 'select' && isset($field['options']) && is_callable($field['options'])) {
-                    $options = $field['options']($scope);
-                    return $options[$v] ?? $v;
-                }
-                return $v;
-            }, $value));
+        if ($isBoolean) {
+            // The operator already reads "Yes" or "No".
+        } elseif (is_array($value)) {
+            $options = ($field['type'] ?? '') === 'select' && isset($field['options'])
+                ? (is_callable($field['options']) ? $field['options']($scope) : $field['options'])
+                : [];
+            $valueLabel = implode(', ', array_map(fn ($v) => $options[$v] ?? $v, $value));
         } elseif ($value !== null && $value !== '') {
             $valueLabel = (string) $value;
         } elseif ($operator === 'is_empty') {
@@ -61,6 +76,7 @@
             'label' => $fieldLabel,
             'operator' => $operatorLabel,
             'value' => $valueLabel,
+            'url' => $listUrlWithout($fieldKey),
         ];
     }
 
@@ -101,7 +117,7 @@
 
     {{-- Active filter badges --}}
     @if (!empty($activeFilters))
-        <x-basics13::list.filter-badges :filters="$activeFilters" :prefix="$prefix" />
+        <x-basics13::list.filter-badges :filters="$activeFilters" :prefix="$prefix" :clear-url="$listUrlWithout()" />
     @endif
 
     <x-basics13::list.tabs :tabs="$list['tabs']" :prefix="$prefix">

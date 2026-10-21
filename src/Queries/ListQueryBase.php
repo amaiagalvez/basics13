@@ -23,7 +23,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
  *     help?: string,
  *     condition?: callable(string): bool,
  *     options?: array<int, string>|callable(string): array<int, string>,
- *     multiple?: bool
+ *     multiple?: bool,
+ *     relation?: string
  * }
  * @phpstan-type SearchFields array<string, SearchField>
  * @phpstan-type SearchFilters array<string, array{operator: string, value: mixed}>
@@ -128,6 +129,12 @@ abstract class ListQueryBase
             $operator = $filter['operator'];
             $value = $filter['value'];
 
+            // Only the operators the field declares; an empty boolean operator means "any".
+            $operators = $field['operators'] ?? self::getDefaultOperatorsForType($field['type'], $field['nullable'] ?? false);
+            if (! in_array($operator, $operators, true)) {
+                continue;
+            }
+
             if ($value === '' || $value === [] || $value === null) {
                 // Allow is_empty operator and boolean fields to pass through with null/empty
                 if ($operator !== 'is_empty' && $field['type'] !== 'boolean') {
@@ -136,6 +143,13 @@ abstract class ListQueryBase
             }
 
             $column = $field['column'];
+
+            if (isset($field['relation'])) {
+                $this->applyRelationFilter($query, $field['relation'], $column, $operator, $value);
+
+                continue;
+            }
+
             $type = $field['type'];
             $isMultiSelect = ($field['multiple'] ?? true) && $type === 'select';
             $nullable = $field['nullable'] ?? false;
@@ -184,18 +198,30 @@ abstract class ListQueryBase
      */
     protected function applyTextFilter(Builder $query, string $column, string $operator, mixed $value): void
     {
-        if ($value === null || $value === '') {
+        if (! is_scalar($value) || $value === '') {
             return;
         }
 
         $escapedValue = $this->escapeLikeValue((string) $value);
+        $pattern = match ($operator) {
+            'contains' => "%{$escapedValue}%",
+            'starts_with' => "{$escapedValue}%",
+            'ends_with' => "%{$escapedValue}",
+            default => null,
+        };
+
+        if ($pattern !== null) {
+            // Same clause as whereMatches: the escaped pattern only means what it says once the
+            // escape character is declared. The column comes from the server-side field definitions.
+            /** @phpstan-ignore argument.type */
+            $query->whereRaw($column.' like ? escape \''.self::LIKE_ESCAPE.'\'', [$pattern]);
+
+            return;
+        }
 
         match ($operator) {
-            'contains' => $query->where($column, 'LIKE', "%{$escapedValue}%"),
             'equals' => $query->where($column, '=', $value),
             'not_equals' => $query->where($column, '!=', $value),
-            'starts_with' => $query->where($column, 'LIKE', "{$escapedValue}%"),
-            'ends_with' => $query->where($column, 'LIKE', "%{$escapedValue}"),
             default => null,
         };
     }
@@ -207,11 +233,14 @@ abstract class ListQueryBase
      */
     protected function applyDateFilter(Builder $query, string $column, string $operator, mixed $value): void
     {
+        $single = is_string($value) && $value !== '';
+
         match ($operator) {
-            'equals' => $value !== null && $value !== '' ? $query->whereDate($column, '=', $value) : null,
-            'before' => $value !== null && $value !== '' ? $query->whereDate($column, '<', $value) : null,
-            'after' => $value !== null && $value !== '' ? $query->whereDate($column, '>', $value) : null,
-            'between' => is_array($value) && count($value) === 2 && $value[0] !== '' && $value[1] !== ''
+            'equals' => $single ? $query->whereDate($column, '=', $value) : null,
+            'before' => $single ? $query->whereDate($column, '<', $value) : null,
+            'after' => $single ? $query->whereDate($column, '>', $value) : null,
+            'between' => is_array($value) && array_is_list($value) && count($value) === 2
+                && is_string($value[0]) && $value[0] !== '' && is_string($value[1]) && $value[1] !== ''
                 ? $query->whereDate($column, '>=', $value[0])->whereDate($column, '<=', $value[1]) : null,
             'is_empty' => $query->whereNull($column),
             default => null,
@@ -230,6 +259,7 @@ abstract class ListQueryBase
         match ($operator) {
             'is_true' => $query->where($column, '=', true),
             'is_false' => $query->where($column, '=', false),
+            '' => null, // "Any": no filter.
             default => $query->where($column, '=', $boolValue),
         };
     }
@@ -314,6 +344,36 @@ abstract class ListQueryBase
                 'not_equals' => $query->where($column, '!=', $singleValue),
                 default => $query->where($column, '=', $singleValue),
             };
+        }
+    }
+
+    /**
+     * Apply a select filter on a to-many relation, where `column` belongs to the related table:
+     * "equals" keeps the records holding any of the selected values, "not_equals" those holding
+     * none of them and "is_empty" those holding none at all.
+     *
+     * @param  Builder<TModel>  $query
+     */
+    protected function applyRelationFilter(Builder $query, string $relation, string $column, string $operator, mixed $value): void
+    {
+        if ($operator === 'is_empty') {
+            $query->whereDoesntHave($relation);
+
+            return;
+        }
+
+        $values = array_values(array_filter(is_array($value) ? $value : [$value], fn ($v) => $v !== null && $v !== ''));
+
+        if ($values === []) {
+            return;
+        }
+
+        $constraint = fn (Builder $related): Builder => $related->whereIn($column, $values);
+
+        if ($operator === 'not_equals') {
+            $query->whereDoesntHave($relation, $constraint);
+        } else {
+            $query->whereHas($relation, $constraint);
         }
     }
 
@@ -434,7 +494,7 @@ abstract class ListQueryBase
         return match ($type) {
             'text' => 'contains',
             'date' => 'between',
-            'boolean' => 'is_true',
+            'boolean' => '',
             'number' => 'equals',
             'select' => 'equals',
             default => 'equals',

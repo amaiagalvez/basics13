@@ -26,15 +26,19 @@ class UserController extends Controller
         UserListTransformer $transformer,
     ): View|string {
         $search = $request->search();
-        $users = $query->active($search);
+        $filters = $request->filters() ?? [];
+        $users = $query->active($search, $filters);
 
         return $this->listView($request, 'basics13::users.list', [
             'users' => $users,
             'list' => $transformer->active(
                 $users,
                 $search,
-                $query->stateCounts(activeTotal: $search === '' ? $users->total() : null),
+                $query->stateCounts(activeTotal: $search === '' && $filters === [] ? $users->total() : null),
             ),
+            'searchableFields' => $query->searchableFields('active'),
+            'filters' => $filters,
+            'scope' => 'active',
         ]);
     }
 

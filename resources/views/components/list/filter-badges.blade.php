@@ -1,17 +1,14 @@
 {{--
     Filter badges component for page header.
-    Displays active filters as badges with remove buttons.
+    Displays active filters as badges. Removing one, or all of them, is a plain link to the list URL
+    without those filters, so the page reloads with the badges, the results and the modal in step.
+
+    :filters   badges built by the page header: key, label, operator, value and url (without it).
+    :clearUrl  list URL without any filter.
 --}}
-@props(['filters' => [], 'prefix' => ''])
+@props(['filters' => [], 'prefix' => '', 'clearUrl'])
 
-@php
-    $filtersB64 = base64_encode(json_encode($filters, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
-@endphp
-
-<div class="flex flex-wrap gap-2"
-    x-data="filterBadges()"
-    data-filters-b64="{{ $filtersB64 }}"
-    x-init="filters = JSON.parse(atob($el.dataset.filtersB64))">
+<div class="flex flex-wrap items-center gap-2" data-test="{{ $prefix }}-filter-badges">
     @foreach ($filters as $filter)
         <flux:badge variant="outline" class="gap-1">
             <span class="font-medium">{{ $filter['label'] }}:</span>
@@ -19,35 +16,13 @@
             @if ($filter['value'] !== '')
                 <span>{{ $filter['value'] }}</span>
             @endif
-            <flux:button type="button" variant="ghost" size="xs" square icon="x-mark"
-                wire:click="$dispatch('filter-removed', { key: '{{ $filter['key'] }}' })"
-                :aria-label="{{ __('basics13::messages.remove_filter') . ': ' . $filter['label'] }}" />
+            <flux:button :href="$filter['url']" variant="ghost" size="xs" square icon="x-mark"
+                :data-test="$prefix.'-filter-remove-'.$filter['key']"
+                :aria-label="__('basics13::messages.remove_filter') . ': ' . $filter['label']" />
         </flux:badge>
     @endforeach
-    <flux:button type="button" variant="ghost" size="sm" wire:click="$dispatch('clear-all-filters')"
+    <flux:button :href="$clearUrl" variant="ghost" size="sm" :data-test="$prefix.'-filter-clear-all'"
         class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white">
         {{ __('basics13::messages.clear_all_filters') }}
     </flux:button>
 </div>
-
-@verbatim
-<script>
-    function filterBadges() {
-        return {
-            filters: [],
-            init() {
-                this.filters = JSON.parse(atob(this.$el.dataset.filtersB64));
-            },
-            handleFilterRemoved(event) {
-                this.filters = this.filters.filter(f => f.key !== event.detail.key);
-                this.$dispatch('update-url', {
-                    filters: this.filters.reduce((acc, f) => {
-                        acc[f.key] = { operator: f.operator, value: f.value };
-                        return acc;
-                    }, {})
-                });
-            }
-        };
-    }
-</script>
-@endverbatim

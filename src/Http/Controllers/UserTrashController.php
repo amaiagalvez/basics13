@@ -25,15 +25,19 @@ class UserTrashController extends TrashController
         UserListTransformer $transformer,
     ): View|string {
         $search = $request->search();
-        $users = $query->trashed($search);
+        $filters = $request->filters() ?? [];
+        $users = $query->trashed($search, $filters);
 
         return $this->listView($request, 'basics13::users.list', [
             'users' => $users,
             'list' => $transformer->trash(
                 $users,
                 $search,
-                $query->stateCounts(trashedTotal: $search === '' ? $users->total() : null),
+                $query->stateCounts(trashedTotal: $search === '' && $filters === [] ? $users->total() : null),
             ),
+            'searchableFields' => $query->searchableFields('trashed'),
+            'filters' => $filters,
+            'scope' => 'trashed',
         ]);
     }
 

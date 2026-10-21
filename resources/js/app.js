@@ -424,10 +424,20 @@ document.addEventListener('alpine:init', () => {
                 void this.refreshList(url, false).catch(() => window.location.reload());
             };
             window.addEventListener('popstate', this.handlePopstate);
+
+            // Listen for filters applied from advanced search modal (Livewire event)
+            this.handleFiltersApplied = (event) => {
+                const filters = event.detail?.filters;
+                if (filters !== undefined) {
+                    void this.applyFilters(filters);
+                }
+            };
+            document.addEventListener('filters-applied', this.handleFiltersApplied);
         },
 
         destroy() {
             window.removeEventListener('popstate', this.handlePopstate);
+            document.removeEventListener('filters-applied', this.handleFiltersApplied);
             this.requestController?.abort();
         },
 
@@ -486,9 +496,11 @@ document.addEventListener('alpine:init', () => {
             }
         },
 
+        // Both start from the current URL and change only their own key, so a search keeps the
+        // active filters and applying filters keeps the search. Either one goes back to page one.
         search(query) {
-            const form = this.$root.querySelector('[data-list-search]');
-            const url = new URL(form.action, window.location.href);
+            const url = new URL(window.location.href);
+            url.searchParams.delete('page');
 
             if (query === '') {
                 url.searchParams.delete('search');
@@ -497,6 +509,40 @@ document.addEventListener('alpine:init', () => {
             }
 
             void this.refreshList(url).catch(() => window.location.assign(url.href));
+        },
+
+        applyFilters(filters) {
+            const url = new URL(window.location.href);
+            url.searchParams.delete('page');
+
+            // Remove existing filter params. The keys are copied first: deleting while iterating
+            // the live list skips entries.
+            for (const key of [...url.searchParams.keys()]) {
+                if (key.startsWith('filters[')) {
+                    url.searchParams.delete(key);
+                }
+            }
+
+            // Add new filter params
+            for (const [key, filter] of Object.entries(filters)) {
+                if (filter && filter.operator) {
+                    url.searchParams.set(`filters[${key}][operator]`, filter.operator);
+                    const value = filter.value;
+                    if (value !== null && value !== '' && !(Array.isArray(value) && value.length === 0)) {
+                        if (Array.isArray(value)) {
+                            value.forEach((v, i) => {
+                                url.searchParams.set(`filters[${key}][value][${i}]`, v);
+                            });
+                        } else {
+                            url.searchParams.set(`filters[${key}][value]`, value);
+                        }
+                    }
+                }
+            }
+
+            // A full load, not a fragment refresh: the filter badges and the modal live outside the
+            // results fragment and are rendered from the URL.
+            window.location.assign(url.href);
         },
 
         async refreshList(url, updateHistory = true) {
@@ -549,13 +595,6 @@ document.addEventListener('alpine:init', () => {
 
                 if (region) {
                     region.textContent = announcement;
-                }
-
-                // Update visible result count
-                const countDisplay = root.querySelector('[data-count-display]');
-                const countTemplate = root.dataset.countTemplate ?? '';
-                if (countDisplay && countTemplate) {
-                    countDisplay.textContent = countTemplate.replace(':count', String(totalResults));
                 }
             } catch (error) {
                 if (!controller.signal.aborted) {
