@@ -59,6 +59,7 @@ return [
     'pagination_summary' => 'Showing :first to :last of :total results',
 
     // Advanced search
+    'close' => 'Close',
     'advanced_search' => 'Advanced search',
     'show_advanced_fields' => 'Show advanced fields',
     'hide_advanced_fields' => 'Hide advanced fields',

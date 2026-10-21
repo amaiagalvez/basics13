@@ -60,6 +60,7 @@ return [
     'pagination_summary' => ':first–:last erakusten, :total emaitzatik',
 
     // Bilaketa aurreratua
+    'close' => 'Itxi',
     'advanced_search' => 'Bilaketa aurreratua',
     'show_advanced_fields' => 'Eremu aurreratuak erakutsi',
     'hide_advanced_fields' => 'Eremu aurreratuak ezkutatu',

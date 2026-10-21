@@ -2,11 +2,14 @@
 
 namespace Basics13\Tests\Unit\Queries;
 
-use PHPUnit\Framework\TestCase;
+use Carbon\CarbonImmutable;
+use Basics13\Tests\TestCase;
+use Illuminate\Support\Facades\DB;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Database\Eloquent\Builder;
 use Basics13\Tests\Fixtures\AuditedRecord;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 
 /**
  * Test the abstract ListQueryBase through a concrete test subclass.
@@ -16,6 +19,8 @@ use Illuminate\Pagination\LengthAwarePaginator;
  */
 final class ListQueryBaseTest extends TestCase
 {
+    use RefreshDatabase;
+
     private TestListQuery $query;
 
     protected function setUp(): void
@@ -312,8 +317,19 @@ final class ListQueryBaseTest extends TestCase
      */
     public function test_apply_filters_text_contains(): void
     {
-        // Skipped - requires real database connection for where
-        $this->markTestSkipped('Requires real database connection for where');
+        AuditedRecord::create(['name' => 'Juan Perez', 'notes' => 'test']);
+        AuditedRecord::create(['name' => 'Maria Garcia', 'notes' => 'test']);
+        AuditedRecord::create(['name' => 'Pedro Lopez', 'notes' => 'test']);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['name' => ['operator' => 'contains', 'value' => 'Mar']],
+            ['name' => ['column' => 'name', 'label' => 'test.name', 'type' => 'text']],
+        );
+
+        $this->assertSame(1, $builder->count());
+        $this->assertSame('Maria Garcia', $builder->first()->name);
     }
 
     /**
@@ -321,8 +337,19 @@ final class ListQueryBaseTest extends TestCase
      */
     public function test_apply_filters_text_equals(): void
     {
-        // Skipped - requires real database connection for where
-        $this->markTestSkipped('Requires real database connection for where');
+        AuditedRecord::create(['name' => 'Juan Perez', 'notes' => 'test']);
+        AuditedRecord::create(['name' => 'Maria Garcia', 'notes' => 'test']);
+        AuditedRecord::create(['name' => 'Pedro Lopez', 'notes' => 'test']);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['name' => ['operator' => 'equals', 'value' => 'Juan Perez']],
+            ['name' => ['column' => 'name', 'label' => 'test.name', 'type' => 'text']],
+        );
+
+        $this->assertSame(1, $builder->count());
+        $this->assertSame('Juan Perez', $builder->first()->name);
     }
 
     /**
@@ -330,8 +357,19 @@ final class ListQueryBaseTest extends TestCase
      */
     public function test_apply_filters_text_starts_with(): void
     {
-        // Skipped - requires real database connection for where
-        $this->markTestSkipped('Requires real database connection for where');
+        AuditedRecord::create(['name' => 'Juan Perez', 'notes' => 'test']);
+        AuditedRecord::create(['name' => 'Maria Garcia', 'notes' => 'test']);
+        AuditedRecord::create(['name' => 'Pedro Lopez', 'notes' => 'test']);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['name' => ['operator' => 'starts_with', 'value' => 'Ped']],
+            ['name' => ['column' => 'name', 'label' => 'test.name', 'type' => 'text']],
+        );
+
+        $this->assertSame(1, $builder->count());
+        $this->assertSame('Pedro Lopez', $builder->first()->name);
     }
 
     /**
@@ -339,8 +377,19 @@ final class ListQueryBaseTest extends TestCase
      */
     public function test_apply_filters_text_ends_with(): void
     {
-        // Skipped - requires real database connection for where
-        $this->markTestSkipped('Requires real database connection for where');
+        AuditedRecord::create(['name' => 'Juan Perez', 'notes' => 'test']);
+        AuditedRecord::create(['name' => 'Maria Gomez', 'notes' => 'test']);
+        AuditedRecord::create(['name' => 'Pedro Martinez', 'notes' => 'test']);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['name' => ['operator' => 'ends_with', 'value' => 'rez']],
+            ['name' => ['column' => 'name', 'label' => 'test.name', 'type' => 'text']],
+        );
+
+        $this->assertSame(1, $builder->count());
+        $this->assertSame('Juan Perez', $builder->first()->name);
     }
 
     /**
@@ -348,8 +397,22 @@ final class ListQueryBaseTest extends TestCase
      */
     public function test_apply_filters_text_not_equals(): void
     {
-        // Skipped - requires real database connection for where
-        $this->markTestSkipped('Requires real database connection for where');
+        AuditedRecord::create(['name' => 'Juan Perez', 'notes' => 'test']);
+        AuditedRecord::create(['name' => 'Maria Garcia', 'notes' => 'test']);
+        AuditedRecord::create(['name' => 'Pedro Lopez', 'notes' => 'test']);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['name' => ['operator' => 'not_equals', 'value' => 'Juan Perez']],
+            ['name' => ['column' => 'name', 'label' => 'test.name', 'type' => 'text']],
+        );
+
+        $this->assertSame(2, $builder->count());
+        $names = $builder->pluck('name')->all();
+        $this->assertContains('Maria Garcia', $names);
+        $this->assertContains('Pedro Lopez', $names);
+        $this->assertNotContains('Juan Perez', $names);
     }
 
     /**
@@ -357,8 +420,24 @@ final class ListQueryBaseTest extends TestCase
      */
     public function test_apply_filters_date_between(): void
     {
-        // Skipped - requires real database connection for whereDate
-        $this->markTestSkipped('Requires real database connection for whereDate');
+        $date1 = CarbonImmutable::now()->subDays(10);
+        $date2 = CarbonImmutable::now()->subDays(5);
+        $date3 = CarbonImmutable::now();
+
+        DB::table('audited_records')->insert([
+            ['name' => 'Record 1', 'created_at' => $date1, 'updated_at' => $date1, 'active' => true, 'notes' => 'test'],
+            ['name' => 'Record 2', 'created_at' => $date2, 'updated_at' => $date2, 'active' => true, 'notes' => 'test'],
+            ['name' => 'Record 3', 'created_at' => $date3, 'updated_at' => $date3, 'active' => true, 'notes' => 'test'],
+        ]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['created_at' => ['operator' => 'between', 'value' => [$date2->toDateString(), $date3->toDateString()]]],
+            ['created_at' => ['column' => 'created_at', 'label' => 'test.created_at', 'type' => 'date']],
+        );
+
+        $this->assertSame(2, $builder->count());
     }
 
     /**
@@ -366,8 +445,24 @@ final class ListQueryBaseTest extends TestCase
      */
     public function test_apply_filters_date_before(): void
     {
-        // Skipped - requires real database connection for whereDate
-        $this->markTestSkipped('Requires real database connection for whereDate');
+        $date1 = CarbonImmutable::now()->subDays(10);
+        $date2 = CarbonImmutable::now()->subDays(5);
+        $date3 = CarbonImmutable::now();
+
+        DB::table('audited_records')->insert([
+            ['name' => 'Record 1', 'created_at' => $date1, 'updated_at' => $date1, 'active' => true, 'notes' => 'test'],
+            ['name' => 'Record 2', 'created_at' => $date2, 'updated_at' => $date2, 'active' => true, 'notes' => 'test'],
+            ['name' => 'Record 3', 'created_at' => $date3, 'updated_at' => $date3, 'active' => true, 'notes' => 'test'],
+        ]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['created_at' => ['operator' => 'before', 'value' => $date3->toDateString()]],
+            ['created_at' => ['column' => 'created_at', 'label' => 'test.created_at', 'type' => 'date']],
+        );
+
+        $this->assertSame(2, $builder->count());
     }
 
     /**
@@ -375,8 +470,24 @@ final class ListQueryBaseTest extends TestCase
      */
     public function test_apply_filters_date_after(): void
     {
-        // Skipped - requires real database connection for whereDate
-        $this->markTestSkipped('Requires real database connection for whereDate');
+        $date1 = CarbonImmutable::now()->subDays(10);
+        $date2 = CarbonImmutable::now()->subDays(5);
+        $date3 = CarbonImmutable::now();
+
+        DB::table('audited_records')->insert([
+            ['name' => 'Record 1', 'created_at' => $date1, 'updated_at' => $date1, 'active' => true, 'notes' => 'test'],
+            ['name' => 'Record 2', 'created_at' => $date2, 'updated_at' => $date2, 'active' => true, 'notes' => 'test'],
+            ['name' => 'Record 3', 'created_at' => $date3, 'updated_at' => $date3, 'active' => true, 'notes' => 'test'],
+        ]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['created_at' => ['operator' => 'after', 'value' => $date1->toDateString()]],
+            ['created_at' => ['column' => 'created_at', 'label' => 'test.created_at', 'type' => 'date']],
+        );
+
+        $this->assertSame(2, $builder->count());
     }
 
     /**
@@ -384,8 +495,23 @@ final class ListQueryBaseTest extends TestCase
      */
     public function test_apply_filters_date_equals(): void
     {
-        // Skipped - requires real database connection for whereDate
-        $this->markTestSkipped('Requires real database connection for whereDate');
+        $date1 = CarbonImmutable::now()->subDays(10);
+        $date2 = CarbonImmutable::now()->subDays(5);
+
+        DB::table('audited_records')->insert([
+            ['name' => 'Record 1', 'created_at' => $date1, 'updated_at' => $date1, 'active' => true, 'notes' => 'test'],
+            ['name' => 'Record 2', 'created_at' => $date2, 'updated_at' => $date2, 'active' => true, 'notes' => 'test'],
+            ['name' => 'Record 3', 'created_at' => $date2, 'updated_at' => $date2, 'active' => true, 'notes' => 'test'],
+        ]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['created_at' => ['operator' => 'equals', 'value' => $date2->toDateString()]],
+            ['created_at' => ['column' => 'created_at', 'label' => 'test.created_at', 'type' => 'date']],
+        );
+
+        $this->assertSame(2, $builder->count());
     }
 
     /**
@@ -393,8 +519,20 @@ final class ListQueryBaseTest extends TestCase
      */
     public function test_apply_filters_boolean_is_true(): void
     {
-        // Skipped - requires real database connection for where
-        $this->markTestSkipped('Requires real database connection for where');
+        AuditedRecord::factory()->create(['name' => 'Record One', 'active' => true]);
+        AuditedRecord::factory()->create(['name' => 'Record Two', 'active' => false]);
+        AuditedRecord::factory()->create(['name' => 'Record Three', 'active' => true]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['active' => ['operator' => 'is_true', 'value' => true]],
+            ['active' => ['column' => 'active', 'label' => 'test.active', 'type' => 'boolean']],
+        );
+
+        $this->assertSame(2, $builder->count());
+        // SQLite returns boolean as integer 1/0
+        $this->assertTrue($builder->pluck('active')->every(fn ($v) => (bool) $v === true));
     }
 
     /**
@@ -402,8 +540,20 @@ final class ListQueryBaseTest extends TestCase
      */
     public function test_apply_filters_boolean_is_false(): void
     {
-        // Skipped - requires real database connection for where
-        $this->markTestSkipped('Requires real database connection for where');
+        AuditedRecord::factory()->create(['name' => 'Record One', 'active' => true]);
+        AuditedRecord::factory()->create(['name' => 'Record Two', 'active' => false]);
+        AuditedRecord::factory()->create(['name' => 'Record Three', 'active' => true]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['active' => ['operator' => 'is_false', 'value' => false]],
+            ['active' => ['column' => 'active', 'label' => 'test.active', 'type' => 'boolean']],
+        );
+
+        $this->assertSame(1, $builder->count());
+        // SQLite returns boolean as integer 1/0
+        $this->assertFalse((bool) $builder->first()->active);
     }
 
     public function test_apply_filters_number_between_applies_both_bounds(): void
@@ -437,8 +587,19 @@ final class ListQueryBaseTest extends TestCase
      */
     public function test_apply_filters_select_equals_single(): void
     {
-        // Skipped - requires real database connection for whereIn
-        $this->markTestSkipped('Requires real database connection for whereIn');
+        AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
+        AuditedRecord::factory()->create(['name' => 'Project B', 'project_id' => 2]);
+        AuditedRecord::factory()->create(['name' => 'Project C', 'project_id' => 1]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['project_id' => ['operator' => 'equals', 'value' => 1]],
+            ['project_id' => ['column' => 'project_id', 'label' => 'test.project', 'type' => 'select', 'multiple' => false]],
+        );
+
+        $this->assertSame(2, $builder->count());
+        $this->assertTrue($builder->pluck('project_id')->every(fn ($v) => $v === 1));
     }
 
     /**
@@ -446,8 +607,19 @@ final class ListQueryBaseTest extends TestCase
      */
     public function test_apply_filters_select_not_equals_single(): void
     {
-        // Skipped - requires real database connection for whereNotIn
-        $this->markTestSkipped('Requires real database connection for whereNotIn');
+        AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
+        AuditedRecord::factory()->create(['name' => 'Project B', 'project_id' => 2]);
+        AuditedRecord::factory()->create(['name' => 'Project C', 'project_id' => 1]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['project_id' => ['operator' => 'not_equals', 'value' => 1]],
+            ['project_id' => ['column' => 'project_id', 'label' => 'test.project', 'type' => 'select', 'multiple' => false]],
+        );
+
+        $this->assertSame(1, $builder->count());
+        $this->assertSame(2, $builder->first()->project_id);
     }
 
     /**
@@ -455,8 +627,23 @@ final class ListQueryBaseTest extends TestCase
      */
     public function test_apply_filters_select_in_multiple(): void
     {
-        // Skipped - requires real database connection for whereIn
-        $this->markTestSkipped('Requires real database connection for whereIn');
+        AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
+        AuditedRecord::factory()->create(['name' => 'Project B', 'project_id' => 2]);
+        AuditedRecord::factory()->create(['name' => 'Project C', 'project_id' => 3]);
+        AuditedRecord::factory()->create(['name' => 'Project D', 'project_id' => 1]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['project_id' => ['operator' => 'in', 'value' => [1, 3]]],
+            ['project_id' => ['column' => 'project_id', 'label' => 'test.project', 'type' => 'select', 'multiple' => true]],
+        );
+
+        $this->assertSame(3, $builder->count());
+        $projectIds = $builder->pluck('project_id')->all();
+        $this->assertContains(1, $projectIds);
+        $this->assertContains(3, $projectIds);
+        $this->assertNotContains(2, $projectIds);
     }
 
     /**
@@ -464,8 +651,20 @@ final class ListQueryBaseTest extends TestCase
      */
     public function test_apply_filters_select_not_in_multiple(): void
     {
-        // Skipped - requires real database connection for whereNotIn
-        $this->markTestSkipped('Requires real database connection for whereNotIn');
+        AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
+        AuditedRecord::factory()->create(['name' => 'Project B', 'project_id' => 2]);
+        AuditedRecord::factory()->create(['name' => 'Project C', 'project_id' => 3]);
+        AuditedRecord::factory()->create(['name' => 'Project D', 'project_id' => 1]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['project_id' => ['operator' => 'not_in', 'value' => [1, 3]]],
+            ['project_id' => ['column' => 'project_id', 'label' => 'test.project', 'type' => 'select', 'multiple' => true]],
+        );
+
+        $this->assertSame(1, $builder->count());
+        $this->assertSame(2, $builder->first()->project_id);
     }
 
     /**
@@ -473,8 +672,20 @@ final class ListQueryBaseTest extends TestCase
      */
     public function test_apply_filters_select_is_empty(): void
     {
-        // Skipped - requires real database connection for whereNull
-        $this->markTestSkipped('Requires real database connection for whereNull');
+        AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
+        AuditedRecord::factory()->create(['name' => 'Project B', 'project_id' => null]);
+        AuditedRecord::factory()->create(['name' => 'Project C', 'project_id' => 2]);
+        AuditedRecord::factory()->create(['name' => 'Project D', 'project_id' => null]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['project_id' => ['operator' => 'is_empty', 'value' => null]],
+            ['project_id' => ['column' => 'project_id', 'label' => 'test.project', 'type' => 'select', 'nullable' => true]],
+        );
+
+        $this->assertSame(2, $builder->count());
+        $this->assertTrue($builder->pluck('project_id')->every(fn ($v) => $v === null));
     }
 
     /**
@@ -482,8 +693,28 @@ final class ListQueryBaseTest extends TestCase
      */
     public function test_apply_filters_combines_multiple_with_and(): void
     {
-        // Skipped - requires real database connection
-        $this->markTestSkipped('Requires real database connection');
+        AuditedRecord::factory()->create(['name' => 'Juan', 'active' => true, 'project_id' => 1]);
+        AuditedRecord::factory()->create(['name' => 'Maria', 'active' => true, 'project_id' => 2]);
+        AuditedRecord::factory()->create(['name' => 'Pedro', 'active' => false, 'project_id' => 1]);
+        AuditedRecord::factory()->create(['name' => 'Ana', 'active' => true, 'project_id' => 1]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            [
+                'name' => ['operator' => 'contains', 'value' => 'na'],
+                'active' => ['operator' => 'is_true', 'value' => true],
+                'project_id' => ['operator' => 'equals', 'value' => 1],
+            ],
+            [
+                'name' => ['column' => 'name', 'label' => 'test.name', 'type' => 'text'],
+                'active' => ['column' => 'active', 'label' => 'test.active', 'type' => 'boolean'],
+                'project_id' => ['column' => 'project_id', 'label' => 'test.project', 'type' => 'select', 'multiple' => false],
+            ],
+        );
+
+        $this->assertSame(1, $builder->count());
+        $this->assertSame('Ana', $builder->first()->name);
     }
 
     // =========================================================================

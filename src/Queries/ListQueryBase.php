@@ -406,9 +406,9 @@ abstract class ListQueryBase
      *
      * @param  string  $type  One of 'text', 'date', 'boolean', 'number', 'select'
      * @param  bool  $nullable  Whether the field is nullable (affects date/select)
-     * @return array<int, string>
+     * @return list<string>
      */
-    protected function getDefaultOperatorsForType(string $type, bool $nullable = false): array
+    public static function getDefaultOperatorsForType(string $type, bool $nullable = false): array
     {
         return match ($type) {
             'text' => ['contains', 'equals', 'not_equals', 'starts_with', 'ends_with'],
@@ -429,7 +429,7 @@ abstract class ListQueryBase
      *
      * @param  string  $type  One of 'text', 'date', 'boolean', 'number', 'select'
      */
-    protected function getDefaultOperatorForType(string $type): string
+    public static function getDefaultOperatorForType(string $type): string
     {
         return match ($type) {
             'text' => 'contains',

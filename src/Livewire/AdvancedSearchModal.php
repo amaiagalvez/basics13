@@ -3,6 +3,7 @@
 namespace Basics13\Livewire;
 
 use Livewire\Component;
+use Basics13\Queries\ListQueryBase;
 use Illuminate\Contracts\View\View;
 
 /**
@@ -53,20 +54,14 @@ class AdvancedSearchModal extends Component
         array $fieldTypeLabels = [],
         array $groupLabels = [],
     ): void {
+        /** @var SearchFields $processedFields */
+        $processedFields = [];
         foreach ($fields as $key => $field) {
-            if (isset($field['condition'])) {
-                $field['visible'] = ($field['visible'] ?? true) && $field['condition']($scope);
-                unset($field['condition']);
-            }
-
-            if (isset($field['options']) && is_callable($field['options'])) {
-                $field['options'] = $field['options']($scope);
-            }
-
-            $fields[$key] = $field;
+            $field = $this->normalizeField($field, $scope);
+            $processedFields[$key] = $field;
         }
 
-        $this->fields = $fields;
+        $this->fields = $processedFields;
         $this->filters = $filters;
         $this->scope = $scope;
         $this->operatorLabels = $operatorLabels;
@@ -154,7 +149,10 @@ class AdvancedSearchModal extends Component
         $labels = [];
 
         foreach ($operators as $operator) {
-            $labels[$operator] = $this->operatorLabels[$operator] ?? ucfirst(str_replace('_', ' ', $operator));
+            $translationKey = 'basics13::messages.operator_'.$operator;
+            $translation = __($translationKey);
+            $labels[$operator] = $this->operatorLabels[$operator]
+                ?? ($translation !== $translationKey ? $translation : ucfirst(str_replace('_', ' ', $operator)));
         }
 
         return $labels;
@@ -268,5 +266,31 @@ class AdvancedSearchModal extends Component
     public function render(): View
     {
         return view('basics13::components.list.advanced-search-modal');
+    }
+
+    /**
+     * Normalize a field definition with defaults and condition evaluation.
+     *
+     * @param  SearchField  $field
+     * @return SearchField
+     */
+    private function normalizeField(array $field, string $scope): array
+    {
+        $field['operators'] ??= ListQueryBase::getDefaultOperatorsForType(
+            $field['type'],
+            $field['nullable'] ?? false,
+        );
+        $field['default_operator'] ??= ListQueryBase::getDefaultOperatorForType($field['type']);
+
+        if (isset($field['condition'])) {
+            $field['visible'] = ($field['visible'] ?? true) && $field['condition']($scope);
+            unset($field['condition']);
+        }
+
+        if (isset($field['options']) && is_callable($field['options'])) {
+            $field['options'] = $field['options']($scope);
+        }
+
+        return $field;
     }
 }

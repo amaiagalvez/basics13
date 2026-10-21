@@ -60,6 +60,7 @@ return [
     'pagination_summary' => 'Affichage de :first à :last sur :total résultats',
 
     // Recherche avancée
+    'close' => 'Fermer',
     'advanced_search' => 'Recherche avancée',
     'show_advanced_fields' => 'Afficher les champs avancés',
     'hide_advanced_fields' => 'Masquer les champs avancés',

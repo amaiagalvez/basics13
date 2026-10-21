@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * `$model->delete()` outside a controller.
  *
  * Only applies when the model uses SoftDeletes; otherwise it is a no-op.
+ *
+ * @phpstan-ignore trait.unused
  */
 trait TransactionalDelete
 {
