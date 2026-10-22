@@ -38,29 +38,14 @@ class AdvancedSearchModal extends Component
 
     public bool $showAdvanced = false;
 
-    /** @var array<string, string> */
-    protected array $operatorLabels = [];
-
-    /** @var array<string, string> */
-    protected array $fieldTypeLabels = [];
-
-    /** @var array<string, string> */
-    protected array $groupLabels = [];
-
     /**
      * @param  SearchFields  $fields
      * @param  SearchFilters  $filters
-     * @param  array<string, string>  $operatorLabels
-     * @param  array<string, string>  $fieldTypeLabels
-     * @param  array<string, string>  $groupLabels
      */
     public function mount(
         array $fields = [],
         array $filters = [],
         string $scope = 'active',
-        array $operatorLabels = [],
-        array $fieldTypeLabels = [],
-        array $groupLabels = [],
     ): void {
         /** @var SearchFields $processedFields */
         $processedFields = [];
@@ -77,9 +62,6 @@ class AdvancedSearchModal extends Component
         $this->fields = $processedFields;
         $this->filters = $filters;
         $this->scope = $scope;
-        $this->operatorLabels = $operatorLabels;
-        $this->fieldTypeLabels = $fieldTypeLabels;
-        $this->groupLabels = $groupLabels;
 
         // Initialize filter fields with default operators. A multi-select starts as an empty list:
         // Livewire binds its checkboxes to an array only when the property already holds one.
@@ -128,23 +110,6 @@ class AdvancedSearchModal extends Component
     }
 
     /**
-     * Get fields grouped by group key.
-     *
-     * @return array<string, SearchFields>
-     */
-    public function getGroupedFields(): array
-    {
-        $grouped = [];
-
-        foreach ($this->getVisibleFields() as $key => $field) {
-            $group = $field['group'] ?? 'general';
-            $grouped[$group][$key] = $field;
-        }
-
-        return $grouped;
-    }
-
-    /**
      * Get operators for a field type.
      *
      * @param  SearchField  $field
@@ -158,19 +123,12 @@ class AdvancedSearchModal extends Component
         foreach ($operators as $operator) {
             $translationKey = 'basics13::messages.operator_'.$operator;
             $translation = __($translationKey);
-            $labels[$operator] = $this->operatorLabels[$operator]
-                ?? ($translation !== $translationKey ? $translation : ucfirst(str_replace('_', ' ', $operator)));
+            $labels[$operator] = $translation !== $translationKey
+                ? $translation
+                : ucfirst(str_replace('_', ' ', $operator));
         }
 
         return $labels;
-    }
-
-    /**
-     * Get the label for a group.
-     */
-    public function getGroupLabel(string $group): string
-    {
-        return $this->groupLabels[$group] ?? ucfirst($group);
     }
 
     /**

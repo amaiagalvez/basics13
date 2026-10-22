@@ -96,4 +96,6 @@ return [
     'field_type_boolean' => 'Booléen',
     'field_type_number' => 'Nombre',
     'field_type_select' => 'Sélection',
+
+    'own_account_only' => 'Seul le titulaire du compte peut modifier l’adresse e-mail et le mot de passe.',
 ];

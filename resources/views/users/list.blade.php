@@ -3,6 +3,7 @@
     $initialForm = $list['create']
         ? [
             'id' => $editingUser ? old('_user_id') : null,
+            'own' => $editingUser && (int) old('_user_id') === auth()->id(),
             'name' => old('name', ''),
             'email' => old('email', ''),
             'notes' => old('notes', ''),
@@ -32,6 +33,7 @@
         createUser() {
             this.form = {
                 id: null,
+                own: false,
                 name: '',
                 email: '',
                 notes: '',
@@ -108,7 +110,7 @@
                             </flux:table.row>
                         @empty
                             <x-basics13::list.empty-state :colspan="3" :message="$list['emptyMessage']">
-                                @if ($list['create'] && $list['search']['value'] === '')
+                                @if ($list['create'] && ! $list['narrowed'])
                                     <flux:modal.trigger name="user-form">
                                         <flux:button size="sm" variant="primary" icon="plus"
                                             x-on:click="createUser()"
@@ -137,10 +139,7 @@
         <livewire:basics13.advanced-search-modal
             :fields="$searchableFields"
             :filters="$filters"
-            :scope="$scope"
-            :operatorLabels="__('basics13::messages')"
-            :fieldTypeLabels="__('basics13::messages')"
-            :groupLabels="__('basics13::messages')" />
+            :scope="$scope" />
 
         <x-basics13::list.confirm-modal prefix="user" />
     </div>

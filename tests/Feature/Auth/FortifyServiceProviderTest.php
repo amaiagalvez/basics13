@@ -135,7 +135,6 @@ class FortifyServiceProviderTest extends AuthFeatureTestCase
         config(['auth.providers.users.model' => \stdClass::class]);
 
         $method = new \ReflectionMethod(FortifyServiceProvider::class, 'userModelClass');
-        $method->setAccessible(true);
 
         $this->expectException(LogicException::class);
         $this->expectExceptionMessage('The configured users model must be an Eloquent authenticatable model.');

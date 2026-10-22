@@ -92,6 +92,17 @@ class ListTransformerTest extends TestCase
         $this->assertSame('No records match your search.', $transformer->buildEnvelope('active', 'search')['emptyMessage']);
     }
 
+    public function test_an_active_filter_narrows_the_list_like_a_search_does(): void
+    {
+        $this->assertFalse((new TestListTransformer)->buildEnvelope('archived', '')['narrowed']);
+
+        request()->query->set('filters', ['name' => ['operator' => 'contains', 'value' => 'x']]);
+
+        $envelope = (new TestListTransformer)->buildEnvelope('active', '');
+        $this->assertTrue($envelope['narrowed']);
+        $this->assertSame('No records match your search.', $envelope['emptyMessage']);
+    }
+
     public function test_empty_message_for_archived_state(): void
     {
         $transformer = new TestListTransformer;

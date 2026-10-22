@@ -194,7 +194,6 @@ final class UserListQueryTest extends TestCase
     private function invoke(UserListQuery $query, string $method, array $arguments = []): mixed
     {
         $reflection = new \ReflectionMethod($query, $method);
-        $reflection->setAccessible(true);
 
         return $reflection->invoke($query, ...$arguments);
     }

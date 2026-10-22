@@ -417,24 +417,29 @@ abstract class ListQueryBase
     }
 
     /**
-     * Find a soft-deleted record by name, optionally scoped by project.
+     * Find a soft-deleted record by name. A resource whose names are unique inside a parent
+     * overrides this to scope the lookup by that parent.
      *
      * The record comes back as the query's own model, so a caller keeps its columns instead of
      * receiving the bare `Model` and losing them.
      *
      * @return TModel|null
      */
-    public function findTrashedByName(string $name, ?int $projectId = null): ?Model
+    public function findTrashedByName(string $name): ?Model
+    {
+        return $this->firstTrashedByName($this->trashedQuery(), $name);
+    }
+
+    /**
+     * @return Builder<TModel>
+     */
+    protected function trashedQuery(): Builder
     {
         /** @var Builder<TModel> $query */
         /** @phpstan-ignore method.notFound */
         $query = $this->getModelClass()::query()->withTrashed()->whereNotNull('deleted_at');
 
-        if ($projectId !== null) {
-            $query->where('project_id', $projectId);
-        }
-
-        return $this->firstTrashedByName($query, $name);
+        return $query;
     }
 
     /**

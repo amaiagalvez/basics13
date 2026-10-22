@@ -47,7 +47,6 @@ class ResolvesUserModelTest extends TestCase
     private function userModelClass(object $subject): string
     {
         $method = new \ReflectionMethod($subject, 'userModelClass');
-        $method->setAccessible(true);
 
         /** @var string */
         return $method->invoke($subject);

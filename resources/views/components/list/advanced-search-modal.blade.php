@@ -26,6 +26,7 @@
             @if ($hasHiddenFields)
                 <div class="flex items-center gap-2 px-2">
                     <flux:button type="button" variant="ghost" size="sm" wire:click="toggleAdvanced"
+                        :aria-expanded="$showAdvanced ? 'true' : 'false'"
                         data-test="advanced-search-toggle"
                         class="text-sm text-zinc-600 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-white">
                         {{ $showAdvanced ? __('basics13::messages.hide_advanced_fields') : __('basics13::messages.show_advanced_fields') }}
@@ -78,11 +79,13 @@
                             @switch($fieldType)
                                 @case('text')
                                     <flux:input wire:model="filters.{{ $fieldKey }}.value"
+                                        :aria-label="__($field['label'])"
                                         placeholder="{{ isset($field['placeholder']) ? __($field['placeholder']) : '' }}"
                                         class="flex-1 min-w-0" />
                                     @break
                                 @case('number')
                                     <flux:input type="number" wire:model="filters.{{ $fieldKey }}.value"
+                                        :aria-label="__($field['label'])"
                                         placeholder="{{ isset($field['placeholder']) ? __($field['placeholder']) : '' }}"
                                         class="flex-1 min-w-0" step="any" />
                                     @break
@@ -90,14 +93,17 @@
                                     @if ($currentOperator === 'between')
                                         <div class="flex gap-2 flex-1 min-w-0">
                                             <flux:input type="date" wire:model="filters.{{ $fieldKey }}.value.0"
+                                                :aria-label="__($field['label']).' – '.__('basics13::messages.date_from')"
                                                 placeholder="{{ __('basics13::messages.date_from') }}"
                                                 class="flex-1 min-w-0" />
                                             <flux:input type="date" wire:model="filters.{{ $fieldKey }}.value.1"
+                                                :aria-label="__($field['label']).' – '.__('basics13::messages.date_to')"
                                                 placeholder="{{ __('basics13::messages.date_to') }}"
                                                 class="flex-1 min-w-0" />
                                         </div>
                                     @else
                                         <flux:input type="date" wire:model="filters.{{ $fieldKey }}.value"
+                                            :aria-label="__($field['label'])"
                                             placeholder="{{ isset($field['placeholder']) ? __($field['placeholder']) : '' }}"
                                             class="flex-1 min-w-0" />
                                     @endif
@@ -120,7 +126,7 @@
                                         </div>
                                     @else
                                         <flux:select wire:model="filters.{{ $fieldKey }}.value"
-                                            class="flex-1 min-w-0" :aria-label="__('basics13::messages.select_single')">
+                                            class="flex-1 min-w-0" :aria-label="__($field['label'])">
                                             <option value="">{{ __('basics13::messages.select_placeholder') }}</option>
                                             @foreach ($selectOptions as $optValue => $optLabel)
                                                 <option value="{{ $optValue }}">{{ $optLabel }}</option>

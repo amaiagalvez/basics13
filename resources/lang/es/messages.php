@@ -95,4 +95,6 @@ return [
     'field_type_boolean' => 'Booleano',
     'field_type_number' => 'Número',
     'field_type_select' => 'Selección',
+
+    'own_account_only' => 'Solo el titular de la cuenta puede cambiar el correo y la contraseña.',
 ];

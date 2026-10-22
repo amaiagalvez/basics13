@@ -143,8 +143,8 @@ class UserCrudTest extends UserTestCase
 
     public function test_an_edit_with_a_password_changes_it(): void
     {
-        $this->actingAs(User::factory()->create());
         $account = User::factory()->create();
+        $this->actingAs($account);
 
         $this->put(route('users.update', $account->getKey()), [
             'name' => $account->name,
@@ -158,14 +158,73 @@ class UserCrudTest extends UserTestCase
 
     public function test_an_edit_requires_the_password_confirmation(): void
     {
-        $this->actingAs(User::factory()->create());
         $account = User::factory()->create();
+        $this->actingAs($account);
 
         $this->from(route('users.index'))->put(route('users.update', $account->getKey()), [
             'name' => $account->name,
             'email' => $account->email,
             'password' => 'brand-new-password',
         ])->assertRedirect(route('users.index'))->assertSessionHasErrors('password');
+    }
+
+    public function test_another_account_password_cannot_be_changed(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $account = User::factory()->create();
+        $originalPassword = $account->password;
+
+        $this->from(route('users.index'))->put(route('users.update', $account->getKey()), [
+            'name' => $account->name,
+            'email' => $account->email,
+            'password' => 'taken-over-password',
+            'password_confirmation' => 'taken-over-password',
+        ])->assertRedirect(route('users.index'))
+            ->assertSessionHasErrors(['password' => __('basics13::messages.own_account_only')]);
+
+        $this->assertSame($originalPassword, $account->refresh()->password);
+    }
+
+    public function test_another_account_email_cannot_be_changed(): void
+    {
+        $this->actingAs(User::factory()->create());
+        $account = User::factory()->create(['email' => 'holder@example.test']);
+
+        $this->from(route('users.index'))->put(route('users.update', $account->getKey()), [
+            'name' => $account->name,
+            'email' => 'attacker@example.test',
+        ])->assertRedirect(route('users.index'))
+            ->assertSessionHasErrors(['email' => __('basics13::messages.own_account_only')]);
+
+        $this->assertSame('holder@example.test', $account->refresh()->email);
+    }
+
+    public function test_the_account_holder_can_change_its_own_email(): void
+    {
+        $account = User::factory()->create(['email' => 'old@example.test']);
+        $this->actingAs($account);
+
+        $this->put(route('users.update', $account->getKey()), [
+            'name' => $account->name,
+            'email' => 'new-own@example.test',
+        ])->assertRedirect(route('users.index'))->assertSessionHasNoErrors();
+
+        $this->assertSame('new-own@example.test', $account->refresh()->email);
+    }
+
+    public function test_the_edit_payload_tells_the_drawer_which_account_is_the_own_one(): void
+    {
+        $actor = User::factory()->create(['name' => 'Aaa actor']);
+        $other = User::factory()->create(['name' => 'Bbb other']);
+
+        $this->actingAs($actor)
+            ->get(route('users.index'))
+            ->assertOk()
+            ->assertViewHas('list', function (array $list) use ($actor, $other): bool {
+                $own = array_column(array_column($list['rows'], 'editPayload'), 'own', 'id');
+
+                return $own[$actor->getKey()] === true && $own[$other->getKey()] === false;
+            });
     }
 
     public function test_the_edit_form_is_bound_to_the_saved_notes(): void

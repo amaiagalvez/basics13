@@ -170,7 +170,6 @@ class TrashControllerTest extends TestCase
         AuditedRecord::factory()->create(['name' => 'Existing Name']);
 
         $reflection = new \ReflectionMethod($controller, 'takenBy');
-        $reflection->setAccessible(true);
 
         $result = $reflection->invoke($controller, AuditedRecord::query(), 'Existing Name');
 
@@ -182,7 +181,6 @@ class TrashControllerTest extends TestCase
         $controller = new TestTrashController;
 
         $reflection = new \ReflectionMethod($controller, 'takenBy');
-        $reflection->setAccessible(true);
 
         $result = $reflection->invoke($controller, AuditedRecord::query(), 'Non Existent Name');
 
@@ -195,7 +193,6 @@ class TrashControllerTest extends TestCase
         $trashed = AuditedRecord::factory()->trashed()->create();
 
         $reflection = new \ReflectionMethod($controller, 'restoreTookEffect');
-        $reflection->setAccessible(true);
 
         $result = $reflection->invoke($controller, $trashed);
 
@@ -209,7 +206,6 @@ class TrashControllerTest extends TestCase
         $trashed->restore();
 
         $reflection = new \ReflectionMethod($controller, 'restoreTookEffect');
-        $reflection->setAccessible(true);
 
         $result = $reflection->invoke($controller, $trashed);
 
@@ -224,7 +220,6 @@ class TrashControllerTest extends TestCase
         $request = $this->destroyRequest($trashed);
 
         $reflection = new \ReflectionMethod($controller, 'forceDeleteLocked');
-        $reflection->setAccessible(true);
 
         $deleted = $reflection->invoke($controller, $request);
 
@@ -241,7 +236,6 @@ class TrashControllerTest extends TestCase
         $request = $this->destroyRequest($trashed);
 
         $reflection = new \ReflectionMethod($controller, 'forceDeleteLocked');
-        $reflection->setAccessible(true);
 
         // When the record is force deleted, the lockForUpdate/firstOrFail throws ModelNotFoundException
         $this->expectException(ModelNotFoundException::class);

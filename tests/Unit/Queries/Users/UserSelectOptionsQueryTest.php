@@ -60,15 +60,14 @@ final class UserSelectOptionsQueryTest extends TestCase
         $this->assertSame(0, $result->count());
     }
 
-    public function test_search_returns_active_users_limited_to_per_page(): void
+    public function test_search_returns_only_active_users_as_id_and_text(): void
     {
-        User::factory()->count(30)->create(['active' => true]);
-        User::factory()->count(5)->create(['active' => false]);
+        $active = User::factory()->count(3)->create(['active' => true]);
+        User::factory()->count(2)->create(['active' => false]);
 
-        $query = new UserSelectOptionsQuery;
-        $result = $query->search('');
+        $result = (new UserSelectOptionsQuery)->search('');
 
-        $this->assertSame(25, $result->count()); // PER_PAGE = 25
+        $this->assertEqualsCanonicalizing($active->modelKeys(), $result->pluck('id')->all());
         $this->assertSame(['id', 'text'], array_keys($result->first()));
     }
 
@@ -91,13 +90,9 @@ final class UserSelectOptionsQueryTest extends TestCase
         $user1 = User::factory()->create(['name' => 'Ana', 'email' => 'ana@example.com', 'active' => true]);
         $user2 = User::factory()->create(['name' => 'Ana', 'email' => 'ana2@example.com', 'active' => true]);
 
-        $query = new UserSelectOptionsQuery;
-        $result = $query->search('');
+        $result = (new UserSelectOptionsQuery)->search('');
 
-        $names = $result->pluck('text')->all();
-        $this->assertSame('Ana', $names[0]);
-        $this->assertSame('Ana', $names[1]);
-        $this->assertSame('Carlos', $names[2]);
+        $this->assertSame([$user1->id, $user2->id, $user3->id], $result->pluck('id')->all());
     }
 
     public function test_search_escapes_special_characters(): void
@@ -119,7 +114,7 @@ final class UserSelectOptionsQueryTest extends TestCase
         $query = new UserSelectOptionsQuery;
         $result = $query->search('');
 
-        $this->assertSame(25, $result->count()); // PER_PAGE = 25
+        $this->assertSame(UserSelectOptionsQuery::PER_PAGE, $result->count());
     }
 
     /**
@@ -128,7 +123,6 @@ final class UserSelectOptionsQueryTest extends TestCase
     private function invoke(UserSelectOptionsQuery $query, string $method, array $arguments = []): mixed
     {
         $reflection = new \ReflectionMethod($query, $method);
-        $reflection->setAccessible(true);
 
         return $reflection->invoke($query, ...$arguments);
     }

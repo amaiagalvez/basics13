@@ -313,9 +313,6 @@ final class ListQueryBaseTest extends TestCase
     // Advanced Search: applyFilters() operator mapping
     // =========================================================================
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_text_contains(): void
     {
         AuditedRecord::create(['name' => 'Juan Perez', 'notes' => 'test']);
@@ -333,9 +330,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame('Maria Garcia', $builder->first()->name);
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_text_equals(): void
     {
         AuditedRecord::create(['name' => 'Juan Perez', 'notes' => 'test']);
@@ -353,9 +347,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame('Juan Perez', $builder->first()->name);
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_text_starts_with(): void
     {
         AuditedRecord::create(['name' => 'Juan Perez', 'notes' => 'test']);
@@ -373,9 +364,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame('Pedro Lopez', $builder->first()->name);
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_text_ends_with(): void
     {
         AuditedRecord::create(['name' => 'Juan Perez', 'notes' => 'test']);
@@ -393,9 +381,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame('Juan Perez', $builder->first()->name);
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_text_not_equals(): void
     {
         AuditedRecord::create(['name' => 'Juan Perez', 'notes' => 'test']);
@@ -416,9 +401,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertNotContains('Juan Perez', $names);
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_date_between(): void
     {
         $date1 = CarbonImmutable::now()->subDays(10);
@@ -441,9 +423,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame(2, $builder->count());
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_date_before(): void
     {
         $date1 = CarbonImmutable::now()->subDays(10);
@@ -466,9 +445,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame(2, $builder->count());
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_date_after(): void
     {
         $date1 = CarbonImmutable::now()->subDays(10);
@@ -491,9 +467,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame(2, $builder->count());
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_date_equals(): void
     {
         $date1 = CarbonImmutable::now()->subDays(10);
@@ -515,9 +488,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame(2, $builder->count());
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_boolean_is_true(): void
     {
         AuditedRecord::factory()->create(['name' => 'Record One', 'active' => true]);
@@ -536,9 +506,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertTrue($builder->pluck('active')->every(fn ($v) => (bool) $v === true));
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_boolean_is_false(): void
     {
         AuditedRecord::factory()->create(['name' => 'Record One', 'active' => true]);
@@ -583,9 +550,6 @@ final class ListQueryBaseTest extends TestCase
         ], $whereCalls);
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_select_equals_single(): void
     {
         AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
@@ -603,9 +567,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertTrue($builder->pluck('project_id')->every(fn ($v) => $v === 1));
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_select_not_equals_single(): void
     {
         AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
@@ -623,9 +584,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame(2, $builder->first()->project_id);
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_select_in_multiple(): void
     {
         AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
@@ -647,9 +605,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertNotContains(2, $projectIds);
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_select_not_in_multiple(): void
     {
         AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
@@ -668,9 +623,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame(2, $builder->first()->project_id);
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_select_is_empty(): void
     {
         AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
@@ -689,9 +641,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertTrue($builder->pluck('project_id')->every(fn ($v) => $v === null));
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_combines_multiple_with_and(): void
     {
         AuditedRecord::factory()->create(['name' => 'Juan', 'active' => true, 'project_id' => 1]);
@@ -722,9 +671,6 @@ final class ListQueryBaseTest extends TestCase
     // Additional filter operator coverage
     // =========================================================================
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_number_greater_than(): void
     {
         DB::table('audited_records')->insert([
@@ -746,9 +692,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertTrue(in_array(25, $priorities));
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_number_less_than(): void
     {
         DB::table('audited_records')->insert([
@@ -770,9 +713,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertTrue(in_array(15, $priorities));
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_number_greater_than_or_equal(): void
     {
         DB::table('audited_records')->insert([
@@ -794,9 +734,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertTrue(in_array(20, $priorities));
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_number_less_than_or_equal(): void
     {
         DB::table('audited_records')->insert([
@@ -818,9 +755,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertTrue(in_array(15, $priorities));
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_number_not_equals(): void
     {
         DB::table('audited_records')->insert([
@@ -843,9 +777,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertFalse(in_array(15, $priorities));
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_date_is_empty(): void
     {
         DB::table('audited_records')->insert([
@@ -865,9 +796,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertNull($builder->first()->published_at);
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_boolean_default_operator(): void
     {
         AuditedRecord::factory()->create(['name' => 'Record One', 'active' => true]);
@@ -884,9 +812,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame(2, $builder->count());
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_text_equals_exact_match(): void
     {
         AuditedRecord::factory()->create(['name' => 'Juan Perez', 'active' => true]);
@@ -904,9 +829,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame('Juan Perez', $builder->first()->name);
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_select_multiple_equals_single_value_as_array(): void
     {
         AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
@@ -924,9 +846,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertTrue($builder->pluck('project_id')->every(fn ($v) => $v === 1));
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_select_multiple_not_equals_single_value_as_array(): void
     {
         AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
@@ -944,9 +863,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame(2, $builder->first()->project_id);
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_select_is_empty_non_nullable_skips(): void
     {
         AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
@@ -963,9 +879,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame(2, $builder->count());
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_select_multiple_in_with_empty_array(): void
     {
         AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
@@ -982,9 +895,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame(2, $builder->count());
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_skips_unknown_field(): void
     {
         AuditedRecord::factory()->create(['name' => 'Record 1', 'active' => true]);
@@ -1001,9 +911,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame(2, $builder->count());
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_number_between_invalid_value_skips(): void
     {
         DB::table('audited_records')->insert([
@@ -1022,9 +929,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame(2, $builder->count());
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_number_between_non_numeric_skips(): void
     {
         DB::table('audited_records')->insert([
@@ -1043,9 +947,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame(2, $builder->count());
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_text_empty_value_skips(): void
     {
         AuditedRecord::factory()->create(['name' => 'Record 1', 'active' => true]);
@@ -1140,9 +1041,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame(2, $builder->count());
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_apply_filters_number_empty_value_skips(): void
     {
         DB::table('audited_records')->insert([
@@ -1165,9 +1063,6 @@ final class ListQueryBaseTest extends TestCase
     // stateCounts with default null parameters
     // =========================================================================
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_state_counts_calculates_when_not_provided(): void
     {
         AuditedRecord::factory()->create(['name' => 'Active 1', 'active' => true]);
@@ -1193,9 +1088,6 @@ final class ListQueryBaseTest extends TestCase
     // findTrashedByName
     // =========================================================================
 
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_find_trashed_by_name_returns_most_recently_deleted(): void
     {
         $record1 = AuditedRecord::factory()->create(['name' => 'Test Record', 'active' => true]);
@@ -1211,27 +1103,6 @@ final class ListQueryBaseTest extends TestCase
         $this->assertSame($record2->id, $result->id);
     }
 
-    /**
-     * @requires extension pdo_sqlite
-     */
-    public function test_find_trashed_by_name_with_project_id(): void
-    {
-        $record1 = AuditedRecord::factory()->create(['name' => 'Test Record', 'active' => true, 'project_id' => 1]);
-        $record1->delete();
-
-        $record2 = AuditedRecord::factory()->create(['name' => 'Test Record', 'active' => true, 'project_id' => 2]);
-        $record2->delete();
-
-        $query = new TestListQuery;
-        $result = $query->findTrashedByName('Test Record', 1);
-
-        $this->assertNotNull($result);
-        $this->assertSame(1, $result->project_id);
-    }
-
-    /**
-     * @requires extension pdo_sqlite
-     */
     public function test_find_trashed_by_name_returns_null_when_not_found(): void
     {
         AuditedRecord::factory()->create(['name' => 'Other Record', 'active' => true]);
@@ -1380,7 +1251,6 @@ final class ListQueryBaseTest extends TestCase
     private function callSearchPattern(string $search): string
     {
         $reflection = new \ReflectionMethod($this->query, 'searchPattern');
-        $reflection->setAccessible(true);
 
         /** @var string */
         return $reflection->invoke($this->query, $search);
@@ -1394,7 +1264,6 @@ final class ListQueryBaseTest extends TestCase
     private function callWhereMatches(Builder $builder, string $search, array $searchColumns): Builder
     {
         $reflection = new \ReflectionMethod($this->query, 'whereMatches');
-        $reflection->setAccessible(true);
 
         /** @var Builder<AuditedRecord> */
         return $reflection->invoke($this->query, $builder, $search, $searchColumns);
@@ -1406,7 +1275,6 @@ final class ListQueryBaseTest extends TestCase
     private function callFirstTrashedByName(Builder $builder, string $name): ?AuditedRecord
     {
         $reflection = new \ReflectionMethod($this->query, 'firstTrashedByName');
-        $reflection->setAccessible(true);
 
         /** @var AuditedRecord|null */
         return $reflection->invoke($this->query, $builder, $name);
@@ -1420,7 +1288,6 @@ final class ListQueryBaseTest extends TestCase
     private function callPaginate(Builder $builder, string $search, array $searchColumns): LengthAwarePaginator
     {
         $reflection = new \ReflectionMethod($this->query, 'paginate');
-        $reflection->setAccessible(true);
 
         /** @var LengthAwarePaginator<int, AuditedRecord> */
         return $reflection->invoke($this->query, $builder, $search, $searchColumns);
@@ -1434,7 +1301,6 @@ final class ListQueryBaseTest extends TestCase
     private function callApplyFilters(Builder $builder, array $filters, array $fields): void
     {
         $reflection = new \ReflectionMethod($this->query, 'applyFilters');
-        $reflection->setAccessible(true);
         $reflection->invoke($this->query, $builder, $filters, $fields, 'active');
     }
 
@@ -1444,7 +1310,6 @@ final class ListQueryBaseTest extends TestCase
     private function callStateCounts(TestListQuery $query, ?int $activeTotal = null, ?int $archivedTotal = null, ?int $trashedTotal = null): array
     {
         $reflection = new \ReflectionMethod($query, 'stateCounts');
-        $reflection->setAccessible(true);
 
         /** @var array{active: int, archived: int, trashed: int} */
         return $reflection->invoke($query, $activeTotal, $archivedTotal, $trashedTotal);
@@ -1457,7 +1322,6 @@ final class ListQueryBaseTest extends TestCase
     private function callSearchColumns(TestListQueryWithSearchColumns $query, string $scope, array $columns): array
     {
         $reflection = new \ReflectionMethod($query, 'searchColumns');
-        $reflection->setAccessible(true);
 
         /** @var non-empty-list<literal-string> */
         return $reflection->invoke($query, $scope, $columns);
@@ -1466,7 +1330,6 @@ final class ListQueryBaseTest extends TestCase
     private function callEscapeLikeValue(string $value): string
     {
         $reflection = new \ReflectionMethod($this->query, 'escapeLikeValue');
-        $reflection->setAccessible(true);
 
         /** @var string */
         return $reflection->invoke($this->query, $value);

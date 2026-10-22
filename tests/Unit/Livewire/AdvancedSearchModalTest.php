@@ -56,6 +56,23 @@ class AdvancedSearchModalTest extends FeatureTestCase
         $this->assertEquals(['contains', 'equals', 'not_equals', 'starts_with', 'ends_with'], $fieldsProp['name']['operators']);
     }
 
+    public function test_value_inputs_are_named_after_their_field_and_the_toggle_reports_its_state(): void
+    {
+        $fields = [
+            'name' => ['column' => 'name', 'label' => 'Name', 'type' => 'text'],
+            'start_date' => ['column' => 'start_date', 'label' => 'Start date', 'type' => 'date'],
+            'notes' => ['column' => 'notes', 'label' => 'Notes', 'type' => 'text', 'visible' => false],
+        ];
+
+        Livewire::test(AdvancedSearchModal::class, ['fields' => $fields, 'filters' => [], 'scope' => 'active'])
+            ->assertSeeHtml('aria-label="Name"')
+            ->assertSeeHtml('aria-label="Start date – '.e(__('basics13::messages.date_from')).'"')
+            ->assertSeeHtml('aria-label="Start date – '.e(__('basics13::messages.date_to')).'"')
+            ->assertSeeHtml('aria-expanded="false"')
+            ->call('toggleAdvanced')
+            ->assertSeeHtml('aria-expanded="true"');
+    }
+
     public function test_toggle_advanced_toggles_show_advanced(): void
     {
         $component = Livewire::test(AdvancedSearchModal::class, ['fields' => [], 'filters' => [], 'scope' => 'active']);

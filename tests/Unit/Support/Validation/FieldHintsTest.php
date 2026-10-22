@@ -178,7 +178,6 @@ final class FieldHintsTest extends TestCase
 
         $reflection = new \ReflectionClass($hints);
         $method = $reflection->getMethod('label');
-        $method->setAccessible(true);
 
         $label = $method->invoke($hints, 'custom_field');
 
@@ -192,7 +191,6 @@ final class FieldHintsTest extends TestCase
 
         $reflection = new \ReflectionClass($hints);
         $method = $reflection->getMethod('label');
-        $method->setAccessible(true);
 
         $label = $method->invoke($hints, 'snake_case_field');
 
@@ -205,7 +203,6 @@ final class FieldHintsTest extends TestCase
 
         $reflection = new \ReflectionClass($hints);
         $method = $reflection->getMethod('declaredRules');
-        $method->setAccessible(true);
 
         $rules1 = $method->invoke($hints);
         $rules2 = $method->invoke($hints);
@@ -220,7 +217,6 @@ final class FieldHintsTest extends TestCase
 
         $reflection = new \ReflectionClass($hints);
         $method = $reflection->getMethod('declaredRules');
-        $method->setAccessible(true);
 
         $this->expectException(\LogicException::class);
         $this->expectExceptionMessage('must declare rules()');
@@ -234,7 +230,6 @@ final class FieldHintsTest extends TestCase
 
         $reflection = new \ReflectionClass($hints);
         $method = $reflection->getMethod('parsedRules');
-        $method->setAccessible(true);
 
         $parsed = $method->invoke($hints, 'code');
 
@@ -250,7 +245,6 @@ final class FieldHintsTest extends TestCase
 
         $reflection = new \ReflectionClass($hints);
         $method = $reflection->getMethod('say');
-        $method->setAccessible(true);
 
         $result = $method->invoke($hints, 'Test :value', ['value' => '123']);
 
@@ -265,7 +259,6 @@ final class FieldHintsTest extends TestCase
 
         $reflection = new \ReflectionClass($hints);
         $method = $reflection->getMethod('lengthNotices');
-        $method->setAccessible(true);
 
         // quantity is integer, not string
         $rules = [
@@ -285,7 +278,6 @@ final class FieldHintsTest extends TestCase
 
         $reflection = new \ReflectionClass($hints);
         $method = $reflection->getMethod('lengthNotices');
-        $method->setAccessible(true);
 
         $rules = [
             ['string', []],
@@ -305,7 +297,6 @@ final class FieldHintsTest extends TestCase
 
         $reflection = new \ReflectionClass($hints);
         $method = $reflection->getMethod('lengthNotices');
-        $method->setAccessible(true);
 
         $rules = [
             ['string', []],
@@ -324,7 +315,6 @@ final class FieldHintsTest extends TestCase
 
         $reflection = new \ReflectionClass($hints);
         $method = $reflection->getMethod('lengthNotices');
-        $method->setAccessible(true);
 
         $rules = [
             ['string', []],
@@ -343,7 +333,6 @@ final class FieldHintsTest extends TestCase
 
         $reflection = new \ReflectionClass($hints);
         $method = $reflection->getMethod('hint');
-        $method->setAccessible(true);
 
         $result = $method->invoke($hints, 'unknown_rule', []);
 

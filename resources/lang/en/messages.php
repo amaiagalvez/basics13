@@ -95,4 +95,6 @@ return [
     'field_type_boolean' => 'Boolean',
     'field_type_number' => 'Number',
     'field_type_select' => 'Selection',
+
+    'own_account_only' => 'Only the account holder can change the email and the password.',
 ];

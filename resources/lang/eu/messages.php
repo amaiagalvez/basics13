@@ -96,4 +96,6 @@ return [
     'field_type_boolean' => 'Boolearra',
     'field_type_number' => 'Zenbakia',
     'field_type_select' => 'Hautapena',
+
+    'own_account_only' => 'Kontuaren jabeak bakarrik alda ditzake helbide elektronikoa eta pasahitza.',
 ];

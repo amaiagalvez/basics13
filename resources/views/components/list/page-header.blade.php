@@ -54,8 +54,9 @@
             continue;
         }
 
-        $operatorLabel = __('basics13::messages.operator_'.$operator) ?? ucfirst(str_replace('_', ' ', $operator));
-        $fieldLabel = __($field['label']) ?? $field['label'] ?? $fieldKey;
+        $operatorKey = 'basics13::messages.operator_'.$operator;
+        $operatorLabel = __($operatorKey) !== $operatorKey ? __($operatorKey) : ucfirst(str_replace('_', ' ', $operator));
+        $fieldLabel = __($field['label']);
 
         $valueLabel = '';
         if ($isBoolean) {
@@ -79,9 +80,6 @@
             'url' => $listUrlWithout($fieldKey),
         ];
     }
-
-    // Prepare base64 encoded JSON for Alpine.js
-    $filtersB64 = base64_encode(json_encode($activeFilters, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE));
 @endphp
 
 <div {{ $attributes->class('flex flex-col gap-4') }}>

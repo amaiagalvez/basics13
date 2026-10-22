@@ -81,37 +81,6 @@ class ListQueryBaseSearchTest extends TestCase
         $this->assertNull($found);
     }
 
-    public function test_find_trashed_by_name_scopes_by_project_id(): void
-    {
-        $this->trashNamed('Scoped Record', 1);
-        $this->trashNamed('Scoped Record', 2);
-
-        $query = new FindTrashedListQuery;
-
-        $this->assertSame(1, $query->findTrashedByName('Scoped Record', 1)?->project_id);
-        $this->assertSame(2, $query->findTrashedByName('Scoped Record', 2)?->project_id);
-        $this->assertNull($query->findTrashedByName('Scoped Record', 3));
-    }
-
-    /**
-     * Trash a record under a name that no other row holds, then rename it to the shared one.
-     *
-     * The active-name index keeps the two rows from clashing while the rename happens, because a
-     * soft-deleted row is out of that index.
-     */
-    private function trashNamed(string $name, int $projectId): AuditedRecord
-    {
-        $record = AuditedRecord::factory()->create([
-            'name' => $name.' '.$projectId,
-            'project_id' => $projectId,
-        ]);
-
-        $record->update(['name' => $name]);
-        $record->delete();
-
-        return $record;
-    }
-
     public function test_state_counts_returns_correct_counts(): void
     {
         // Create active records with unique names

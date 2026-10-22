@@ -46,7 +46,8 @@ abstract class ListTransformer
                 'archived' => __('basics13::messages.updated_at'),
                 'trash' => __('basics13::messages.deleted_at'),
             },
-            'emptyMessage' => $this->emptyMessage($state, $search),
+            'emptyMessage' => $this->emptyMessage($state, $this->narrowed($search)),
+            'narrowed' => $this->narrowed($search),
             'search' => $this->search(
                 route($this->routes()[$state]),
                 $search,
@@ -112,11 +113,22 @@ abstract class ListTransformer
     }
 
     /**
+     * Whether a search term or an advanced filter narrows the list: an empty page then means that
+     * nothing matched, not that nothing exists, so it says so and offers no "create" shortcut.
+     */
+    private function narrowed(string $search): bool
+    {
+        $filters = request()->query('filters');
+
+        return $search !== '' || (is_array($filters) && $filters !== []);
+    }
+
+    /**
      * @param  'active'|'archived'|'trash'  $state
      */
-    private function emptyMessage(string $state, string $search): string
+    private function emptyMessage(string $state, bool $narrowed): string
     {
-        if ($search !== '') {
+        if ($narrowed) {
             return $this->noMatchMessage();
         }
 

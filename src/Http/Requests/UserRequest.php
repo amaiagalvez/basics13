@@ -2,6 +2,7 @@
 
 namespace Basics13\Http\Requests;
 
+use Illuminate\Validation\Rule;
 use Illuminate\Database\Eloquent\Model;
 use Basics13\Concerns\ResolvesUserModel;
 use Illuminate\Validation\Rules\Password;
@@ -41,9 +42,31 @@ class UserRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             ...$this->profileRules($this->editingId()),
             'password' => $this->passwordRule(),
+        ];
+
+        // Every user manages accounts, but only the account holder changes its sign-in: someone
+        // else setting the password or the email would take the account over.
+        $record = $this->route('user');
+
+        if ($record instanceof Model && (int) $record->getKey() !== (int) $this->user()?->getAuthIdentifier()) {
+            $rules['password'] = ['prohibited'];
+            $rules['email'][] = Rule::in([$record->getAttribute('email')]);
+        }
+
+        return $rules;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'password.prohibited' => __('basics13::messages.own_account_only'),
+            'email.in' => __('basics13::messages.own_account_only'),
         ];
     }
 

@@ -12,8 +12,8 @@ return new class extends Migration
             $table->id();
             $table->string('name');
 
-            // The scope ListQueryBase::findTrashedByName() filters on. No project table exists here
-            // on purpose: the package has no domain model, only the column the query looks for.
+            // A plain integer column for the select filter tests. No related table exists here on
+            // purpose: the package has no domain model.
             $table->unsignedBigInteger('project_id')->nullable();
 
             // Columns for filter testing

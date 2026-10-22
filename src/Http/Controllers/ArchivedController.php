@@ -35,12 +35,12 @@ abstract class ArchivedController extends Controller
     }
 
     /**
-     * Route the user lands on after a record becomes active again.
+     * The active list: where the user lands after archiving, since the record has just left it.
      */
     abstract protected function activeRoute(): string;
 
     /**
-     * Route the user lands on after a record is archived.
+     * The archived list: where the user lands after activating, since the record has just left it.
      */
     abstract protected function archivedRoute(): string;
 }

@@ -15,13 +15,19 @@
             test="user-email-info" for="user-email">
             {{ __('Email') }}
         </x-basics13::forms.field-label>
+        {{-- Only the account holder changes the sign-in email; for anyone else it is shown read-only. --}}
         <flux:input name="email" x-model="form.email" type="email"
             maxlength="{{ \Basics13\Support\Validation\MaxLength::string() }}" required
+            x-bind:readonly="form.context !== 'create' && ! form.own"
             id="user-email" data-test="user-email" />
+        <flux:text class="text-xs" x-show="form.context !== 'create' && ! form.own" data-test="user-own-account-only">
+            {{ __('basics13::messages.own_account_only') }}
+        </flux:text>
         <flux:error name="email" />
     </flux:field>
 
-    <flux:field>
+    {{-- The password, like the email, is changed only by the account holder or set on creation. --}}
+    <flux:field x-show="form.context === 'create' || form.own">
         {{--
             The password is required when the account is created and optional when it is edited: the
             label and its asterisk follow the mode the drawer is in, and the notice says what an
@@ -40,7 +46,7 @@
         <flux:error name="password" />
     </flux:field>
 
-    <flux:field>
+    <flux:field x-show="form.context === 'create' || form.own">
         <x-basics13::forms.field-label :request="\Basics13\Http\Requests\UserRequest::class"
             field="password_confirmation" test="user-password-confirmation-info"
             for="user-password-confirmation">
