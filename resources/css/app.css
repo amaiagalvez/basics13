@@ -111,3 +111,8 @@ select.input-error:focus {
         @apply hidden;
     }
 }
+
+/* A field hint whose rule the value breaks reads as the error. */
+[data-field-hint][data-error] {
+    @apply font-medium text-red-600 dark:text-red-400;
+}

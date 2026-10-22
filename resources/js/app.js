@@ -81,6 +81,48 @@ const formatLocalDateTime = (value, format = 'datetime') => {
 
 window.formatLocalDateTime = formatLocalDateTime;
 
+/**
+ * How long ago a moment was ("duela 3 egun", "hace 3 días"), in the page language. Falls back to
+ * the absolute date when the browser cannot word it.
+ */
+const formatRelativeTime = (value) => {
+    const date = new Date(value);
+
+    if (!value || Number.isNaN(date.getTime())) {
+        return formatLocalDateTime(value, 'datetime');
+    }
+
+    const seconds = Math.round((date.getTime() - Date.now()) / 1000);
+    const units = [['year', 31536000], ['month', 2592000], ['week', 604800], ['day', 86400], ['hour', 3600], ['minute', 60]];
+
+    const locale = document.documentElement.lang || undefined;
+
+    // A browser without data for the page language would word it in English: show the date instead.
+    if (locale && Intl.RelativeTimeFormat.supportedLocalesOf([locale]).length === 0) {
+        return formatLocalDateTime(value, 'datetime');
+    }
+
+    try {
+        const formatter = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+
+        for (const [unit, size] of units) {
+            if (Math.abs(seconds) >= size) {
+                return formatter.format(Math.round(seconds / size), unit);
+            }
+        }
+
+        return formatter.format(0, 'minute');
+    } catch {
+        return formatLocalDateTime(value, 'datetime');
+    }
+};
+
+window.formatRelativeTime = formatRelativeTime;
+
+// Up to two initials of a person's name, for the avatar next to what they wrote.
+window.initials = (name) => (name ?? '').trim().split(/\s+/).filter(Boolean).slice(0, 2)
+    .map((word) => word.charAt(0).toUpperCase()).join('');
+
 // On small screens each list row becomes a card: its cells take their column name from the table
 // header, and cells with nothing to show are skipped.
 const labelListCells = (root) => {
@@ -340,6 +382,114 @@ trackedFormObserver.observe(document.documentElement, {
     subtree: true,
 });
 
+/**
+ * Validation on leaving a field of a tracked form: the browser's own constraints (required,
+ * minlength, min…) are checked as soon as the user moves on, worded with the app's texts rather
+ * than the browser's, which follow the browser language instead of the app locale. An empty
+ * required field reads the framework's "required" message; any other problem reads the same rule
+ * text as the info icon next to the label. The mark clears as soon as the value is valid again.
+ */
+const fieldSelector = 'input:not([type="hidden"]):not([type="checkbox"]):not([type="radio"]), textarea, select';
+
+const clientErrorMessage = (field, form) => {
+    const container = field.closest('[data-flux-field]') ?? field.parentElement;
+    const label = container.querySelector('[data-flux-label] span')?.textContent.trim() ?? '';
+
+    if (field.validity.valueMissing) {
+        const template = form.dataset.requiredMessage ?? '';
+
+        return template
+            .replace(':Attribute', label.charAt(0).toUpperCase() + label.slice(1))
+            .replace(':attribute', label);
+    }
+
+    return container.querySelector('button[data-test$="-info"]')?.getAttribute('aria-label')
+        || field.validationMessage;
+};
+
+const showClientError = (field) => {
+    const form = field.closest('form[data-track-changes]');
+
+    if (!form || !field.matches(fieldSelector)) {
+        return;
+    }
+
+    const container = field.closest('[data-flux-field]') ?? field.parentElement;
+    const errorId = `${field.id || field.name}-client-error`;
+    const hint = container.querySelector('[data-field-hint]');
+    let error = container.querySelector('[data-client-error]');
+
+    if (hint) {
+        delete hint.dataset.error;
+    }
+
+    if (field.checkValidity()) {
+        if (field.dataset.clientInvalid !== undefined) {
+            field.removeAttribute('aria-invalid');
+            delete field.dataset.invalid;
+            delete field.dataset.clientInvalid;
+            field.setAttribute('aria-describedby', (field.getAttribute('aria-describedby') ?? '')
+                .split(' ').filter((id) => id && id !== errorId).join(' '));
+        }
+
+        error?.remove();
+
+        return;
+    }
+
+    field.setAttribute('aria-invalid', 'true');
+    field.dataset.invalid = '';
+    field.dataset.clientInvalid = '';
+
+    // The rule is already written under the control: it turns red rather than being said twice.
+    if (hint && !field.validity.valueMissing) {
+        hint.dataset.error = '';
+        error?.remove();
+
+        return;
+    }
+
+    if (!error) {
+        error = document.createElement('p');
+        error.id = errorId;
+        error.dataset.clientError = '';
+        error.className = 'text-sm font-medium text-red-600 dark:text-red-400';
+        container.append(error);
+    }
+
+    error.textContent = clientErrorMessage(field, form);
+
+    const describedBy = (field.getAttribute('aria-describedby') ?? '').split(' ').filter(Boolean);
+
+    if (!describedBy.includes(errorId)) {
+        field.setAttribute('aria-describedby', [...describedBy, errorId].join(' '));
+    }
+};
+
+document.addEventListener('focusout', (event) => showClientError(event.target));
+document.addEventListener('input', (event) => {
+    if (event.target.dataset?.clientInvalid !== undefined) {
+        showClientError(event.target);
+    }
+});
+
+// A drawer that closes leaves no stale marks behind for the next record it opens with.
+document.addEventListener('close', (event) => {
+    if (event.target instanceof HTMLDialogElement) {
+        clearClientErrors(event.target);
+    }
+}, true);
+
+const clearClientErrors = (root) => {
+    root.querySelectorAll('[data-client-error]').forEach((error) => error.remove());
+    root.querySelectorAll('[data-field-hint][data-error]').forEach((hint) => delete hint.dataset.error);
+    root.querySelectorAll('[data-client-invalid]').forEach((field) => {
+        field.removeAttribute('aria-invalid');
+        delete field.dataset.invalid;
+        delete field.dataset.clientInvalid;
+    });
+};
+
 export function clearForm(form) {
     if (!(form instanceof HTMLFormElement)) {
         return;
@@ -378,6 +528,8 @@ export function clearForm(form) {
         field.removeAttribute('aria-invalid');
         delete field.dataset.invalid;
     });
+
+    clearClientErrors(form);
 }
 
 /**

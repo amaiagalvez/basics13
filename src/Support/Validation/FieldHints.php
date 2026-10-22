@@ -145,7 +145,8 @@ final class FieldHints
      */
     private function say(string $notice, array $replace = []): string
     {
-        return (string) __($notice, $replace);
+        // A field named at the start of the sentence, as Basque words it, still opens with a capital.
+        return Str::ucfirst((string) __($notice, $replace));
     }
 
     /**
