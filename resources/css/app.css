@@ -13,8 +13,14 @@ select:focus[data-flux-control] {
 }
 
 .form-drawer {
-    width: 100vw !important;
-    max-width: 100vw !important;
+    /* A floating flyout keeps a 0.5rem margin on every side. */
+    width: calc(100vw - 1rem) !important;
+    max-width: calc(100vw - 1rem) !important;
+}
+
+/* Drawers and modals sit on the overlay elevation with the widest radius (tokens.md). */
+[data-flux-modal] > dialog {
+    @apply rounded-3xl shadow-overlay;
 }
 
 /* Small modal for single-field forms */

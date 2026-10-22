@@ -2,7 +2,7 @@
     Advanced Search Modal Component.
     Receives searchable field configuration via Livewire component props.
 --}}
-<flux:modal wire:model="show" name="advanced-search" aria-labelledby="advanced-search-heading" variant="flyout"
+<flux:modal wire:model="show" name="advanced-search" aria-labelledby="advanced-search-heading" flyout variant="floating"
     :closable="false"
     position="right" class="form-drawer max-w-none"
     x-on:close="window.resetTrackedForms($el)"
