@@ -45,6 +45,12 @@ class MariaDbUniqueActiveNameIndexTest extends TestCase
         ]);
     }
 
+    /**
+     * The fixture migrations run on SQLite before setUp switches to MariaDB, so rolling them back
+     * would hit MariaDB; these tests only use their own temporary table.
+     */
+    protected function defineDatabaseMigrations(): void {}
+
     protected function tearDown(): void
     {
         try {
