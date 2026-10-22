@@ -18,6 +18,7 @@ final class PackageViewsTest extends FeatureTestCase
         $this->assertContains('Basics13\ServiceProvider', $providers, 'Basics13 ServiceProvider not loaded');
 
         $this->assertTrue(View::exists('basics13::components.list.create-action'));
+        $this->assertTrue(View::exists('basics13::components.forms.field-label'));
     }
 
     public function test_package_view_can_be_rendered(): void

@@ -60,7 +60,7 @@ return [
         'choose' => 'Aukeratu :name',
         'create' => 'Sortu :name',
         'delete' => 'Ezabatu :name',
-        'duplicate' => 'Bikoiztua: izena',
+        'duplicate' => 'Bikoiztu :name',
         'edit' => 'Editatu :name',
         'export' => 'Export :name',
         'hide' => 'Ezkutatu :name',

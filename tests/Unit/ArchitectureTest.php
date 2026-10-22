@@ -7,10 +7,26 @@ use Basics13\Models\User;
 use Basics13\Tests\TestCase;
 use Illuminate\Support\Facades\File;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Basics13\Tests\ChecksResourceArchitecture;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 
 class ArchitectureTest extends TestCase
 {
+    use ChecksResourceArchitecture;
+
+    protected function packageRoot(): string
+    {
+        return dirname(__DIR__, 2);
+    }
+
+    /**
+     * Users are the only records basics13 manages, and they are not a resource: no policy.
+     */
+    protected function resources(): array
+    {
+        return [];
+    }
+
     public function test_user_accounts_are_soft_deletable_without_a_resource_policy(): void
     {
         $this->assertContains(SoftDeletes::class, class_uses_recursive(User::class));
@@ -20,7 +36,7 @@ class ArchitectureTest extends TestCase
     public function test_raw_blade_echo_is_limited_to_the_two_factor_qr_code(): void
     {
         $rawEchoesByFile = [];
-        $packageViewsPath = dirname(__DIR__, 2).'/resources/views';
+        $packageViewsPath = $this->packageRoot().'/resources/views';
 
         foreach (File::allFiles($packageViewsPath) as $file) {
             $relativePath = $file->getRelativePathname();
