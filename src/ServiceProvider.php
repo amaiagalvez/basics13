@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Database\Eloquent\Model;
 use Basics13\Livewire\AdvancedSearchModal;
+use Basics13\Console\Commands\MakeSuperAdmin;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
 class ServiceProvider extends BaseServiceProvider
@@ -27,6 +28,11 @@ class ServiceProvider extends BaseServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadRoutesFrom(__DIR__.'/../routes/settings.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/users.php');
+        $this->loadRoutesFrom(__DIR__.'/../routes/roles.php');
+
+        if ($this->app->runningInConsole()) {
+            $this->commands([MakeSuperAdmin::class]);
+        }
 
         Blade::anonymousComponentNamespace('basics13::components', 'basics13');
         Blade::anonymousComponentNamespace('basics13::layouts', 'basics13-layouts');

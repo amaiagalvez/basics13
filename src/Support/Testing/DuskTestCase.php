@@ -2,6 +2,7 @@
 
 namespace Basics13\Support\Testing;
 
+use Basics13\Models\Role;
 use Illuminate\Support\Env;
 use Illuminate\Support\Collection;
 use Illuminate\Database\Eloquent\Model;
@@ -30,6 +31,24 @@ abstract class DuskTestCase extends BaseTestCase
         $user = $factory->createOne($attributes);
         static::assertInstanceOf(Model::class, $user);
         static::assertInstanceOf(Authenticatable::class, $user);
+
+        return $user;
+    }
+
+    /**
+     * A user holding the `admin` system role, which manages accounts and roles.
+     *
+     * @param  array<string, mixed>  $attributes
+     */
+    protected function admin(array $attributes = []): Model&Authenticatable
+    {
+        $user = $this->user($attributes);
+
+        if (! method_exists($user, 'assignRole')) {
+            static::fail('The authentication model must use the Basics13\Concerns\HasRoles concern.');
+        }
+
+        $user->assignRole(Role::query()->where('slug', 'admin')->firstOrFail());
 
         return $user;
     }

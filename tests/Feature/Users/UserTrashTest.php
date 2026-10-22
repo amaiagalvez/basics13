@@ -11,7 +11,7 @@ class UserTrashTest extends UserTestCase
 
     public function test_trash_list_searches_deleted_accounts_without_showing_live_records(): void
     {
-        $this->actingAs(User::factory()->create(['name' => 'Zzz actor']));
+        $this->actingAs(User::factory()->admin()->create(['name' => 'Zzz actor']));
         User::factory()->trashed()->create(['name' => 'Matching deleted account']);
         User::factory()->trashed()->create(['name' => 'Other deleted account']);
         User::factory()->create(['name' => 'Matching live account']);
@@ -25,7 +25,7 @@ class UserTrashTest extends UserTestCase
 
     public function test_an_account_can_be_restored_and_permanently_deleted(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $account = User::factory()->create();
         $account->delete();
 
@@ -44,7 +44,7 @@ class UserTrashTest extends UserTestCase
 
     public function test_a_restored_account_returns_to_the_active_list(): void
     {
-        $this->actingAs(User::factory()->create(['name' => 'Zzz actor']));
+        $this->actingAs(User::factory()->admin()->create(['name' => 'Zzz actor']));
         $account = User::factory()->trashed()->create(['name' => 'Restored account']);
 
         $this->get(route('users.trash.index'))

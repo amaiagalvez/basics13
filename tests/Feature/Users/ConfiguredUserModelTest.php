@@ -2,6 +2,7 @@
 
 namespace Basics13\Tests\Feature\Users;
 
+use Basics13\Models\Role;
 use Basics13\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
@@ -54,7 +55,8 @@ final class ConfiguredUserModelTest extends UserTestCase
     /**
      * The configured model is not the package one, so the actor is made the same way a host would:
      * created through the model and verified explicitly, since only the real account columns are
-     * fillable and the verification timestamp is not one of them.
+     * fillable and the verification timestamp is not one of them. The `admin` role is what lets it
+     * manage accounts.
      */
     private function configuredActor(): ConfiguredAccount
     {
@@ -65,6 +67,7 @@ final class ConfiguredUserModelTest extends UserTestCase
         ]);
 
         $actor->markEmailAsVerified();
+        $actor->assignRole(Role::query()->where('slug', 'admin')->firstOrFail());
 
         return $actor;
     }

@@ -12,7 +12,7 @@ class UserSelectOptionsTest extends UserTestCase
 
     public function test_options_list_only_active_accounts(): void
     {
-        $this->actingAs(User::factory()->create(['name' => 'Zzz account']));
+        $this->actingAs(User::factory()->admin()->create(['name' => 'Zzz account']));
         User::factory()->create(['name' => 'Active account']);
         User::factory()->archived()->create(['name' => 'Archived account']);
 
@@ -25,7 +25,7 @@ class UserSelectOptionsTest extends UserTestCase
 
     public function test_options_are_capped_at_the_page_size(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         User::factory()->count(ListQueryBase::PER_PAGE + 5)->create();
 
         $this->getJson(route('users.options'))

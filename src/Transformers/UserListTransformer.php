@@ -4,6 +4,7 @@ namespace Basics13\Transformers;
 
 use Basics13\Enums\Language;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Collection;
 
 /**
  * @extends ListTransformer<Model>
@@ -44,7 +45,8 @@ class UserListTransformer extends ListTransformer
     /**
      * Fields the drawer needs to edit the account. Never carries the password: it is not readable
      * and an edit that leaves the field out keeps the current one. `own` tells the drawer whether
-     * the password and the email can change: only the account holder may change them.
+     * the password, the email and the roles can change: only the account holder changes the first
+     * two, and nobody changes their own roles.
      *
      * @return array<string, mixed>
      */
@@ -53,7 +55,24 @@ class UserListTransformer extends ListTransformer
         return [
             ...$record->only(['id', 'name', 'email', 'lang', 'notes']),
             'own' => (int) $record->getKey() === (int) auth()->id(),
+            'role_ids' => $this->roleIds($record),
         ];
+    }
+
+    /**
+     * The roles the account holds, as the strings the checkboxes of the form carry.
+     *
+     * @return list<string>
+     */
+    private function roleIds(Model $record): array
+    {
+        $roles = $record->relationLoaded('roles') ? $record->getRelation('roles') : null;
+
+        if (! $roles instanceof Collection) {
+            return [];
+        }
+
+        return array_values($roles->map(static fn (Model $role): string => (string) $role->getKey())->all());
     }
 
     /**

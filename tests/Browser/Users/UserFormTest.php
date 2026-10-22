@@ -32,7 +32,7 @@ class UserFormTest extends DuskTestCase
 
     public function test_another_account_is_edited_without_its_email_or_password(): void
     {
-        $user = $this->user();
+        $user = $this->admin();
         $other = User::factory()->create(['name' => 'Other account', 'email' => 'other@example.test']);
         $passwordHash = $other->password;
 
@@ -61,7 +61,7 @@ class UserFormTest extends DuskTestCase
 
     public function test_the_account_holder_changes_its_own_password_from_the_drawer(): void
     {
-        $user = $this->user(['email' => 'holder@example.test']);
+        $user = $this->admin(['email' => 'holder@example.test']);
 
         $this->browse(function (Browser $browser) use ($user): void {
             $browser->loginAs($user)
@@ -85,7 +85,7 @@ class UserFormTest extends DuskTestCase
 
     public function test_an_account_is_created_with_its_password_from_the_drawer(): void
     {
-        $user = $this->user();
+        $user = $this->admin();
         $other = User::factory()->create();
 
         $this->browse(function (Browser $browser) use ($user, $other): void {

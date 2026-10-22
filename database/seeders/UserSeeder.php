@@ -3,6 +3,7 @@
 namespace Basics13\Database\Seeders;
 
 use LogicException;
+use Basics13\Models\Role;
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -22,7 +23,7 @@ class UserSeeder extends Seeder
             throw new LogicException('The configured users model must be an Eloquent authenticatable model.');
         }
 
-        $userModel::query()->firstOrCreate(
+        $user = $userModel::query()->firstOrCreate(
             ['email' => 'info@amaia.eus'],
             [
                 'name' => 'Amaia',
@@ -30,5 +31,11 @@ class UserSeeder extends Seeder
                 'email_verified_at' => now(),
             ],
         );
+
+        // The permissions migration gives `admin` to the accounts that exist when it runs, and a
+        // fresh database has none yet: the development account receives it here.
+        if (method_exists($user, 'assignRole')) {
+            $user->assignRole(Role::query()->where('slug', 'admin')->firstOrFail());
+        }
     }
 }

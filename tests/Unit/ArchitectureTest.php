@@ -3,6 +3,7 @@
 namespace Basics13\Tests\Unit;
 
 use ReflectionClass;
+use Basics13\Models\Role;
 use Basics13\Models\User;
 use Basics13\Tests\TestCase;
 use Illuminate\Support\Facades\File;
@@ -20,11 +21,12 @@ class ArchitectureTest extends TestCase
     }
 
     /**
-     * Users are the only records basics13 manages, and they are not a resource: no policy.
+     * Roles are a canonical resource. Users are not: their policy is registered for the configured
+     * model instead of declared on it.
      */
     protected function resources(): array
     {
-        return [];
+        return ['Role' => Role::class];
     }
 
     public function test_user_accounts_are_soft_deletable_without_a_resource_policy(): void

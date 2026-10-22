@@ -4,6 +4,7 @@ namespace Basics13\Http\Controllers;
 
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\RedirectResponse;
 use Basics13\Http\Requests\UserRequest;
 use Illuminate\Database\Eloquent\Model;
@@ -31,6 +32,8 @@ class UserController extends Controller
 
         return $this->listView($request, 'basics13::users.list', [
             'users' => $users,
+            // Null when the user cannot assign roles: the form then shows no selector.
+            'assignableRoles' => $request->assignsRoles() ? $query->assignableRoles($request->assignsSystemRoles()) : null,
             'list' => $transformer->active(
                 $users,
                 $search,
@@ -54,8 +57,10 @@ class UserController extends Controller
     public function store(UserRequest $request): RedirectResponse
     {
         try {
-            $modelClass = $this->userModelClass();
-            $modelClass::query()->create($this->attributes($request));
+            DB::transaction(function () use ($request): void {
+                $modelClass = $this->userModelClass();
+                $this->syncRoles($request, $modelClass::query()->create($this->attributes($request)));
+            });
         } catch (QueryException $exception) {
             UniqueConstraintViolation::rethrowAsValidationError($exception, 'email');
         }
@@ -66,7 +71,10 @@ class UserController extends Controller
     public function update(UserRequest $request, Model $user): RedirectResponse
     {
         try {
-            $user->update($this->attributes($request));
+            DB::transaction(function () use ($request, $user): void {
+                $user->update($this->attributes($request));
+                $this->syncRoles($request, $user);
+            });
         } catch (QueryException $exception) {
             UniqueConstraintViolation::rethrowAsValidationError($exception, 'email');
         }
@@ -91,6 +99,24 @@ class UserController extends Controller
     }
 
     /**
+     * Leaves the account with the roles the form chose, stamped with who assigned them. A form
+     * without the role selector leaves them as they are.
+     */
+    private function syncRoles(UserRequest $request, Model $user): void
+    {
+        $roleIds = $request->roleIds();
+
+        if ($roleIds === null) {
+            return;
+        }
+
+        // The configured users model uses the HasRoles concern, which PHPStan cannot see through
+        // the shared `Model` base.
+        /** @phpstan-ignore method.notFound */
+        $user->syncRoles($roleIds, (int) $request->user()?->getAuthIdentifier());
+    }
+
+    /**
      * The validated columns, without a null password: an edit that leaves the field out keeps the
      * current one, so the null must never reach the update.
      *
@@ -99,6 +125,7 @@ class UserController extends Controller
     private function attributes(UserRequest $request): array
     {
         $attributes = $request->validated();
+        unset($attributes['assign_roles'], $attributes['role_ids']);
 
         if (($attributes['password'] ?? null) === null) {
             unset($attributes['password']);

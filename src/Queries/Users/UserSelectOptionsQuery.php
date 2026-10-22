@@ -9,7 +9,8 @@ use Basics13\Concerns\ResolvesUserModel;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
- * Options for a remote selector: the active accounts, capped at the shared page size.
+ * Options for a remote selector: the active accounts, capped at the shared page size. The
+ * super-admin is never offered.
  *
  * @extends ListQueryBase<Model>
  */
@@ -27,6 +28,7 @@ final class UserSelectOptionsQuery extends ListQueryBase
 
         return $modelClass::query()
             ->where('active', true)
+            ->where('is_super_admin', false)
             ->when($search !== '', fn (Builder $query) => $query->where(
                 fn (Builder $query) => $query
                     ->whereRaw('name like ? escape \''.self::LIKE_ESCAPE.'\'', [$pattern])

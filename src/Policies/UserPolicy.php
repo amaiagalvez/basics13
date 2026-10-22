@@ -3,11 +3,15 @@
 namespace Basics13\Policies;
 
 use Illuminate\Database\Eloquent\Model;
+use Basics13\Concerns\ChecksPermissions;
 use Illuminate\Contracts\Auth\Authenticatable as User;
 
 /**
- * Account management abilities. Accounts are not tied to a role, so every verified user can
- * administer them, exactly like the domain resources.
+ * Account management abilities, each one granted by its `users.{action}` permission.
+ *
+ * The super-admin account is out of reach of everybody else: no permission lets another user edit,
+ * archive, trash, restore or delete it. That rule is checked before the permission. The account
+ * holder manages it from the settings, which do not go through this policy.
  *
  * The record arrives as the configured users model rather than a concrete class, because the host
  * may replace it (`auth.providers.users.model`). The policy is registered for that configured model
@@ -15,12 +19,14 @@ use Illuminate\Contracts\Auth\Authenticatable as User;
  */
 class UserPolicy
 {
+    use ChecksPermissions;
+
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return true;
+        return $this->permits($user, 'users.view');
     }
 
     /**
@@ -28,7 +34,7 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return true;
+        return $this->permits($user, 'users.create');
     }
 
     /**
@@ -36,7 +42,7 @@ class UserPolicy
      */
     public function update(User $user, Model $record): bool
     {
-        return true;
+        return $this->reachable($user, $record) && $this->permits($user, 'users.edit');
     }
 
     /**
@@ -44,7 +50,7 @@ class UserPolicy
      */
     public function delete(User $user, Model $record): bool
     {
-        return true;
+        return $this->reachable($user, $record) && $this->permits($user, 'users.delete');
     }
 
     /**
@@ -52,7 +58,7 @@ class UserPolicy
      */
     public function restore(User $user, Model $record): bool
     {
-        return true;
+        return $this->reachable($user, $record) && $this->permits($user, 'users.restore');
     }
 
     /**
@@ -60,7 +66,7 @@ class UserPolicy
      */
     public function forceDelete(User $user, Model $record): bool
     {
-        return true;
+        return $this->reachable($user, $record) && $this->permits($user, 'users.force_delete');
     }
 
     /**
@@ -68,7 +74,7 @@ class UserPolicy
      */
     public function archive(User $user, Model $record): bool
     {
-        return true;
+        return $this->reachable($user, $record) && $this->permits($user, 'users.archive');
     }
 
     /**
@@ -76,6 +82,15 @@ class UserPolicy
      */
     public function activate(User $user, Model $record): bool
     {
-        return true;
+        return $this->reachable($user, $record) && $this->permits($user, 'users.archive');
+    }
+
+    /**
+     * Whether the user may act on this account at all: the super-admin only on itself.
+     */
+    private function reachable(User $user, Model $record): bool
+    {
+        return ! (bool) $record->getAttribute('is_super_admin')
+            || (int) $record->getKey() === (int) $user->getAuthIdentifier();
     }
 }

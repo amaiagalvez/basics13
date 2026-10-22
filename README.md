@@ -36,6 +36,34 @@ Name comparison follows the database collation. MariaDB with `utf8mb4_unicode_ci
 accent variants; SQLite's default comparison is not equivalent. Run the MariaDB integration tests
 with `BASICS13_MARIADB_DATABASE` set to a dedicated test database to verify that production contract.
 
+## Roles and permissions
+
+Account and domain policies authorize with permissions (`{module}.{action}`) granted through roles.
+A user holds a permission when one of its active roles outside the trash grants it or grants
+`{module}.manage`. The `basics13` migrations seed the `users.*` and `roles.*` permissions, the
+system role `admin` and the roles `manager` and `viewer`, and give `admin` to every account that
+already exists. A newly registered account receives `basics13.roles.registration_role`
+(none by default).
+
+**BREAKING:** a host that configures its own users model (`auth.providers.users.model`) MUST add
+the roles concern to it, or every permission check fails:
+
+```php
+use Basics13\Concerns\HasRoles;
+
+class User extends Authenticatable
+{
+    use HasRoles;
+}
+```
+
+After the first deploy, create the super-admin once. It holds every permission, is hidden from the
+user lists and can only be created this way:
+
+```bash
+php artisan basics13:make-super-admin
+```
+
 ## Important runtime note
 
 The package tests and Blade compilation need a writable temporary directory. The package bootstrap creates or reuses a local `storage/.tmp` directory inside the package and sets `TMPDIR`, `TEMP`, and `TMP` to it so Laravel can compile view cache files reliably in CI and local containers.

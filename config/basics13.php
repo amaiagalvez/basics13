@@ -18,6 +18,13 @@ return [
         ],
     ],
 
+    'roles' => [
+        // Slug of the role a newly registered account receives. Null leaves it without roles, so it
+        // can do nothing until someone with `roles.manage` gives it one. A system role is refused:
+        // only the super-admin assigns those.
+        'registration_role' => null,
+    ],
+
     // TODO: hau ere db-aren config-ean erabili behar da
     'validation' => [
         'max_length' => [

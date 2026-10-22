@@ -33,7 +33,7 @@ class UserCrudTest extends UserTestCase
 
     public function test_the_list_shows_every_active_account(): void
     {
-        $this->actingAs(User::factory()->create(['name' => 'Actor account']));
+        $this->actingAs(User::factory()->admin()->create(['name' => 'Actor account']));
         $listedAccount = User::factory()->create(['name' => 'Listed account']);
         User::factory()->archived()->create(['name' => 'Archived account']);
 
@@ -47,7 +47,7 @@ class UserCrudTest extends UserTestCase
 
     public function test_the_lists_offer_advanced_filters(): void
     {
-        $this->actingAs(User::factory()->create(['name' => 'Actor account', 'email' => 'actor@example.test']));
+        $this->actingAs(User::factory()->admin()->create(['name' => 'Actor account', 'email' => 'actor@example.test']));
         User::factory()->create(['name' => 'Ane account', 'email' => 'ane@client.test']);
         User::factory()->archived()->create(['name' => 'Archived ane', 'email' => 'archived@client.test']);
         User::factory()->archived()->create(['name' => 'Archived other', 'email' => 'other@example.test']);
@@ -76,7 +76,7 @@ class UserCrudTest extends UserTestCase
 
     public function test_an_account_can_be_created_updated_and_trashed(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $this->post(route('users.store'), $this->account())
             ->assertRedirect(route('users.index'))
@@ -104,7 +104,7 @@ class UserCrudTest extends UserTestCase
 
     public function test_a_delete_vetoed_by_a_listener_reports_that_the_account_cannot_be_deleted(): void
     {
-        $this->actingAs(User::factory()->create(['name' => 'Zzz actor']));
+        $this->actingAs(User::factory()->admin()->create(['name' => 'Zzz actor']));
         $account = User::factory()->create();
 
         // A `deleting` hook that returns false cancels the delete, the way a guard that finds a
@@ -121,7 +121,7 @@ class UserCrudTest extends UserTestCase
 
     public function test_the_password_is_hashed_and_never_stored_in_clear(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $this->post(route('users.store'), $this->account(password: 'secret-password'))
             ->assertSessionHasNoErrors();
@@ -134,7 +134,7 @@ class UserCrudTest extends UserTestCase
 
     public function test_an_edit_without_a_password_keeps_the_current_one(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $account = User::factory()->create();
         $originalPassword = $account->password;
 
@@ -150,7 +150,7 @@ class UserCrudTest extends UserTestCase
 
     public function test_an_edit_with_a_password_changes_it(): void
     {
-        $account = User::factory()->create();
+        $account = User::factory()->admin()->create();
         $this->actingAs($account);
 
         $this->put(route('users.update', $account->getKey()), [
@@ -165,7 +165,7 @@ class UserCrudTest extends UserTestCase
 
     public function test_an_edit_requires_the_password_confirmation(): void
     {
-        $account = User::factory()->create();
+        $account = User::factory()->admin()->create();
         $this->actingAs($account);
 
         $this->from(route('users.index'))->put(route('users.update', $account->getKey()), [
@@ -177,7 +177,7 @@ class UserCrudTest extends UserTestCase
 
     public function test_another_account_password_cannot_be_changed(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $account = User::factory()->create();
         $originalPassword = $account->password;
 
@@ -194,7 +194,7 @@ class UserCrudTest extends UserTestCase
 
     public function test_another_account_email_cannot_be_changed(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $account = User::factory()->create(['email' => 'holder@example.test']);
 
         $this->from(route('users.index'))->put(route('users.update', $account->getKey()), [
@@ -208,7 +208,7 @@ class UserCrudTest extends UserTestCase
 
     public function test_the_account_holder_can_change_its_own_email(): void
     {
-        $account = User::factory()->create(['email' => 'old@example.test']);
+        $account = User::factory()->admin()->create(['email' => 'old@example.test']);
         $this->actingAs($account);
 
         $this->put(route('users.update', $account->getKey()), [
@@ -221,7 +221,7 @@ class UserCrudTest extends UserTestCase
 
     public function test_the_edit_payload_tells_the_drawer_which_account_is_the_own_one(): void
     {
-        $actor = User::factory()->create(['name' => 'Aaa actor']);
+        $actor = User::factory()->admin()->create(['name' => 'Aaa actor']);
         $other = User::factory()->create(['name' => 'Bbb other']);
 
         $this->actingAs($actor)
@@ -236,7 +236,7 @@ class UserCrudTest extends UserTestCase
 
     public function test_the_edit_form_is_bound_to_the_saved_notes(): void
     {
-        $this->actingAs(User::factory()->create(['name' => 'Zzz actor']));
+        $this->actingAs(User::factory()->admin()->create(['name' => 'Zzz actor']));
         $account = User::factory()->create(['name' => 'Aaa account', 'notes' => 'Account notes']);
 
         $this->get(route('users.index'))
@@ -254,7 +254,7 @@ class UserCrudTest extends UserTestCase
 
     public function test_the_language_is_saved_emptied_and_restricted_to_the_offered_ones(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
 
         $this->post(route('users.store'), [...$this->account(), 'lang' => 'eu'])
             ->assertSessionHasNoErrors();
@@ -279,7 +279,7 @@ class UserCrudTest extends UserTestCase
 
     public function test_the_form_offers_the_languages_and_the_list_shows_the_native_name(): void
     {
-        $this->actingAs(User::factory()->create(['name' => 'Zzz actor']));
+        $this->actingAs(User::factory()->admin()->create(['name' => 'Zzz actor']));
         $account = User::factory()->language(Language::EU)->create(['name' => 'Aaa account']);
 
         $this->get(route('users.index'))
@@ -293,7 +293,7 @@ class UserCrudTest extends UserTestCase
 
     public function test_the_email_is_unique(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         User::factory()->create(['email' => 'taken@example.test']);
 
         $this->from(route('users.index'))
@@ -306,7 +306,7 @@ class UserCrudTest extends UserTestCase
 
     public function test_the_email_stays_reserved_while_the_account_is_in_the_trash(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $account = User::factory()->create(['email' => 'reserved@example.test']);
         $account->delete();
 
@@ -320,7 +320,7 @@ class UserCrudTest extends UserTestCase
 
     public function test_store_converts_a_concurrent_duplicate_email_into_a_validation_error(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $email = 'concurrent@example.test';
         $this->createDuplicateEmailAfterValidation($email);
 
@@ -334,7 +334,7 @@ class UserCrudTest extends UserTestCase
     public function test_update_converts_a_concurrent_duplicate_email_into_a_validation_error(): void
     {
         // Only the account holder may change an email, so the request reaches the write.
-        $account = User::factory()->create(['email' => 'original@example.test']);
+        $account = User::factory()->admin()->create(['email' => 'original@example.test']);
         $this->actingAs($account);
         $email = 'concurrent@example.test';
         $this->createDuplicateEmailAfterValidation($email);

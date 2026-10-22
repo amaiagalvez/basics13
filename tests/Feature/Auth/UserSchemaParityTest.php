@@ -24,6 +24,8 @@ class UserSchemaParityTest extends FeatureTestCase
             'id', 'created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by',
             'deleted_by', 'active', 'remember_token', 'email_verified_at',
             'two_factor_secret', 'two_factor_recovery_codes', 'two_factor_confirmed_at',
+            // Set only by the make-super-admin command, never mass assigned.
+            'is_super_admin',
         ];
 
         foreach ($fillable as $attribute) {
@@ -43,5 +45,7 @@ class UserSchemaParityTest extends FeatureTestCase
         $this->assertFalse(User::factory()->archived()->make()->active);
         $this->assertSame('eu', User::factory()->language(Language::EU)->create()->refresh()->lang);
         $this->assertArrayHasKey('active', $user->getCasts());
+        $this->assertNotContains('is_super_admin', $fillable);
+        $this->assertSame('boolean', $user->getCasts()['is_super_admin']);
     }
 }

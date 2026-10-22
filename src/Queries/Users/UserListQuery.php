@@ -2,6 +2,8 @@
 
 namespace Basics13\Queries\Users;
 
+use Basics13\Models\Role;
+use Illuminate\Support\Collection;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Database\Eloquent\Model;
 use Basics13\Concerns\ResolvesUserModel;
@@ -9,7 +11,8 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
- * Lists user accounts in each of their states, over the model the host configures.
+ * Lists user accounts in each of their states, over the model the host configures. The super-admin
+ * is never listed, nor counted in the tabs: other users cannot act on it.
  *
  * @extends ListQueryBase<Model>
  *
@@ -67,19 +70,48 @@ final class UserListQuery extends ListQueryBase
      */
     public function trashed(string $search, array $filters = []): LengthAwarePaginator
     {
-        $modelClass = $this->userModelClass();
-
         return $this->paginate(
             // The configured model is soft deletable. That scope is invisible through the shared
             // `Model` base, hence the ignore.
             /** @phpstan-ignore method.notFound */
-            $modelClass::query()->onlyTrashed()->latest('deleted_at')->orderBy('id'),
+            $this->accounts()->onlyTrashed()->with('roles')->latest('deleted_at')->orderBy('id'),
             $search,
             /** @phpstan-ignore argument.type */
             $this->searchColumns(self::SCOPE_TRASHED, ['name', 'email', 'deleted_at']),
             filters: $filters,
             scope: self::SCOPE_TRASHED,
         );
+    }
+
+    /**
+     * The roles the account form can offer: every one outside the trash, archived ones included so
+     * an edit keeps the roles an account already holds. System roles only for the super-admin.
+     *
+     * @return Collection<int, Role>
+     */
+    public function assignableRoles(bool $withSystemRoles): Collection
+    {
+        return Role::query()
+            ->when(! $withSystemRoles, static fn (Builder $query): Builder => $query->where('is_system', false))
+            ->orderBy('name')
+            ->orderBy('id')
+            ->get();
+    }
+
+    /**
+     * @return array{active: int, archived: int, trashed: int}
+     */
+    public function stateCounts(
+        ?int $activeTotal = null,
+        ?int $archivedTotal = null,
+        ?int $trashedTotal = null,
+    ): array {
+        return [
+            'active' => $activeTotal ?? $this->accounts()->where('active', true)->count(),
+            'archived' => $archivedTotal ?? $this->accounts()->where('active', false)->count(),
+            /** @phpstan-ignore method.notFound */
+            'trashed' => $trashedTotal ?? $this->accounts()->onlyTrashed()->count(),
+        ];
     }
 
     /**
@@ -144,9 +176,20 @@ final class UserListQuery extends ListQueryBase
      */
     private function ordered(): Builder
     {
+        return $this->accounts()->with('roles')->orderBy('name')->orderBy('id');
+    }
+
+    /**
+     * Every account but the super-admin. An explicit condition rather than a global scope, which
+     * would also hide the account from the login.
+     *
+     * @return Builder<Model>
+     */
+    private function accounts(): Builder
+    {
         $modelClass = $this->userModelClass();
 
-        return $modelClass::query()->orderBy('name')->orderBy('id');
+        return $modelClass::query()->where('is_super_admin', false);
     }
 
     /**

@@ -11,7 +11,7 @@ class UserArchivedTest extends UserTestCase
 
     public function test_archived_list_shows_only_inactive_accounts(): void
     {
-        $this->actingAs(User::factory()->create(['name' => 'Zzz actor']));
+        $this->actingAs(User::factory()->admin()->create(['name' => 'Zzz actor']));
         User::factory()->archived()->create(['name' => 'Archived account']);
 
         $this->get(route('users.archived.index'))
@@ -22,7 +22,7 @@ class UserArchivedTest extends UserTestCase
 
     public function test_an_account_can_be_archived_and_activated(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->admin()->create());
         $account = User::factory()->create();
 
         $this->patch(route('users.archive', $account->getKey()))

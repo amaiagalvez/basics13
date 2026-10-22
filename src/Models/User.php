@@ -4,6 +4,7 @@ namespace Basics13\Models;
 
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
+use Basics13\Concerns\HasRoles;
 use Illuminate\Notifications\Notifiable;
 use Basics13\Concerns\TracksAuditColumns;
 use Laravel\Fortify\Contracts\PasskeyUser;
@@ -27,6 +28,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
  * @property bool $active
  * @property CarbonImmutable|null $email_verified_at
  * @property string $password
+ * @property bool $is_super_admin
  * @property string|null $two_factor_secret
  * @property string|null $two_factor_recovery_codes
  * @property CarbonImmutable|null $two_factor_confirmed_at
@@ -44,24 +46,28 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, Notifiable, PasskeyAuthenticatable, SoftDeletes, TracksAuditColumns, TwoFactorAuthenticatable;
+    use HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, SoftDeletes, TracksAuditColumns, TwoFactorAuthenticatable;
 
     /**
-     * @var array{active: bool}
+     * `is_super_admin` is never mass assigned: only the `basics13:make-super-admin` command sets it.
+     *
+     * @var array{active: bool, is_super_admin: bool}
      */
     protected $attributes = [
         'active' => true,
+        'is_super_admin' => false,
     ];
 
     /**
      * Get the attributes that should be cast.
      *
-     * @return array{active: 'boolean', email_verified_at: 'datetime', two_factor_confirmed_at: 'datetime', password: 'hashed'}
+     * @return array{active: 'boolean', is_super_admin: 'boolean', email_verified_at: 'datetime', two_factor_confirmed_at: 'datetime', password: 'hashed'}
      */
     protected function casts(): array
     {
         return [
             'active' => 'boolean',
+            'is_super_admin' => 'boolean',
             'email_verified_at' => 'datetime',
             'two_factor_confirmed_at' => 'datetime',
             'password' => 'hashed',

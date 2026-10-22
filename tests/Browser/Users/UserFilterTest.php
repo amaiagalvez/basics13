@@ -13,7 +13,7 @@ class UserFilterTest extends DuskTestCase
 
     public function test_advanced_search_filters_users_and_removes_the_filter(): void
     {
-        $user = $this->user();
+        $user = $this->admin();
         $client = User::factory()->create(['name' => 'Client account', 'email' => 'client@client.test']);
         $other = User::factory()->create(['name' => 'Other account', 'email' => 'other@example.test']);
 

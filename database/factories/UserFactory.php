@@ -2,6 +2,7 @@
 
 namespace Basics13\Database\Factories;
 
+use Basics13\Models\Role;
 use Basics13\Models\User;
 use Illuminate\Support\Str;
 use Basics13\Enums\Language;
@@ -70,5 +71,38 @@ class UserFactory extends Factory
             'two_factor_recovery_codes' => encrypt(json_encode(['recovery-code-1'], JSON_THROW_ON_ERROR)),
             'two_factor_confirmed_at' => now(),
         ]);
+    }
+
+    /**
+     * Give the account the `admin` system role the permissions migration seeds, which manages users
+     * and roles. The actor of most account tests needs it.
+     */
+    public function admin(): static
+    {
+        return $this->afterCreating(static function (User $user): void {
+            $user->assignRole(Role::query()->where('slug', 'admin')->firstOrFail());
+        });
+    }
+
+    /**
+     * Give the account a new role holding exactly these permissions.
+     *
+     * @param  list<string>  $permissions
+     */
+    public function withPermissions(array $permissions): static
+    {
+        return $this->afterCreating(static function (User $user) use ($permissions): void {
+            $user->assignRole(Role::factory()->withPermissions($permissions)->create());
+        });
+    }
+
+    /**
+     * The account that holds every permission. The flag is not fillable, so it is forced in.
+     */
+    public function superAdmin(): static
+    {
+        return $this->afterMaking(static function (User $user): void {
+            $user->forceFill(['is_super_admin' => true]);
+        });
     }
 }
