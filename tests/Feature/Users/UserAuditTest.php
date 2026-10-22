@@ -80,11 +80,4 @@ class UserAuditTest extends FeatureTestCase
         $this->assertNotSoftDeleted($record->refresh());
         $this->assertNull($record->deleted_by);
     }
-
-    public function test_audit_columns_are_not_mass_assignable(): void
-    {
-        foreach (['created_by', 'updated_by', 'deleted_by'] as $column) {
-            $this->assertFalse((new User)->isFillable($column));
-        }
-    }
 }

@@ -1,6 +1,6 @@
 <?php
 
-namespace Basics13\Tests\Unit\Concerns;
+namespace Basics13\Tests\Feature\Concerns;
 
 use RuntimeException;
 use Basics13\Tests\TestCase;

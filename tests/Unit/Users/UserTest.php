@@ -74,4 +74,11 @@ class UserTest extends TestCase
             'hyphenated first name counts once' => ['Jean-Luc Picard', 'JP'],
         ];
     }
+
+    public function test_audit_columns_are_not_mass_assignable(): void
+    {
+        foreach (['created_by', 'updated_by', 'deleted_by'] as $column) {
+            $this->assertFalse((new User)->isFillable($column));
+        }
+    }
 }

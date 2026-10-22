@@ -1,6 +1,6 @@
 <?php
 
-namespace Basics13\Tests\Unit\Http\Controllers;
+namespace Basics13\Tests\Feature\Http\Controllers;
 
 use Basics13\Tests\TestCase;
 use Illuminate\Support\Facades\Gate;

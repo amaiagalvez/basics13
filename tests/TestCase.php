@@ -14,6 +14,8 @@ use Orchestra\Testbench\TestCase as TestbenchTestCase;
  */
 abstract class TestCase extends TestbenchTestCase
 {
+    use ForbidsDatabaseInUnitTests;
+
     /**
      * Loads the package so its config, translations and views are available to the tests.
      *
@@ -27,12 +29,21 @@ abstract class TestCase extends TestbenchTestCase
         ];
     }
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        $this->forbidDatabaseInUnitTests();
+    }
+
     /**
-     * Define database migrations for the test fixtures.
+     * Define database migrations for the test fixtures, only for the tests that use a database.
      */
     protected function defineDatabaseMigrations(): void
     {
-        $this->loadMigrationsFrom(__DIR__.'/Fixtures');
+        if (static::usesDatabase()) {
+            $this->loadMigrationsFrom(__DIR__.'/Fixtures');
+        }
     }
 
     /**

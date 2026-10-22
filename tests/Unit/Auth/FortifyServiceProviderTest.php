@@ -1,12 +1,13 @@
 <?php
 
-namespace Basics13\Tests\Feature\Auth;
+namespace Basics13\Tests\Unit\Auth;
 
 use LogicException;
 use Illuminate\Http\Request;
 use Illuminate\Cache\RateLimiting\Limit;
 use Basics13\Auth\FortifyServiceProvider;
 use Illuminate\Support\Facades\RateLimiter;
+use Basics13\Tests\Feature\Auth\AuthFeatureTestCase;
 
 /**
  * The provider only wires the limiters: the application turns them on through fortify.limiters.

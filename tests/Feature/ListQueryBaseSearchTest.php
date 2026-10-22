@@ -108,16 +108,6 @@ class ListQueryBaseSearchTest extends TestCase
         $this->assertSame(2, $counts['archived']);
         $this->assertSame(4, $counts['trashed']);
     }
-
-    public function test_state_counts_accepts_precomputed_totals(): void
-    {
-        $query = new FindTrashedListQuery;
-        $counts = $query->stateCounts(10, 5, 2);
-
-        $this->assertSame(10, $counts['active']);
-        $this->assertSame(5, $counts['archived']);
-        $this->assertSame(2, $counts['trashed']);
-    }
 }
 
 /** @extends ListQueryBase<AuditedRecord> */

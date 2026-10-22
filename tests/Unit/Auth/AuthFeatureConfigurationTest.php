@@ -1,6 +1,6 @@
 <?php
 
-namespace Basics13\Tests\Feature\Auth;
+namespace Basics13\Tests\Unit\Auth;
 
 use Basics13\ServiceProvider;
 use Laravel\Fortify\Features;
