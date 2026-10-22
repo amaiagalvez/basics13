@@ -11,7 +11,7 @@
         @if ($action['type'] === 'form-modal')
             <flux:modal.trigger :name="$prefix.'-form'">
                 <flux:tooltip :content="$action['label']">
-                    <flux:button size="xs" square variant="ghost" :icon="$action['icon']"
+                    <flux:button size="sm" square variant="ghost" :icon="$action['icon']"
                         :aria-label="$action['label']"
                         x-on:click="{{ $editHandler }}(JSON.parse($el.dataset.payload))"
                         data-payload="{{ json_encode($action['payload']) }}"
@@ -21,14 +21,14 @@
         @elseif ($action['type'] === 'blocked')
             <flux:tooltip :content="$action['hint']">
                 <span role="note" tabindex="0" class="inline-flex" aria-label="{{ $action['hint'] }}">
-                    <flux:button size="xs" square variant="ghost" :icon="$action['icon']"
+                    <flux:button size="sm" square variant="ghost" :icon="$action['icon']"
                         :aria-label="$action['label']" disabled :data-test="$action['test']" />
                 </span>
             </flux:tooltip>
         @else
             <flux:modal.trigger :name="$prefix.'-confirm'">
                 <flux:tooltip :content="$action['hint'] ?? $action['label']">
-                    <flux:button size="xs" square variant="ghost" :icon="$action['icon']"
+                    <flux:button size="sm" square variant="ghost" :icon="$action['icon']"
                         :aria-label="$action['label']"
                         :class="($action['danger'] ?? false) ? 'text-red-600 hover:text-red-700 dark:text-red-400 dark:hover:text-red-300' : ''"
                         x-on:click="confirmAction(JSON.parse($el.dataset.action))"

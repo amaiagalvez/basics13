@@ -162,12 +162,12 @@ abstract class ListTransformer
     {
         return $this->confirmAction(
             $record,
-            __('basics13::messages.delete'),
+            __('basics13::messages.move_to_trash'),
             'trash',
             'delete',
             route($this->routes()['destroy'], $record),
             'DELETE',
-            __('basics13::messages.delete_record'),
+            __('basics13::messages.delete_record', ['name' => $this->recordName($record)]),
             __('basics13::messages.you_can_restore_from_trash'),
             danger: true,
         );
@@ -186,7 +186,7 @@ abstract class ListTransformer
             'archive',
             route($this->routes()['archive'], $record),
             'PATCH',
-            __('basics13::messages.archive_record'),
+            __('basics13::messages.archive_record', ['name' => $this->recordName($record)]),
             __('basics13::messages.you_can_activate_from_archived'),
             danger: true,
         );
@@ -211,7 +211,7 @@ abstract class ListTransformer
             'activate',
             route($this->routes()['activate'], $record),
             'PATCH',
-            __('basics13::messages.activate_record'),
+            __('basics13::messages.activate_record', ['name' => $this->recordName($record)]),
             __('basics13::messages.record_returns_to_active'),
             danger: false,
         );
@@ -232,7 +232,7 @@ abstract class ListTransformer
             'restore',
             route($this->routes()['restore'], $this->key($record)),
             'PATCH',
-            __('basics13::messages.restore_record'),
+            __('basics13::messages.restore_record', ['name' => $this->recordName($record)]),
             $active
                 ? __('basics13::messages.record_returns_to_active')
                 : __('basics13::messages.record_returns_to_archived'),
@@ -253,10 +253,20 @@ abstract class ListTransformer
             'force-delete',
             route($this->routes()['trashDestroy'], $this->key($record)),
             'DELETE',
-            __('basics13::messages.permanently_delete_record'),
+            __('basics13::messages.permanently_delete_record', ['name' => $this->recordName($record)]),
             __('basics13::messages.action_cannot_be_undone'),
             danger: true,
         );
+    }
+
+    /**
+     * How the confirmation modal names the record, so the user sees which one the action hits.
+     *
+     * @param  TRecord  $record
+     */
+    protected function recordName(Model $record): string
+    {
+        return (string) $record->getAttribute('name');
     }
 
     /**

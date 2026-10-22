@@ -174,12 +174,15 @@ class ListTransformerTest extends TestCase
     public function test_delete_action_returns_correct_structure(): void
     {
         $transformer = new TestListTransformer;
-        $record = AuditedRecord::factory()->make(['id' => 1]);
+        $record = AuditedRecord::factory()->make(['id' => 1, 'name' => 'Alpha']);
 
         $result = $transformer->actions($record)['delete'];
 
         $this->assertSame('confirm-modal', $result['type']);
-        $this->assertSame(__('basics13::messages.delete'), $result['label']);
+        $this->assertSame(__('basics13::messages.move_to_trash'), $result['label']);
+        // The modal names the record it is about to move.
+        $this->assertSame(__('basics13::messages.delete_record', ['name' => 'Alpha']), $result['confirmTitle']);
+        $this->assertStringContainsString('Alpha', $result['confirmTitle']);
         $this->assertSame('trash', $result['icon']);
         $this->assertSame('test-delete-'.$record->id, $result['test']);
         $this->assertTrue($result['danger']);
