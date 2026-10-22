@@ -433,11 +433,30 @@ document.addEventListener('alpine:init', () => {
                 }
             };
             document.addEventListener('filters-applied', this.handleFiltersApplied);
+
+            // "/" jumps to the search box, unless the user is already typing or a dialog is open.
+            this.handleSearchShortcut = (event) => {
+                if (event.key !== '/' || event.ctrlKey || event.metaKey || event.altKey
+                    || event.target.closest('input, textarea, select, [contenteditable="true"]')
+                    || document.querySelector('dialog[open]')) {
+                    return;
+                }
+
+                const input = this.$root.querySelector('[data-list-search] input[name="search"]');
+
+                if (input) {
+                    event.preventDefault();
+                    input.focus();
+                    input.select();
+                }
+            };
+            document.addEventListener('keydown', this.handleSearchShortcut);
         },
 
         destroy() {
             window.removeEventListener('popstate', this.handlePopstate);
             document.removeEventListener('filters-applied', this.handleFiltersApplied);
+            document.removeEventListener('keydown', this.handleSearchShortcut);
             this.requestController?.abort();
         },
 

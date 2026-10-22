@@ -49,6 +49,7 @@ final class PackageViewsTest extends FeatureTestCase
             BLADE,
             [
                 'list' => [
+                    'resource' => 'Entities',
                     'breadcrumbs' => [
                         ['label' => 'Entities', 'url' => '/entities'],
                     ],

@@ -1,11 +1,12 @@
 {{--
-    Page heading for resource lists: breadcrumbs, H1 and the state tabs. Rendered outside the
-    "list-results" fragment so it stays stable while the results morph on search.
+    Page heading for resource lists: breadcrumbs, H1 with its one-line description, the primary
+    action and the state tabs. Rendered outside the "list-results" fragment so it stays stable while
+    the results morph on search.
 
-    The breadcrumbs already name the page, so the H1 is only there for the document outline and for
-    screen readers: it is announced once, not repeated on screen.
+    The breadcrumbs only show when there is a hierarchy to walk back (archived, trash): on the
+    active list they would just repeat the H1.
 --}}
-@props(['list', 'prefix', 'scope' => 'active', 'searchableFields' => [], 'filters' => []])
+@props(['list', 'prefix', 'scope' => 'active', 'searchableFields' => [], 'filters' => [], 'description' => null])
 
 @php
     // Determine if advanced search button should be shown
@@ -83,34 +84,44 @@
 @endphp
 
 <div {{ $attributes->class('flex flex-col gap-4') }}>
-    <div class="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
-        <div
-            class="-mx-6 -mt-6 mb-2 w-[calc(100%+3rem)] border-b border-zinc-200 bg-zinc-50 pb-5 dark:border-zinc-700 dark:bg-zinc-900 lg:-mx-8 lg:-mt-8 lg:w-[calc(100%+4rem)]">
-            <flux:breadcrumbs class="translate-y-2 ps-3 text-sm text-zinc-500 dark:text-zinc-400"
-                :data-test="$prefix.
-                '-breadcrumbs'">
-                @foreach ($list['breadcrumbs'] as $breadcrumb)
-                    @if ($loop->last)
-                        {{-- The current page links to its own URL, search included. --}}
-                        <flux:breadcrumbs.item :href="request()->fullUrl()" aria-current="page"
-                            class="transition-colors hover:text-zinc-800 dark:hover:text-zinc-200">
-                            {{ $breadcrumb['label'] }}
-                        </flux:breadcrumbs.item>
-                    @else
-                        <flux:breadcrumbs.item :href="$breadcrumb['url']" wire:navigate
-                            class="transition-colors hover:text-zinc-800 dark:hover:text-zinc-200">
-                            {{ $breadcrumb['label'] }}
-                        </flux:breadcrumbs.item>
-                    @endif
-                @endforeach
-            </flux:breadcrumbs>
+    <div class="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+        <div class="flex min-w-0 flex-col gap-1">
+            @if (count($list['breadcrumbs']) > 1)
+                <flux:breadcrumbs class="text-sm text-zinc-600 dark:text-zinc-400" :data-test="$prefix.'-breadcrumbs'">
+                    @foreach ($list['breadcrumbs'] as $breadcrumb)
+                        @if ($loop->last)
+                            {{-- The current page links to its own URL, search included. --}}
+                            <flux:breadcrumbs.item :href="request()->fullUrl()" aria-current="page"
+                                class="transition-colors hover:text-zinc-800 dark:hover:text-zinc-200">
+                                {{ $breadcrumb['label'] }}
+                            </flux:breadcrumbs.item>
+                        @else
+                            <flux:breadcrumbs.item :href="$breadcrumb['url']" wire:navigate
+                                class="transition-colors hover:text-zinc-800 dark:hover:text-zinc-200">
+                                {{ $breadcrumb['label'] }}
+                            </flux:breadcrumbs.item>
+                        @endif
+                    @endforeach
+                </flux:breadcrumbs>
+            @endif
+
+            <flux:heading level="1" size="xl" class="font-display text-3xl! font-semibold! tracking-tight"
+                :data-test="$prefix.'-heading'">
+                {{ $list['resource'] }}
+            </flux:heading>
+
+            @if ($description)
+                <flux:text class="text-zinc-600 dark:text-zinc-400" :data-test="$prefix.'-description'">
+                    {{ $description }}
+                </flux:text>
+            @endif
         </div>
 
-        <flux:heading level="1" size="xl" class="sr-only"
-            :data-test="$prefix.
-            '-heading'">
-            {{ collect($list['breadcrumbs'])->pluck('label')->implode(' / ') }}
-        </flux:heading>
+        @if (isset($actions) && $actions->isNotEmpty())
+            <div class="flex shrink-0 items-center gap-2">
+                {{ $actions }}
+            </div>
+        @endif
     </div>
 
     {{-- Active filter badges --}}
@@ -119,22 +130,14 @@
     @endif
 
     <x-basics13::list.tabs :tabs="$list['tabs']" :prefix="$prefix">
-        @if (isset($actions) || $showAdvancedSearch)
+        @if ($showAdvancedSearch)
             <x-slot:actions>
-                <div class="flex items-center gap-2">
-                    @isset($actions)
-                        {{ $actions }}
-                    @endisset
-
-                    @if ($showAdvancedSearch)
-                        <flux:modal.trigger name="advanced-search">
-                            <flux:button variant="outline" size="sm" icon="funnel"
-                                :data-test="$prefix.'-advanced-search'">
-                                {{ __('basics13::messages.advanced_search') }}
-                            </flux:button>
-                        </flux:modal.trigger>
-                    @endif
-                </div>
+                <flux:modal.trigger name="advanced-search">
+                    <flux:button variant="outline" size="sm" icon="funnel"
+                        :data-test="$prefix.'-advanced-search'">
+                        {{ __('basics13::messages.advanced_search') }}
+                    </flux:button>
+                </flux:modal.trigger>
             </x-slot:actions>
         @endif
     </x-basics13::list.tabs>

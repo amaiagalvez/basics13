@@ -102,13 +102,13 @@ abstract class ListTransformer
      */
     private function breadcrumbs(string $state): array
     {
-        $dashboard = ['label' => __('Dashboard'), 'url' => route('dashboard')];
+        // Root lists start at the resource: the dashboard is one sidebar click away, not a parent.
         $resource = ['label' => $this->resourceLabel(), 'url' => route($this->routes()['active'])];
 
         return match ($state) {
-            'active' => [$dashboard, ['label' => $this->resourceLabel(), 'url' => null]],
-            'archived' => [$dashboard, $resource, ['label' => __('basics13::messages.archived_label'), 'url' => null]],
-            'trash' => [$dashboard, $resource, ['label' => __('basics13::messages.trash_label'), 'url' => null]],
+            'active' => [['label' => $this->resourceLabel(), 'url' => null]],
+            'archived' => [$resource, ['label' => __('basics13::messages.archived_label'), 'url' => null]],
+            'trash' => [$resource, ['label' => __('basics13::messages.trash_label'), 'url' => null]],
         };
     }
 

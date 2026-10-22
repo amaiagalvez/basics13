@@ -274,10 +274,9 @@ class ListTransformerTest extends TestCase
         /** @var list<array{label: string, url: string|null}> $result */
         $result = $transformer->buildEnvelope('active', '')['breadcrumbs'];
 
-        $this->assertCount(2, $result);
-        $this->assertSame('Dashboard', $result[0]['label']);
-        $this->assertSame('Test Resource', $result[1]['label']);
-        $this->assertNull($result[1]['url']);
+        $this->assertCount(1, $result);
+        $this->assertSame('Test Resource', $result[0]['label']);
+        $this->assertNull($result[0]['url']);
     }
 
     public function test_breadcrumbs_for_archived_state(): void
@@ -287,10 +286,10 @@ class ListTransformerTest extends TestCase
         /** @var list<array{label: string, url: string|null}> $result */
         $result = $transformer->buildEnvelope('archived', '')['breadcrumbs'];
 
-        $this->assertCount(3, $result);
-        $this->assertSame('Dashboard', $result[0]['label']);
-        $this->assertSame('Test Resource', $result[1]['label']);
-        $this->assertSame(__('basics13::messages.archived_label'), $result[2]['label']);
+        $this->assertCount(2, $result);
+        $this->assertSame('Test Resource', $result[0]['label']);
+        $this->assertNotNull($result[0]['url']);
+        $this->assertSame(__('basics13::messages.archived_label'), $result[1]['label']);
     }
 
     public function test_active_view_builds_the_envelope_and_the_editable_rows(): void
