@@ -302,7 +302,6 @@
     "When you enable two-factor authentication, you will be prompted for a secure pin during login. This pin can be retrieved from a TOTP-supported application on your phone.": "Bi faktoreen autentifikazioa gaitzen duzunean, saioa hastean PIN segurua eskatuko zaizu. Pin hau TOTP onartzen den aplikazio batetik berreskura daiteke telefonoan.",
     "Whoops!": "Aupa!",
     "Yes": "Bai",
-    "Desegin": "Desegin",
     "You are receiving this email because we received a password reset request for your account.": "Zure kontutik pasahitza berrezartzeko eskaera bat jaso genuelako jaso duzu posta elektroniko hau.",
     "You have unsaved changes. Leave without saving?": "Gorde gabeko aldaketak dituzu. Irten nahi duzu gorde gabe?",
     "You will be prompted for a secure, random pin during login, which you can retrieve from the TOTP-supported application on your phone.": "Saioa hastean ausazko pin seguru bat eskatuko zaizu, zure telefonoko TOTP-ek onartzen duen aplikaziotik berreskura dezakezuna.",
