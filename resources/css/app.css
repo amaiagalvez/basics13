@@ -48,39 +48,14 @@ select.input-error:focus {
     @apply bg-zinc-50 dark:bg-zinc-800/60;
 }
 
+/* Colours and the focus token come from the host's @theme; only the radii live here. */
 @theme {
-    --color-brand: oklch(0.65 0.2 2.5);
-    --color-brand-foreground: oklch(0.98 0 0);
-    --color-zinc-50: oklch(0.99 0 0);
-    --color-zinc-100: oklch(0.97 0 0);
-    --color-zinc-200: oklch(0.94 0 0);
-    --color-zinc-700: oklch(0.45 0 0);
-    --color-zinc-800: oklch(0.25 0 0);
-    --color-zinc-900: oklch(0.15 0 0);
     --radius-sm: 0.375rem;
     --radius-md: 0.5rem;
 }
 
-/* Focus ring tokens */
-input:focus[data-flux-control],
-textarea:focus[data-flux-control],
-select:focus[data-flux-control] {
-    @apply outline-hidden ring-2 ring-[var(--color-brand)] ring-offset-2 ring-offset-[var(--color-brand-foreground)];
-}
-
-/* Brand border for focused table cells */
 .resource-list-table [data-flux-cell]:focus-visible {
-    @apply ring-2 ring-[var(--color-brand)] ring-offset-2 ring-offset-[var(--color-brand-foreground)];
-}
-
-/* Table row hover */
-.resource-list-table [data-flux-row]:hover > [data-flux-cell] {
-    @apply bg-[var(--color-zinc-50)] dark:bg-zinc-800/60;
-}
-
-/* Active state for table rows */
-.resource-list-table [data-flux-row].bg-zinc-50 {
-    @apply dark:bg-zinc-800/60;
+    @apply ring-2 ring-focus ring-offset-2;
 }
 
 @media (min-width: 768px) {
