@@ -52,6 +52,7 @@ return [
     'trash_label' => 'Trash',
     'no_archived_records' => 'No archived records.',
     'trash_is_empty' => 'Trash is empty.',
+    'no_matching_records' => 'No records match your search.',
     'you_can_restore_from_trash' => 'You can restore it from the trash.',
     'you_can_activate_from_archived' => 'You can activate it from the archived list.',
     'record_returns_to_active' => 'The record will return to the active list.',
@@ -90,11 +91,6 @@ return [
     'operator_less_than' => 'less than',
     'operator_greater_than_or_equal' => 'greater than or equal',
     'operator_less_than_or_equal' => 'less than or equal',
-    'field_type_text' => 'Text',
-    'field_type_date' => 'Date',
-    'field_type_boolean' => 'Boolean',
-    'field_type_number' => 'Number',
-    'field_type_select' => 'Selection',
 
     'own_account_only' => 'Only the account holder can change the email and the password.',
 ];

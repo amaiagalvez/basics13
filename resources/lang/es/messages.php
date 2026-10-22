@@ -52,6 +52,7 @@ return [
     'trash_label' => 'Papelera',
     'no_archived_records' => 'No hay registros archivados.',
     'trash_is_empty' => 'La papelera está vacía.',
+    'no_matching_records' => 'Ningún registro coincide con la búsqueda.',
     'you_can_restore_from_trash' => 'Puedes restaurarlo desde la papelera.',
     'you_can_activate_from_archived' => 'Puedes activarlo de nuevo desde el listado de archivados.',
     'record_returns_to_active' => 'El registro volverá al listado de activos.',
@@ -90,11 +91,6 @@ return [
     'operator_less_than' => 'menor que',
     'operator_greater_than_or_equal' => 'mayor o igual que',
     'operator_less_than_or_equal' => 'menor o igual que',
-    'field_type_text' => 'Texto',
-    'field_type_date' => 'Fecha',
-    'field_type_boolean' => 'Booleano',
-    'field_type_number' => 'Número',
-    'field_type_select' => 'Selección',
 
     'own_account_only' => 'Solo el titular de la cuenta puede cambiar el correo y la contraseña.',
 ];

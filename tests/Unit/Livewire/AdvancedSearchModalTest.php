@@ -262,4 +262,70 @@ class AdvancedSearchModalTest extends FeatureTestCase
         $component->call('applyFilters')
             ->assertDispatched('filters-applied', filters: []);
     }
+
+    public function test_an_operator_without_translation_falls_back_to_a_readable_label(): void
+    {
+        $labels = (new AdvancedSearchModal)->getOperatorsForField([
+            'column' => 'name',
+            'label' => 'Name',
+            'type' => 'text',
+            'operators' => ['contains', 'sounds_like'],
+        ]);
+
+        $this->assertSame(__('basics13::messages.operator_contains'), $labels['contains']);
+        $this->assertSame('Sounds like', $labels['sounds_like']);
+    }
+
+    /**
+     * Mount resolves the callable, so the view only ever lists an array; an unresolved callable
+     * renders no options instead of being invoked from component state.
+     */
+    public function test_select_options_are_listed_only_when_already_resolved(): void
+    {
+        $modal = new AdvancedSearchModal;
+        $field = ['column' => 'entity_id', 'label' => 'Entity', 'type' => 'select'];
+
+        $this->assertSame([1 => 'One'], $modal->getSelectOptions([...$field, 'options' => [1 => 'One']]));
+        $this->assertSame([], $modal->getSelectOptions([...$field, 'options' => fn (): array => [1 => 'One']]));
+        $this->assertSame([], $modal->getSelectOptions($field));
+    }
+
+    public function test_apply_filters_drops_a_filter_for_an_unknown_field(): void
+    {
+        $fields = [
+            'name' => ['column' => 'name', 'label' => 'Name', 'type' => 'text'],
+        ];
+
+        Livewire::test(AdvancedSearchModal::class, ['fields' => $fields, 'filters' => [], 'scope' => 'active'])
+            ->set('filters', [
+                'name' => ['operator' => 'contains', 'value' => 'Alpha'],
+                'password' => ['operator' => 'equals', 'value' => 'secret'],
+            ])
+            ->call('applyFilters')
+            ->assertDispatched('filters-applied', filters: ['name' => ['operator' => 'contains', 'value' => 'Alpha']]);
+    }
+
+    public function test_apply_filters_sends_a_single_multi_select_value_as_a_list(): void
+    {
+        $fields = [
+            'project_id' => ['column' => 'project_id', 'label' => 'Project', 'type' => 'select', 'options' => [1 => 'One', 2 => 'Two']],
+        ];
+
+        Livewire::test(AdvancedSearchModal::class, ['fields' => $fields, 'filters' => [], 'scope' => 'active'])
+            ->set('filters.project_id.value', '2')
+            ->call('applyFilters')
+            ->assertDispatched('filters-applied', filters: ['project_id' => ['operator' => 'equals', 'value' => ['2']]]);
+    }
+
+    public function test_apply_filters_sends_an_empty_list_for_a_multi_select_is_empty(): void
+    {
+        $fields = [
+            'project_id' => ['column' => 'project_id', 'label' => 'Project', 'type' => 'select', 'nullable' => true, 'options' => [1 => 'One']],
+        ];
+
+        Livewire::test(AdvancedSearchModal::class, ['fields' => $fields, 'filters' => [], 'scope' => 'active'])
+            ->set('filters.project_id', ['operator' => 'is_empty', 'value' => null])
+            ->call('applyFilters')
+            ->assertDispatched('filters-applied', filters: ['project_id' => ['operator' => 'is_empty', 'value' => []]]);
+    }
 }

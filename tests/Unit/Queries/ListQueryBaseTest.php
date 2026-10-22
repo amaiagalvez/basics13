@@ -6,6 +6,7 @@ use Carbon\CarbonImmutable;
 use Basics13\Tests\TestCase;
 use Illuminate\Support\Facades\DB;
 use Basics13\Queries\ListQueryBase;
+use Basics13\Tests\Fixtures\AuditActor;
 use Illuminate\Database\Eloquent\Builder;
 use Basics13\Tests\Fixtures\AuditedRecord;
 use PHPUnit\Framework\Attributes\DataProvider;
@@ -1057,6 +1058,242 @@ final class ListQueryBaseTest extends TestCase
 
         // Empty value should skip filter
         $this->assertSame(2, $builder->count());
+    }
+
+    // =========================================================================
+    // Advanced Search: branches reached only through declared operators
+    // =========================================================================
+
+    public function test_apply_filters_text_ignores_an_operator_without_a_mapping(): void
+    {
+        $this->createRecordsWithPriorities([10, 20]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['name' => ['operator' => 'sounds_like', 'value' => 'Record 1']],
+            ['name' => ['column' => 'name', 'label' => 'test.name', 'type' => 'text', 'operators' => ['sounds_like']]],
+        );
+
+        $this->assertSame(2, $builder->count());
+    }
+
+    public function test_apply_filters_date_ignores_an_operator_without_a_mapping(): void
+    {
+        $this->createRecordsWithPriorities([10, 20]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['published_at' => ['operator' => 'in_week', 'value' => '2026-01-01']],
+            ['published_at' => ['column' => 'published_at', 'label' => 'test.published_at', 'type' => 'date', 'operators' => ['in_week']]],
+        );
+
+        $this->assertSame(2, $builder->count());
+    }
+
+    public function test_apply_filters_boolean_any_operator_leaves_the_query_untouched(): void
+    {
+        AuditedRecord::factory()->create(['name' => 'Active']);
+        AuditedRecord::factory()->archived()->create(['name' => 'Archived']);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['active' => ['operator' => '', 'value' => null]],
+            ['active' => ['column' => 'active', 'label' => 'test.active', 'type' => 'boolean', 'operators' => ['', 'is_true']]],
+        );
+
+        $this->assertSame(2, $builder->count());
+    }
+
+    public function test_apply_filters_boolean_equals_compares_with_the_cast_value(): void
+    {
+        AuditedRecord::factory()->create(['name' => 'Active']);
+        AuditedRecord::factory()->archived()->create(['name' => 'Archived']);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['active' => ['operator' => 'equals', 'value' => 'false']],
+            ['active' => ['column' => 'active', 'label' => 'test.active', 'type' => 'boolean', 'operators' => ['equals']]],
+        );
+
+        $this->assertSame(['Archived'], $builder->pluck('name')->all());
+    }
+
+    public function test_apply_filters_number_equals(): void
+    {
+        $this->createRecordsWithPriorities([10, 20]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['priority' => ['operator' => 'equals', 'value' => '20']],
+            ['priority' => ['column' => 'priority', 'label' => 'test.priority', 'type' => 'number']],
+        );
+
+        $this->assertSame([20], $builder->pluck('priority')->all());
+    }
+
+    public function test_apply_filters_number_skips_a_non_numeric_value(): void
+    {
+        $this->createRecordsWithPriorities([10, 20]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['priority' => ['operator' => 'equals', 'value' => 'ten']],
+            ['priority' => ['column' => 'priority', 'label' => 'test.priority', 'type' => 'number']],
+        );
+
+        $this->assertSame(2, $builder->count());
+    }
+
+    public function test_apply_filters_number_skips_an_empty_value_even_for_is_empty(): void
+    {
+        $this->createRecordsWithPriorities([10, 20]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['priority' => ['operator' => 'is_empty', 'value' => null]],
+            ['priority' => ['column' => 'priority', 'label' => 'test.priority', 'type' => 'number', 'operators' => ['is_empty']]],
+        );
+
+        $this->assertSame(2, $builder->count());
+    }
+
+    public function test_apply_filters_number_ignores_an_operator_without_a_mapping(): void
+    {
+        $this->createRecordsWithPriorities([10, 20]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['priority' => ['operator' => 'multiple_of', 'value' => 10]],
+            ['priority' => ['column' => 'priority', 'label' => 'test.priority', 'type' => 'number', 'operators' => ['multiple_of']]],
+        );
+
+        $this->assertSame(2, $builder->count());
+    }
+
+    public function test_apply_filters_select_is_empty_on_a_non_nullable_field_skips_the_empty_value(): void
+    {
+        AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
+        AuditedRecord::factory()->create(['name' => 'Project B', 'project_id' => null]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['project_id' => ['operator' => 'is_empty', 'value' => null]],
+            ['project_id' => ['column' => 'project_id', 'label' => 'test.project', 'type' => 'select', 'operators' => ['is_empty']]],
+        );
+
+        $this->assertSame(2, $builder->count());
+    }
+
+    public function test_apply_filters_select_skips_a_list_of_blank_values(): void
+    {
+        AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
+        AuditedRecord::factory()->create(['name' => 'Project B', 'project_id' => 2]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['project_id' => ['operator' => 'equals', 'value' => [null, '']]],
+            ['project_id' => ['column' => 'project_id', 'label' => 'test.project', 'type' => 'select']],
+        );
+
+        $this->assertSame(2, $builder->count());
+    }
+
+    public function test_apply_filters_multi_select_treats_an_unmapped_operator_as_in(): void
+    {
+        AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
+        AuditedRecord::factory()->create(['name' => 'Project B', 'project_id' => 2]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['project_id' => ['operator' => 'any_of', 'value' => [2]]],
+            ['project_id' => ['column' => 'project_id', 'label' => 'test.project', 'type' => 'select', 'operators' => ['any_of']]],
+        );
+
+        $this->assertSame(['Project B'], $builder->pluck('name')->all());
+    }
+
+    public function test_apply_filters_single_select_treats_an_unmapped_operator_as_equals(): void
+    {
+        AuditedRecord::factory()->create(['name' => 'Project A', 'project_id' => 1]);
+        AuditedRecord::factory()->create(['name' => 'Project B', 'project_id' => 2]);
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['project_id' => ['operator' => 'is', 'value' => 1]],
+            ['project_id' => ['column' => 'project_id', 'label' => 'test.project', 'type' => 'select', 'multiple' => false, 'operators' => ['is']]],
+        );
+
+        $this->assertSame(['Project A'], $builder->pluck('name')->all());
+    }
+
+    // =========================================================================
+    // Advanced Search: relation filters
+    // =========================================================================
+
+    /**
+     * @return array<string, array{string, mixed, list<string>}>
+     */
+    public static function relationFilters(): array
+    {
+        return [
+            'equals keeps the records holding a selected value' => ['equals', ['ana'], ['By Ana']],
+            'not_equals keeps the records holding none of them' => ['not_equals', ['ana'], ['By Ben', 'Nobody']],
+            'is_empty keeps the records holding none at all' => ['is_empty', null, ['Nobody']],
+            'blank values leave the query untouched' => ['equals', [null, ''], ['By Ana', 'By Ben', 'Nobody']],
+        ];
+    }
+
+    /**
+     * @param  list<string>  $expected
+     */
+    #[DataProvider('relationFilters')]
+    public function test_apply_filters_on_a_relation(string $operator, mixed $value, array $expected): void
+    {
+        $actors = ['ana' => AuditActor::factory()->create(), 'ben' => AuditActor::factory()->create()];
+        $this->createRecordCreatedBy('By Ana', $actors['ana']->getKey());
+        $this->createRecordCreatedBy('By Ben', $actors['ben']->getKey());
+        $this->createRecordCreatedBy('Nobody', null);
+
+        $value = is_array($value)
+            ? array_map(fn (?string $key) => $key === null || $key === '' ? $key : $actors[$key]->getKey(), $value)
+            : $value;
+
+        $builder = AuditedRecord::query();
+        $this->callApplyFilters(
+            $builder,
+            ['creator' => ['operator' => $operator, 'value' => $value]],
+            ['creator' => ['column' => 'id', 'label' => 'test.creator', 'type' => 'select', 'nullable' => true, 'relation' => 'creator']],
+        );
+
+        $this->assertEqualsCanonicalizing($expected, $builder->pluck('name')->all());
+    }
+
+    /**
+     * @param  list<int>  $priorities
+     */
+    private function createRecordsWithPriorities(array $priorities): void
+    {
+        foreach ($priorities as $index => $priority) {
+            AuditedRecord::factory()->create(['name' => 'Record '.($index + 1), 'priority' => $priority]);
+        }
+    }
+
+    private function createRecordCreatedBy(string $name, mixed $actorId): void
+    {
+        $record = AuditedRecord::factory()->create(['name' => $name]);
+        DB::table('audited_records')->where('id', $record->getKey())->update(['created_by' => $actorId]);
     }
 
     // =========================================================================

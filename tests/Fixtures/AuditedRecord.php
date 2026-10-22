@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Model;
 use Basics13\Concerns\TracksAuditColumns;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 
 /**
@@ -39,6 +40,16 @@ class AuditedRecord extends Model
     protected $attributes = [
         'active' => true,
     ];
+
+    /**
+     * The relation the list query's relation filter is tested through.
+     *
+     * @return BelongsTo<AuditActor, $this>
+     */
+    public function creator(): BelongsTo
+    {
+        return $this->belongsTo(AuditActor::class, 'created_by');
+    }
 
     protected static function newFactory(): AuditedRecordFactory
     {

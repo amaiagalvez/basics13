@@ -328,7 +328,7 @@ abstract class ListTransformer
 
     final protected function noMatchMessage(): string
     {
-        return 'No records match your search.';
+        return __('basics13::messages.no_matching_records');
     }
 
     final protected function noRecordsMessage(): string

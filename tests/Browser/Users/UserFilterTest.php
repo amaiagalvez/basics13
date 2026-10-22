@@ -25,7 +25,7 @@ class UserFilterTest extends DuskTestCase
                 ->assertSeeIn('dialog[open]', __('Email'))
                 ->assertSeeIn('dialog[open]', __('basics13::messages.created_at'))
                 ->assertDontSeeIn('dialog[open]', 'basics13::messages.')
-                ->assertScript('document.querySelector(\'[data-test="active-advanced-search-operator"]\').value', '')
+                ->assertMissing('[data-test="active-advanced-search-operator"]')
                 ->select('[data-test="email-advanced-search-operator"]', 'ends_with')
                 ->type('dialog[open] input[wire\\:model="filters.email.value"]', 'client.test')
                 ->press(__('basics13::messages.apply_filters'))

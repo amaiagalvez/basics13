@@ -56,7 +56,6 @@ class UserCrudTest extends UserTestCase
             ->assertOk()
             ->assertSee('data-test="user-advanced-search"', false)
             ->assertSeeText(__('basics13::messages.created_at'))
-            ->assertSeeText(__('Status'))
             ->assertSee('data-test="user-filter-remove-email"', false)
             ->assertSee('Ane account')
             ->assertDontSee('Actor account');
@@ -65,6 +64,13 @@ class UserCrudTest extends UserTestCase
             ->assertOk()
             ->assertSee('Archived ane')
             ->assertDontSee('Archived other');
+
+        // The status filter only exists where both states mix: the trash.
+        $this->get(route('users.trash.index'))
+            ->assertOk()
+            ->assertSee('data-test="active-advanced-search-operator"', false);
+        $this->get(route('users.index'))
+            ->assertDontSee('data-test="active-advanced-search-operator"', false);
     }
 
     public function test_an_account_can_be_created_updated_and_trashed(): void
@@ -287,8 +293,9 @@ class UserCrudTest extends UserTestCase
 
     public function test_update_converts_a_concurrent_duplicate_email_into_a_validation_error(): void
     {
-        $this->actingAs(User::factory()->create());
+        // Only the account holder may change an email, so the request reaches the write.
         $account = User::factory()->create(['email' => 'original@example.test']);
+        $this->actingAs($account);
         $email = 'concurrent@example.test';
         $this->createDuplicateEmailAfterValidation($email);
 

@@ -53,6 +53,7 @@ return [
     'trash_label' => 'Zakarrontzia',
     'no_archived_records' => 'Ez dago artxibatutako erregistrorik.',
     'trash_is_empty' => 'Zakarrontzia hutsa dago.',
+    'no_matching_records' => 'Ez dago bilaketarekin bat datorren erregistrorik.',
     'you_can_restore_from_trash' => 'Zakarrontzitik berreskura dezakezu.',
     'you_can_activate_from_archived' => 'Artxibatueen zerrendatik aktibatu dezakezu berriro.',
     'record_returns_to_active' => 'Erregistroa aktibuen zerrendara itzuliko da.',
@@ -91,11 +92,6 @@ return [
     'operator_less_than' => 'hau baino txikiagoa',
     'operator_greater_than_or_equal' => 'hau bezain handia edo handiagoa',
     'operator_less_than_or_equal' => 'hau bezain txikia edo txikiagoa',
-    'field_type_text' => 'Testua',
-    'field_type_date' => 'Data',
-    'field_type_boolean' => 'Boolearra',
-    'field_type_number' => 'Zenbakia',
-    'field_type_select' => 'Hautapena',
 
     'own_account_only' => 'Kontuaren jabeak bakarrik alda ditzake helbide elektronikoa eta pasahitza.',
 ];

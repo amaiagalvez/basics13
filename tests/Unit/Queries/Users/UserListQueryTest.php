@@ -43,12 +43,11 @@ final class UserListQueryTest extends TestCase
 
         $this->assertArrayHasKey('name', $fields);
         $this->assertArrayHasKey('email', $fields);
-        $this->assertArrayHasKey('active', $fields);
+        $this->assertArrayNotHasKey('active', $fields);
         $this->assertArrayHasKey('created_at', $fields);
 
         $this->assertEquals('text', $fields['name']['type']);
         $this->assertEquals('text', $fields['email']['type']);
-        $this->assertEquals('boolean', $fields['active']['type']);
         $this->assertEquals('date', $fields['created_at']['type']);
     }
 
@@ -59,7 +58,7 @@ final class UserListQueryTest extends TestCase
 
         $this->assertArrayHasKey('name', $fields);
         $this->assertArrayHasKey('email', $fields);
-        $this->assertArrayHasKey('active', $fields);
+        $this->assertArrayNotHasKey('active', $fields);
         $this->assertArrayHasKey('created_at', $fields);
     }
 
@@ -70,6 +69,8 @@ final class UserListQueryTest extends TestCase
 
         $this->assertArrayHasKey('name', $fields);
         $this->assertArrayHasKey('email', $fields);
+        // The trash is the only list that mixes active and archived records.
+        $this->assertSame('boolean', $fields['active']['type'] ?? null);
         $this->assertArrayHasKey('active', $fields);
         $this->assertArrayHasKey('created_at', $fields);
     }

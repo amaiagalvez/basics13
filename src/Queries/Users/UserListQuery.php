@@ -107,14 +107,16 @@ final class UserListQuery extends ListQueryBase
                 'order' => 20,
                 'group' => 'basic',
             ],
-            'active' => [
+            // Only the trash mixes active and archived records: on the active and archived lists
+            // the status filter could only return everything or nothing.
+            ...($scope === 'trashed' ? ['active' => [
                 'column' => 'active',
                 'label' => 'Status',
                 'type' => 'boolean',
                 'visible' => true,
                 'order' => 10,
                 'group' => 'status',
-            ],
+            ]] : []),
             'created_at' => [
                 'column' => 'created_at',
                 'label' => 'basics13::messages.created_at',

@@ -89,7 +89,7 @@ class ListTransformerTest extends TestCase
         $transformer = new TestListTransformer;
 
         $this->assertSame('No records yet.', $transformer->buildEnvelope('active', '')['emptyMessage']);
-        $this->assertSame('No records match your search.', $transformer->buildEnvelope('active', 'search')['emptyMessage']);
+        $this->assertSame(__('basics13::messages.no_matching_records'), $transformer->buildEnvelope('active', 'search')['emptyMessage']);
     }
 
     public function test_an_active_filter_narrows_the_list_like_a_search_does(): void
@@ -100,7 +100,7 @@ class ListTransformerTest extends TestCase
 
         $envelope = (new TestListTransformer)->buildEnvelope('active', '');
         $this->assertTrue($envelope['narrowed']);
-        $this->assertSame('No records match your search.', $envelope['emptyMessage']);
+        $this->assertSame(__('basics13::messages.no_matching_records'), $envelope['emptyMessage']);
     }
 
     public function test_empty_message_for_archived_state(): void
@@ -108,7 +108,7 @@ class ListTransformerTest extends TestCase
         $transformer = new TestListTransformer;
 
         $this->assertSame(__('basics13::messages.no_archived_records'), $transformer->buildEnvelope('archived', '')['emptyMessage']);
-        $this->assertSame('No records match your search.', $transformer->buildEnvelope('archived', 'search')['emptyMessage']);
+        $this->assertSame(__('basics13::messages.no_matching_records'), $transformer->buildEnvelope('archived', 'search')['emptyMessage']);
     }
 
     public function test_empty_message_for_trash_state(): void
@@ -116,7 +116,7 @@ class ListTransformerTest extends TestCase
         $transformer = new TestListTransformer;
 
         $this->assertSame(__('basics13::messages.trash_is_empty'), $transformer->buildEnvelope('trash', '')['emptyMessage']);
-        $this->assertSame('No records match your search.', $transformer->buildEnvelope('trash', 'search')['emptyMessage']);
+        $this->assertSame(__('basics13::messages.no_matching_records'), $transformer->buildEnvelope('trash', 'search')['emptyMessage']);
     }
 
     public function test_default_routes_use_the_plural_resource_key_for_every_action(): void

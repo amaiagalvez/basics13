@@ -18,19 +18,15 @@ class SecurityTest extends AuthFeatureTestCase
     {
         parent::setUp();
 
-        /* @chisel-2fa */
         $this->skipUnlessFortifyHas(Features::twoFactorAuthentication());
 
         Features::twoFactorAuthentication([
             'confirm' => true,
             'confirmPassword' => true,
         ]);
-        /* @end-chisel-2fa */
-        /* @chisel-passkeys */
         Features::passkeys([
             'confirmPassword' => true,
         ]);
-        /* @end-chisel-passkeys */
     }
 
     public function test_security_settings_page_can_be_rendered(): void
@@ -38,25 +34,19 @@ class SecurityTest extends AuthFeatureTestCase
         $user = User::factory()->create();
 
         $response = $this->actingAs($user)
-            /* @chisel-password-confirmation */
             ->withSession(['auth.password_confirmed_at' => time()])
-            /* @end-chisel-password-confirmation */
             ->get(route('security.edit'));
 
         $response->assertOk();
 
-        /* @chisel-passkeys */
         $response->assertSee(__('Passkeys'))
             ->assertSee('aria-labelledby="delete-passkey-modal-heading"', false)
             ->assertSee('id="delete-passkey-modal-heading"', false);
         $response->assertSee(__('No passkeys yet'));
-        /* @end-chisel-passkeys */
-        /* @chisel-2fa */
         $response->assertSee(__('Two-factor authentication'))
             ->assertSee('aria-labelledby="two-factor-setup-modal-heading"', false)
             ->assertSee('id="two-factor-setup-modal-heading"', false);
         $response->assertSee(__('Enable 2FA'));
-        /* @end-chisel-2fa */
     }
 
     public function test_security_settings_page_renders_without_two_factor_when_feature_is_disabled(): void
@@ -66,9 +56,7 @@ class SecurityTest extends AuthFeatureTestCase
         $user = User::factory()->create();
 
         $this->actingAs($user)
-            /* @chisel-password-confirmation */
             ->withSession(['auth.password_confirmed_at' => time()])
-            /* @end-chisel-password-confirmation */
             ->get(route('security.edit'))
             ->assertOk()
             ->assertSee(__('Update password'))
@@ -79,7 +67,6 @@ class SecurityTest extends AuthFeatureTestCase
 
     public function test_two_factor_authentication_disabled_when_confirmation_abandoned_between_requests(): void
     {
-        /* @chisel-2fa */
         $user = User::factory()->create();
 
         $user->forceFill([
@@ -99,10 +86,8 @@ class SecurityTest extends AuthFeatureTestCase
             'two_factor_secret' => null,
             'two_factor_recovery_codes' => null,
         ]);
-        /* @end-chisel-2fa */
     }
 
-    /* @chisel-2fa */
     public function test_two_factor_authentication_can_be_disabled_from_the_settings_page(): void
     {
         $user = User::factory()->create();
@@ -168,7 +153,6 @@ class SecurityTest extends AuthFeatureTestCase
         Livewire::test('basics13::pages.settings.security')
             ->set('requiresConfirmation', false);
     }
-    /* @end-chisel-2fa */
 
     public function test_password_can_be_updated(): void
     {
@@ -206,7 +190,6 @@ class SecurityTest extends AuthFeatureTestCase
         $response->assertHasErrors(['current_password']);
     }
 
-    /* @chisel-passkeys */
     public function test_user_cannot_confirm_deletion_of_another_users_passkey(): void
     {
         $user = User::factory()->create();
@@ -225,9 +208,7 @@ class SecurityTest extends AuthFeatureTestCase
 
         $this->assertModelExists($passkey);
     }
-    /* @end-chisel-passkeys */
 
-    /* @chisel-password-confirmation */
     public function test_expired_password_confirmation_blocks_livewire_security_updates(): void
     {
         $user = User::factory()->create();
@@ -281,5 +262,4 @@ class SecurityTest extends AuthFeatureTestCase
 
         $updateResponse->assertStatus(423);
     }
-    /* @end-chisel-password-confirmation */
 }

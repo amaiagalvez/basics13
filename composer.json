@@ -6,7 +6,6 @@
     "version": "1.0.0",
     "require": {
         "php": "^8.5",
-        "laravel/chisel": "^0.1.0",
         "laravel/fortify": "^1.37.2",
         "laravel/framework": "^13",
         "livewire/flux": "^2",

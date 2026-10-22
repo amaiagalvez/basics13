@@ -53,6 +53,7 @@ return [
     'trash_label' => 'Corbeille',
     'no_archived_records' => 'Aucun enregistrement archivé.',
     'trash_is_empty' => 'La corbeille est vide.',
+    'no_matching_records' => 'Aucun enregistrement ne correspond à votre recherche.',
     'you_can_restore_from_trash' => 'Vous pouvez le restaurer depuis la corbeille.',
     'you_can_activate_from_archived' => 'Vous pouvez l\'activer depuis la liste des archivés.',
     'record_returns_to_active' => 'L\'enregistrement retournera à la liste active.',
@@ -91,11 +92,6 @@ return [
     'operator_less_than' => 'inférieur à',
     'operator_greater_than_or_equal' => 'supérieur ou égal à',
     'operator_less_than_or_equal' => 'inférieur ou égal à',
-    'field_type_text' => 'Texte',
-    'field_type_date' => 'Date',
-    'field_type_boolean' => 'Booléen',
-    'field_type_number' => 'Nombre',
-    'field_type_select' => 'Sélection',
 
     'own_account_only' => 'Seul le titulaire du compte peut modifier l’adresse e-mail et le mot de passe.',
 ];
