@@ -106,6 +106,11 @@ trait HasRoles
      */
     private function loadPermissionSlugs(): array
     {
+        // An account not saved yet cannot hold a role.
+        if (! $this->exists) {
+            return [];
+        }
+
         /** @var list<string> */
         return DB::table('permissions')
             ->join('permission_role', 'permission_role.permission_id', '=', 'permissions.id')

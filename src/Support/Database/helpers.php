@@ -1,5 +1,6 @@
 <?php
 
+use Basics13\Models\Permission;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
@@ -84,4 +85,40 @@ function addUniqueActiveColumnIndex(string $table, string $column, array $scope 
         $blueprint->string($generated)->nullable()->storedAs('IF(deleted_at IS NULL, '.$column.', NULL)');
         $blueprint->unique([...$scope, $generated], $index);
     });
+}
+
+/**
+ * Seed the permissions of the modules a package's policies check, and grant some of them to the
+ * system role `admin` so the accounts that already hold it keep their access.
+ *
+ * Every write only adds: running it again duplicates nothing and takes no permission away from a
+ * role. Meant for a package's own data migration, after the basics13 one that creates `admin`.
+ *
+ * @param  list<string>  $modules  Each module gets one permission per action of Permission::ACTIONS
+ * @param  list<string>  $grantToAdmin  Slugs added to the `admin` role
+ */
+function seedPermissions(array $modules, array $grantToAdmin = []): void
+{
+    $now = now();
+    $permissions = [];
+
+    foreach ($modules as $module) {
+        foreach (Permission::ACTIONS as $action) {
+            $permissions[] = ['slug' => $module.'.'.$action, 'module' => $module, 'created_at' => $now, 'updated_at' => $now];
+        }
+    }
+
+    DB::table('permissions')->insertOrIgnore($permissions);
+
+    $adminId = DB::table('roles')->whereNull('deleted_at')->where('slug', 'admin')->value('id');
+
+    if ($adminId === null || $grantToAdmin === []) {
+        return;
+    }
+
+    DB::table('permission_role')->insertOrIgnore(DB::table('permissions')
+        ->whereIn('slug', $grantToAdmin)
+        ->pluck('id')
+        ->map(static fn (mixed $permissionId): array => ['permission_id' => $permissionId, 'role_id' => $adminId])
+        ->all());
 }
