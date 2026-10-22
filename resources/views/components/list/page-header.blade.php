@@ -93,7 +93,7 @@
                     @if ($loop->last)
                         {{-- The current page links to its own URL, search included. --}}
                         <flux:breadcrumbs.item :href="request()->fullUrl()" aria-current="page"
-                            class="font-semibold text-zinc-900 dark:text-white">
+                            class="transition-colors hover:text-zinc-800 dark:hover:text-zinc-200">
                             {{ $breadcrumb['label'] }}
                         </flux:breadcrumbs.item>
                     @else
