@@ -122,3 +122,18 @@ select.input-error:focus {
 [data-field-hint][data-error] {
     @apply font-medium text-red-600 dark:text-red-400;
 }
+
+/*
+ * Users who ask for less motion get none: transitions and animations finish at once (drawers,
+ * toasts, hovers, the busy dimming). Charts read the same preference in the chart component.
+ */
+@media (prefers-reduced-motion: reduce) {
+    *,
+    ::before,
+    ::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
