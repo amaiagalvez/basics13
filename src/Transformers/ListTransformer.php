@@ -343,7 +343,7 @@ abstract class ListTransformer
 
     final protected function noRecordsMessage(): string
     {
-        return 'No records yet.';
+        return __('basics13::messages.no_records');
     }
 
     /**

@@ -55,6 +55,7 @@ return [
     'no_archived_records' => 'Ez dago artxibatutako erregistrorik.',
     'trash_is_empty' => 'Zakarrontzia hutsa dago.',
     'no_matching_records' => 'Ez dago bilaketarekin bat datorren erregistrorik.',
+    'no_records' => 'Oraindik ez dago erregistrorik.',
     'you_can_restore_from_trash' => 'Zakarrontzitik berreskura dezakezu.',
     'you_can_activate_from_archived' => 'Artxibatueen zerrendatik aktibatu dezakezu berriro.',
     'record_returns_to_active' => 'Erregistroa aktibuen zerrendara itzuliko da.',

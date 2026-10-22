@@ -31,9 +31,9 @@ final class ListQueryBaseTest extends TestCase
         $this->query = new TestListQuery;
     }
 
-    public function test_per_page_constant_is_25(): void
+    public function test_per_page_constant_is_15(): void
     {
-        $this->assertSame(25, ListQueryBase::PER_PAGE);
+        $this->assertSame(15, ListQueryBase::PER_PAGE);
     }
 
     public function test_like_escape_constant_is_exclamation_mark(): void
@@ -143,7 +143,7 @@ final class ListQueryBaseTest extends TestCase
         $stubPaginator = $this->createStub(LengthAwarePaginator::class);
         $builder->expects($this->once())
             ->method('paginate')
-            ->with(25)
+            ->with(15)
             ->willReturn($stubPaginator);
 
         $paginator = $this->callPaginate($builder, 'test', ['name']);

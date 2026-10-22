@@ -64,3 +64,50 @@ select.input-error:focus {
         max-width: min(50vw, 42rem) !important;
     }
 }
+
+/* A list waiting for its search results dims its rows until the new ones arrive. */
+[data-list-results][aria-busy="true"] .resource-list-table tbody {
+    @apply pointer-events-none cursor-progress opacity-50 transition-opacity duration-150 motion-reduce:transition-none;
+}
+
+/* Small screens: each row is a card, each cell a "label  value" line, the actions at the end. */
+@media (width < 40rem) {
+    .resource-list-table thead {
+        @apply sr-only;
+    }
+
+    .resource-list-table table,
+    .resource-list-table tbody {
+        @apply block;
+    }
+
+    .resource-list-table [data-flux-row] {
+        @apply flex flex-col gap-1.5 border-b border-zinc-200 px-4 py-3 last:border-b-0 dark:border-zinc-800;
+    }
+
+    .resource-list-table [data-flux-cell] {
+        @apply static flex max-w-none items-center justify-between gap-4 border-0 bg-transparent p-0 text-end whitespace-normal;
+    }
+
+    .resource-list-table [data-flux-cell][data-label]:not(:first-child, :last-child)::before {
+        content: attr(data-label);
+        @apply shrink-0 text-start text-xs font-medium text-zinc-600;
+    }
+
+    /* Written out: the dark variant does not compose with ::before here. */
+    .dark .resource-list-table [data-flux-cell][data-label]:not(:first-child, :last-child)::before {
+        color: var(--color-zinc-400);
+    }
+
+    .resource-list-table [data-flux-cell]:first-child {
+        @apply text-start text-base;
+    }
+
+    .resource-list-table [data-flux-cell]:last-child {
+        @apply justify-end;
+    }
+
+    .resource-list-table [data-flux-cell][data-empty] {
+        @apply hidden;
+    }
+}

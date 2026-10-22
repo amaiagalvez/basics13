@@ -55,6 +55,7 @@ return [
     'no_archived_records' => 'Aucun enregistrement archivé.',
     'trash_is_empty' => 'La corbeille est vide.',
     'no_matching_records' => 'Aucun enregistrement ne correspond à votre recherche.',
+    'no_records' => 'Aucun enregistrement pour l\'instant.',
     'you_can_restore_from_trash' => 'Vous pouvez le restaurer depuis la corbeille.',
     'you_can_activate_from_archived' => 'Vous pouvez l\'activer depuis la liste des archivés.',
     'record_returns_to_active' => 'L\'enregistrement retournera à la liste active.',

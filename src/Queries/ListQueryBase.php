@@ -38,7 +38,7 @@ abstract class ListQueryBase
      * on purpose, so both limits move together; give the selects their own constant if they ever
      * need to differ, since no test covers that cap.
      */
-    public const PER_PAGE = 25;
+    public const PER_PAGE = 15;
 
     /**
      * Escape character declared in every LIKE pattern, so a search for `%`, `_` or a

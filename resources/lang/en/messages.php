@@ -54,6 +54,7 @@ return [
     'no_archived_records' => 'No archived records.',
     'trash_is_empty' => 'Trash is empty.',
     'no_matching_records' => 'No records match your search.',
+    'no_records' => 'No records yet.',
     'you_can_restore_from_trash' => 'You can restore it from the trash.',
     'you_can_activate_from_archived' => 'You can activate it from the archived list.',
     'record_returns_to_active' => 'The record will return to the active list.',

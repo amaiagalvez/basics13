@@ -81,6 +81,25 @@ const formatLocalDateTime = (value, format = 'datetime') => {
 
 window.formatLocalDateTime = formatLocalDateTime;
 
+// On small screens each list row becomes a card: its cells take their column name from the table
+// header, and cells with nothing to show are skipped.
+const labelListCells = (root) => {
+    root.querySelectorAll('.resource-list-table table').forEach((table) => {
+        const headers = [...table.querySelectorAll('thead th')].map((header) => header.textContent.trim());
+
+        table.querySelectorAll('tbody tr').forEach((row) => {
+            [...row.children].forEach((cell, index) => {
+                if (cell.colSpan !== 1) {
+                    return;
+                }
+
+                cell.dataset.label = headers[index] ?? '';
+                cell.toggleAttribute('data-empty', cell.textContent.trim() === '' && !cell.querySelector('button, a, input'));
+            });
+        });
+    });
+};
+
 const localizeDateTimes = (root = document) => {
     const elements = [];
 
@@ -451,6 +470,8 @@ document.addEventListener('alpine:init', () => {
                 }
             };
             document.addEventListener('keydown', this.handleSearchShortcut);
+
+            labelListCells(this.$root);
         },
 
         destroy() {
@@ -570,6 +591,10 @@ document.addEventListener('alpine:init', () => {
             const controller = new AbortController();
             this.requestController = controller;
 
+            // Marked busy only if the response is slow, so a quick search does not flicker.
+            const listRoot = this.$root;
+            const busyTimer = setTimeout(() => listRoot.setAttribute('aria-busy', 'true'), 150);
+
             try {
                 const response = await fetch(url, {
                     headers: { 'X-List-Fragment': 'true' },
@@ -609,6 +634,7 @@ document.addEventListener('alpine:init', () => {
                 const root = this.$root;
 
                 window.Alpine.morph(root, results.outerHTML);
+                labelListCells(root);
 
                 const region = root.querySelector('[data-list-results-announcement]');
 
@@ -620,8 +646,11 @@ document.addEventListener('alpine:init', () => {
                     throw error;
                 }
             } finally {
+                clearTimeout(busyTimer);
+
                 if (this.requestController === controller) {
                     this.requestController = null;
+                    listRoot.removeAttribute('aria-busy');
                 }
             }
         },

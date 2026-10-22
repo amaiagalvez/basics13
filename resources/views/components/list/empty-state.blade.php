@@ -1,23 +1,16 @@
-@props(['colspan', 'message'])
+{{--
+    Empty list: one icon, one line and, through the slot, the create button. A search that found
+    nothing shows a magnifier; an empty list shows a tray.
+--}}
+@props(['colspan', 'message', 'narrowed' => false])
 
-<!-- Empty state with card view for mobile -->
-@if (request()->is('mobile') || request()->is('*.mobile'))
-    <flux:callout icon="align-horizontal-end" variant="information">
-        <div class="flex flex-col items-center gap-2">
-            <flux:icon.magnifying-glass class="size-6 text-zinc-400 dark:text-zinc-500"
+<flux:table.row>
+    <flux:table.cell :colspan="$colspan" class="py-12 text-center" data-test="list-empty-state">
+        <div class="flex flex-col items-center gap-3 px-4">
+            <flux:icon :icon="$narrowed ? 'magnifying-glass' : 'inbox'" class="size-8 text-zinc-400 dark:text-zinc-500"
                 aria-hidden="true" />
-            <span class="text-sm text-zinc-600 dark:text-zinc-400">{{ $message }}</span>
+            <p class="text-sm text-zinc-600 dark:text-zinc-400">{{ $message }}</p>
+            {{ $slot }}
         </div>
-    </flux:callout>
-@else
-    <flux:table.row>
-        <flux:table.cell :colspan="$colspan" class="py-8 text-center text-zinc-500" data-test="list-empty-state">
-            <div class="flex flex-col items-center gap-3 px-4 py-4">
-                <flux:icon.magnifying-glass class="size-8 text-zinc-400 dark:text-zinc-500"
-                    aria-hidden="true" />
-                <span>{{ $message }}</span>
-                {{ $slot }}
-            </div>
-        </flux:table.cell>
-    </flux:table.row>
-@endif
+    </flux:table.cell>
+</flux:table.row>

@@ -54,6 +54,7 @@ return [
     'no_archived_records' => 'No hay registros archivados.',
     'trash_is_empty' => 'La papelera está vacía.',
     'no_matching_records' => 'Ningún registro coincide con la búsqueda.',
+    'no_records' => 'Todavía no hay registros.',
     'you_can_restore_from_trash' => 'Puedes restaurarlo desde la papelera.',
     'you_can_activate_from_archived' => 'Puedes activarlo de nuevo desde el listado de archivados.',
     'record_returns_to_active' => 'El registro volverá al listado de activos.',

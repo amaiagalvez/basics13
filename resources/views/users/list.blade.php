@@ -109,7 +109,7 @@
                                 </flux:table.cell>
                             </flux:table.row>
                         @empty
-                            <x-basics13::list.empty-state :colspan="3" :message="$list['emptyMessage']">
+                            <x-basics13::list.empty-state :narrowed="$list['narrowed']" :colspan="3" :message="$list['emptyMessage']">
                                 @if ($list['create'] && ! $list['narrowed'])
                                     <flux:modal.trigger name="user-form">
                                         <flux:button size="sm" variant="primary" icon="plus"

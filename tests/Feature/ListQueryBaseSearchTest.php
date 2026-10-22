@@ -23,7 +23,7 @@ class ListQueryBaseSearchTest extends TestCase
 
         $this->assertSame([$nameMatch->id, $notesMatch->id], $paginator->getCollection()->modelKeys());
         $this->assertSame(2, $paginator->total());
-        $this->assertSame(25, $paginator->perPage());
+        $this->assertSame(15, $paginator->perPage());
         $this->assertStringContainsString('search=Search', $paginator->url(2));
     }
 
