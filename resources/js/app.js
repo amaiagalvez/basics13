@@ -555,6 +555,53 @@ document.addEventListener('alpine:init', () => {
     // every list: the modal only reads confirmation.*, and x-list.row-actions fills it. The list
     // passes its own local state in, so the three views keep declaring their forms and URLs here
     // instead of each repeating this block.
+    /**
+     * A chart drawn with ApexCharts. The host bundles the library and exposes it as
+     * window.loadApexCharts (a lazy import), as it does with jQuery and select2, so pages without a
+     * chart never download it. The series colour is the element's text colour, so it comes from a
+     * token class and follows dark mode; motion is off for users who ask for less of it. The
+     * element carries the chart's conclusion in its aria-label, which is what assistive
+     * technology reads instead of the drawing.
+     */
+    window.Alpine.data('chart', (options) => ({
+        instance: null,
+
+        async init() {
+            if (typeof window.loadApexCharts !== 'function') {
+                return;
+            }
+
+            const ApexCharts = await window.loadApexCharts();
+            const dark = document.documentElement.classList.contains('dark');
+
+            this.instance = new ApexCharts(this.$refs.canvas, {
+                chart: {
+                    type: options.type ?? 'area',
+                    height: options.height ?? 160,
+                    sparkline: { enabled: options.sparkline ?? false },
+                    toolbar: { show: false },
+                    background: 'transparent',
+                    fontFamily: 'inherit',
+                    animations: { enabled: !window.matchMedia('(prefers-reduced-motion: reduce)').matches },
+                },
+                series: options.series,
+                xaxis: { categories: options.labels ?? [] },
+                colors: [getComputedStyle(this.$el).color],
+                stroke: { curve: 'smooth', width: 2 },
+                fill: { type: 'gradient', gradient: { opacityFrom: 0.35, opacityTo: 0 } },
+                dataLabels: { enabled: false },
+                tooltip: { enabled: !(options.sparkline ?? false), theme: dark ? 'dark' : 'light' },
+                theme: { mode: dark ? 'dark' : 'light' },
+            });
+
+            await this.instance.render();
+        },
+
+        destroy() {
+            this.instance?.destroy();
+        },
+    }));
+
     window.Alpine.data('listConfirmation', (local = {}) => ({
         confirmation: {
             action: '',
