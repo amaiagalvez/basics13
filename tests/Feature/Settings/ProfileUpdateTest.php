@@ -56,6 +56,38 @@ class ProfileUpdateTest extends AuthFeatureTestCase
         $this->assertDatabaseHas('users', ['id' => $user->id, 'notes' => 'Available on Fridays']);
     }
 
+    public function test_the_user_picks_its_own_language(): void
+    {
+        $user = User::factory()->create();
+
+        $this->actingAs($user);
+
+        Livewire::test('basics13::pages.settings.profile')
+            ->assertSee('Euskara')
+            ->assertSee('English')
+            ->set('lang', 'eu')
+            ->call('updateProfileInformation')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'lang' => 'eu']);
+
+        Livewire::test('basics13::pages.settings.profile')
+            ->assertSet('lang', 'eu')
+            ->set('lang', 'de')
+            ->call('updateProfileInformation')
+            ->assertHasErrors(['lang']);
+
+        // The rejected code is not written, so the stored language survives.
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'lang' => 'eu']);
+
+        Livewire::test('basics13::pages.settings.profile')
+            ->set('lang', '')
+            ->call('updateProfileInformation')
+            ->assertHasNoErrors();
+
+        $this->assertDatabaseHas('users', ['id' => $user->id, 'lang' => null]);
+    }
+
     public function test_email_verification_status_is_unchanged_when_email_address_is_unchanged(): void
     {
         $user = User::factory()->create();

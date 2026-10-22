@@ -4,6 +4,7 @@ namespace Basics13\Tests\Feature\Auth;
 
 use ReflectionClass;
 use Basics13\Models\User;
+use Basics13\Enums\Language;
 use Illuminate\Support\Facades\Schema;
 use Basics13\Tests\Feature\FeatureTestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -40,6 +41,7 @@ class UserSchemaParityTest extends FeatureTestCase
         $this->assertContains('deleted_at', $columns);
         $this->assertSoftDeleted(User::factory()->trashed()->create());
         $this->assertFalse(User::factory()->archived()->make()->active);
+        $this->assertSame('eu', User::factory()->language(Language::EU)->create()->refresh()->lang);
         $this->assertArrayHasKey('active', $user->getCasts());
     }
 }

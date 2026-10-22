@@ -15,6 +15,7 @@ class UserTest extends TestCase
         $user->fill([
             'name' => 'Ane Bezeroa',
             'email' => 'ane@example.test',
+            'lang' => 'eu',
             'password' => 'sekretua',
             'notes' => 'Admin dela familia',
             'id' => 42,
@@ -23,6 +24,7 @@ class UserTest extends TestCase
 
         $this->assertSame('Ane Bezeroa', $user->name);
         $this->assertSame('ane@example.test', $user->email);
+        $this->assertSame('eu', $user->lang);
         // Hashed on the way in, so only its presence is asserted: the cast is what turns it into a hash.
         $this->assertArrayHasKey('password', $user->getAttributes());
         $this->assertTrue($user->active);

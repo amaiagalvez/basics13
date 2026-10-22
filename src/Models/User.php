@@ -22,6 +22,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
  * @property int $id
  * @property string $name
  * @property string $email
+ * @property string|null $lang
  * @property string|null $notes
  * @property bool $active
  * @property CarbonImmutable|null $email_verified_at
@@ -37,7 +38,7 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
  * @property CarbonImmutable|null $updated_at
  * @property CarbonImmutable|null $deleted_at
  */
-#[Fillable(['name', 'email', 'password', 'notes'])]
+#[Fillable(['name', 'email', 'lang', 'password', 'notes'])]
 #[Hidden(['password', 'two_factor_secret', 'two_factor_recovery_codes', 'remember_token'])]
 #[UseFactory(UserFactory::class)]
 class User extends Authenticatable implements MustVerifyEmail, PasskeyUser

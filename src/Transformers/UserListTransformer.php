@@ -2,6 +2,7 @@
 
 namespace Basics13\Transformers;
 
+use Basics13\Enums\Language;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -19,6 +20,7 @@ class UserListTransformer extends ListTransformer
             'id' => $record->getKey(),
             'name' => $record->getAttribute('name'),
             'email' => $record->getAttribute('email'),
+            'lang' => $this->languageName($record),
             'editPayload' => $this->editPayload($record),
             ...$extra,
         ];
@@ -49,9 +51,20 @@ class UserListTransformer extends ListTransformer
     protected function editPayload(Model $record): array
     {
         return [
-            ...$record->only(['id', 'name', 'email', 'notes']),
+            ...$record->only(['id', 'name', 'email', 'lang', 'notes']),
             'own' => (int) $record->getKey() === (int) auth()->id(),
         ];
+    }
+
+    /**
+     * The native name of the stored language, or nothing when the user has none or it is no longer
+     * offered.
+     */
+    private function languageName(Model $record): string
+    {
+        $lang = $record->getAttribute('lang');
+
+        return is_string($lang) ? (Language::tryFrom($lang)?->nativeName() ?? '') : '';
     }
 
     protected function resourceLabel(): string

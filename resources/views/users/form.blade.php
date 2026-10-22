@@ -26,6 +26,20 @@
         <flux:error name="email" />
     </flux:field>
 
+    <flux:field>
+        <x-basics13::forms.field-label :request="\Basics13\Http\Requests\UserRequest::class" field="lang"
+            test="user-lang-info" for="user-lang">
+            {{ __('Language') }}
+        </x-basics13::forms.field-label>
+        <flux:select id="user-lang" name="lang" x-model="form.lang" data-test="user-lang">
+            <option value="">{{ __('Application default') }}</option>
+            @foreach (\Basics13\Enums\Language::options() as $code => $nativeName)
+                <option value="{{ $code }}" lang="{{ $code }}">{{ $nativeName }}</option>
+            @endforeach
+        </flux:select>
+        <flux:error name="lang" />
+    </flux:field>
+
     {{-- The password, like the email, is changed only by the account holder or set on creation. --}}
     <flux:field x-show="form.context === 'create' || form.own">
         {{--

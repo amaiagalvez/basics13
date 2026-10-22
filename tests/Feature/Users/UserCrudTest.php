@@ -3,6 +3,7 @@
 namespace Basics13\Tests\Feature\Users;
 
 use Basics13\Models\User;
+use Basics13\Enums\Language;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Events\QueryExecuted;
@@ -249,6 +250,45 @@ class UserCrudTest extends UserTestCase
                     && $row['editPayload']['notes'] === 'Account notes'
                     && ! array_key_exists('password', $row['editPayload']);
             });
+    }
+
+    public function test_the_language_is_saved_emptied_and_restricted_to_the_offered_ones(): void
+    {
+        $this->actingAs(User::factory()->create());
+
+        $this->post(route('users.store'), [...$this->account(), 'lang' => 'eu'])
+            ->assertSessionHasNoErrors();
+        $account = User::query()->where('email', 'new@example.test')->firstOrFail();
+        $this->assertSame('eu', $account->lang);
+
+        $this->put(route('users.update', $account->getKey()), [
+            'name' => $account->name,
+            'email' => $account->email,
+            'lang' => '',
+        ])->assertSessionHasNoErrors();
+        $this->assertNull($account->refresh()->lang);
+
+        $this->from(route('users.index'))
+            ->put(route('users.update', $account->getKey()), [
+                'name' => $account->name,
+                'email' => $account->email,
+                'lang' => 'de',
+            ])->assertSessionHasErrors('lang');
+        $this->assertNull($account->refresh()->lang);
+    }
+
+    public function test_the_form_offers_the_languages_and_the_list_shows_the_native_name(): void
+    {
+        $this->actingAs(User::factory()->create(['name' => 'Zzz actor']));
+        $account = User::factory()->language(Language::EU)->create(['name' => 'Aaa account']);
+
+        $this->get(route('users.index'))
+            ->assertOk()
+            ->assertSee('x-model="form.lang"', false)
+            ->assertSee('<option value="fr" lang="fr">Français</option>', false)
+            ->assertSee('data-test="user-lang-'.$account->id.'"', false)
+            ->assertSeeText('Euskara')
+            ->assertViewHas('list', fn (array $list): bool => $list['rows'][0]['editPayload']['lang'] === 'eu');
     }
 
     public function test_the_email_is_unique(): void

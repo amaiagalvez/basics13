@@ -15,6 +15,7 @@ new class extends Component { // @phpstan-ignore expr.resultUnused (Volt require
 
     public string $name = '';
     public string $email = '';
+    public string $lang = '';
     public string $notes = '';
 
     /**
@@ -24,6 +25,7 @@ new class extends Component { // @phpstan-ignore expr.resultUnused (Volt require
     {
         $this->name = Auth::user()->name ?? '';
         $this->email = Auth::user()->email ?? '';
+        $this->lang = Auth::user()->lang ?? '';
         $this->notes = Auth::user()->notes ?? '';
     }
 
@@ -36,7 +38,8 @@ new class extends Component { // @phpstan-ignore expr.resultUnused (Volt require
 
         $validated = $this->validate($this->profileRules($user?->id));
 
-        $user?->fill($validated);
+        // The empty option means no preference, which is stored as null like the HTTP forms do.
+        $user?->fill([...$validated, 'lang' => $validated['lang'] ?: null]);
 
         if ($user?->isDirty('email')) {
             $user->email_verified_at = null;
@@ -130,6 +133,13 @@ new class extends Component { // @phpstan-ignore expr.resultUnused (Volt require
                     </div>
                 @endif
             </div>
+
+            <flux:select wire:model="lang" :label="__('Preferred language')" data-test="profile-lang">
+                <flux:select.option value="">{{ __('Application default') }}</flux:select.option>
+                @foreach (\Basics13\Enums\Language::options() as $code => $nativeName)
+                    <flux:select.option :value="$code" lang="{{ $code }}">{{ $nativeName }}</flux:select.option>
+                @endforeach
+            </flux:select>
 
             <flux:textarea wire:model="notes" :label="__('Notes')" rows="3"
                 maxlength="{{ \Basics13\Support\Validation\MaxLength::longText() }}"

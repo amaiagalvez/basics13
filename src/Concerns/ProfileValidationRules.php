@@ -2,6 +2,7 @@
 
 namespace Basics13\Concerns;
 
+use Basics13\Enums\Language;
 use Illuminate\Validation\Rule;
 use Basics13\Support\Validation\MaxLength;
 use Illuminate\Contracts\Validation\ValidationRule;
@@ -18,6 +19,7 @@ trait ProfileValidationRules
         return [
             'name' => $this->nameRules(),
             'email' => $this->emailRules($userId),
+            'lang' => ['nullable', Rule::in(Language::codes())],
             'notes' => ['nullable', 'string', 'max:'.MaxLength::longText()],
         ];
     }

@@ -6,6 +6,7 @@
             'own' => $editingUser && (int) old('_user_id') === auth()->id(),
             'name' => old('name', ''),
             'email' => old('email', ''),
+            'lang' => old('lang', ''),
             'notes' => old('notes', ''),
             'password' => '',
             'password_confirmation' => '',
@@ -36,6 +37,7 @@
                 own: false,
                 name: '',
                 email: '',
+                lang: '',
                 notes: '',
                 password: '',
                 password_confirmation: '',
@@ -82,6 +84,7 @@
                     <flux:table.columns>
                         <flux:table.column scope="col">{{ __('Name') }}</flux:table.column>
                         <flux:table.column scope="col">{{ __('Email') }}</flux:table.column>
+                        <flux:table.column scope="col">{{ __('Language') }}</flux:table.column>
                         <flux:table.column scope="col" align="end" sticky class="text-end">
                             <span class="sr-only">{{ __('Actions') }}</span>
                         </flux:table.column>
@@ -102,6 +105,9 @@
                                         title="{{ $row['email'] }}"
                                         data-test="user-email-{{ $row['id'] }}">{{ $row['email'] }}</span>
                                 </flux:table.cell>
+                                <flux:table.cell data-test="user-lang-{{ $row['id'] }}">
+                                    {{ $row['lang'] }}
+                                </flux:table.cell>
                                 <flux:table.cell align="end" sticky
                                     class="bg-white dark:bg-zinc-900">
                                     <x-basics13::list.row-actions :actions="$row['actions']" prefix="user"
@@ -109,7 +115,7 @@
                                 </flux:table.cell>
                             </flux:table.row>
                         @empty
-                            <x-basics13::list.empty-state :narrowed="$list['narrowed']" :colspan="3" :message="$list['emptyMessage']">
+                            <x-basics13::list.empty-state :narrowed="$list['narrowed']" :colspan="4" :message="$list['emptyMessage']">
                                 @if ($list['create'] && ! $list['narrowed'])
                                     <flux:modal.trigger name="user-form">
                                         <flux:button size="sm" variant="primary" icon="plus"

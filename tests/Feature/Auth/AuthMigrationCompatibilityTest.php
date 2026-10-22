@@ -77,7 +77,9 @@ final class AuthMigrationCompatibilityTest extends FeatureTestCase
             'id' => 1,
             'credential_id' => 'existing-credential',
         ]);
-        $this->assertSame(3, DB::table('migrations')->count());
+        // Only the language column is new to an existing install: it is added, empty, to the kept row.
+        $this->assertSame(4, DB::table('migrations')->count());
+        $this->assertDatabaseHas('users', ['id' => 1, 'lang' => null]);
     }
 
     private function createExistingAuthSchema(): void

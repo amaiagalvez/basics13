@@ -4,6 +4,7 @@ namespace Basics13\Database\Factories;
 
 use Basics13\Models\User;
 use Illuminate\Support\Str;
+use Basics13\Enums\Language;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -29,6 +30,7 @@ class UserFactory extends Factory
         return [
             'name' => fake()->name(),
             'email' => fake()->unique()->safeEmail(),
+            'lang' => null,
             'email_verified_at' => now(),
             'password' => static::$password ??= Hash::make('password'),
             'remember_token' => Str::random(10),
@@ -45,6 +47,16 @@ class UserFactory extends Factory
     {
         return $this->state(fn (array $attributes) => [
             'email_verified_at' => null,
+        ]);
+    }
+
+    /**
+     * Indicate the user's preferred interface language.
+     */
+    public function language(Language $language): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'lang' => $language->value,
         ]);
     }
 
