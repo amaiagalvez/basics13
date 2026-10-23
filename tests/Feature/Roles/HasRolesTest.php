@@ -39,7 +39,7 @@ class HasRolesTest extends FeatureTestCase
         $user->assignRole($archived);
         $user->assignRole($trashed);
         // The guard refuses to trash a role an account holds, so the row is trashed directly.
-        DB::table('roles')->where('id', $trashed->id)->update(['deleted_at' => now()]);
+        DB::table('BAS_roles')->where('id', $trashed->id)->update(['deleted_at' => now()]);
         $user->forgetPermissions();
 
         $this->assertFalse($user->hasPermissionTo('users.edit'));
@@ -102,14 +102,14 @@ class HasRolesTest extends FeatureTestCase
 
         $user->syncRoles([$kept->id, $added->id], $other->id);
 
-        $assignedBy = $user->roles()->pluck('role_user.assigned_by', 'roles.id')->all();
+        $assignedBy = $user->roles()->pluck('BAS_role_user.assigned_by', 'BAS_roles.id')->all();
         $this->assertEqualsCanonicalizing([$kept->id, $added->id], array_keys($assignedBy));
         $this->assertSame($assigner->id, (int) $assignedBy[$kept->id]);
         $this->assertSame($other->id, (int) $assignedBy[$added->id]);
         $this->assertNotNull($user->roles()->firstOrFail()->getRelationValue('pivot')->created_at);
 
         $user->removeRole($kept);
-        $this->assertSame([$added->id], $user->roles()->pluck('roles.id')->all());
+        $this->assertSame([$added->id], $user->roles()->pluck('BAS_roles.id')->all());
     }
 
     public function test_the_super_admin_never_receives_a_role(): void

@@ -91,7 +91,7 @@ final class PermissionSummaryQuery extends ListQueryBase
                 'group' => 'basic',
             ],
             'role_ids' => [
-                'column' => 'roles.id',
+                'column' => 'BAS_roles.id',
                 'relation' => 'roles',
                 'label' => 'Roles',
                 'help' => 'Equals shows the accounts holding at least one of the selected roles; not equals, those holding none of them.',
@@ -148,8 +148,8 @@ final class PermissionSummaryQuery extends ListQueryBase
             ->where('active', true)
             ->where('is_super_admin', false)
             ->with(['roles' => static fn (Relation $roles): Relation => $roles
-                ->where('roles.active', true)
-                ->orderBy('roles.name')
+                ->where('BAS_roles.active', true)
+                ->orderBy('BAS_roles.name')
                 ->with('permissions')])
             ->orderBy('name')
             ->orderBy('id');

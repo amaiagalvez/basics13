@@ -35,8 +35,8 @@ final class PermissionListQuery
     {
         return Permission::query()
             ->with(['roles' => static fn (BelongsToMany $roles): BelongsToMany => $roles
-                ->where('roles.active', true)
-                ->orderBy('roles.name')])
+                ->where('BAS_roles.active', true)
+                ->orderBy('BAS_roles.name')])
             ->orderBy('module')
             ->orderBy('id')
             ->get()

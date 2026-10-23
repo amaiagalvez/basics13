@@ -33,7 +33,7 @@ trait HasRoles
      */
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, 'role_user', 'user_id', 'role_id')
+        return $this->belongsToMany(Role::class, 'BAS_role_user', 'user_id', 'role_id')
             ->withPivot(['assigned_by', 'created_at']);
     }
 
@@ -66,7 +66,7 @@ trait HasRoles
     public function assignRole(Role $role, ?int $assignedBy = null): void
     {
         $this->syncRoles(
-            array_values(array_map(intval(...), [...$this->roles()->pluck('roles.id')->all(), $role->id])),
+            array_values(array_map(intval(...), [...$this->roles()->pluck('BAS_roles.id')->all(), $role->id])),
             $assignedBy,
         );
     }
@@ -89,7 +89,7 @@ trait HasRoles
             throw new LogicException('The super-admin holds every permission and never receives a role.');
         }
 
-        $current = array_map(intval(...), $this->roles()->pluck('roles.id')->all());
+        $current = array_map(intval(...), $this->roles()->pluck('BAS_roles.id')->all());
         $wanted = array_values(array_unique(array_map(intval(...), $roleIds)));
 
         $this->roles()->detach(array_values(array_diff($current, $wanted)));
@@ -112,15 +112,15 @@ trait HasRoles
         }
 
         /** @var list<string> */
-        return DB::table('permissions')
-            ->join('permission_role', 'permission_role.permission_id', '=', 'permissions.id')
-            ->join('roles', 'roles.id', '=', 'permission_role.role_id')
-            ->join('role_user', 'role_user.role_id', '=', 'roles.id')
-            ->where('role_user.user_id', $this->getKey())
-            ->where('roles.active', true)
-            ->whereNull('roles.deleted_at')
+        return DB::table('BAS_permissions')
+            ->join('BAS_permission_role', 'BAS_permission_role.permission_id', '=', 'BAS_permissions.id')
+            ->join('BAS_roles', 'BAS_roles.id', '=', 'BAS_permission_role.role_id')
+            ->join('BAS_role_user', 'BAS_role_user.role_id', '=', 'BAS_roles.id')
+            ->where('BAS_role_user.user_id', $this->getKey())
+            ->where('BAS_roles.active', true)
+            ->whereNull('BAS_roles.deleted_at')
             ->distinct()
-            ->pluck('permissions.slug')
+            ->pluck('BAS_permissions.slug')
             ->all();
     }
 }

@@ -24,6 +24,7 @@ class UserListTransformer extends ListTransformer
             'name' => $record->getAttribute('name'),
             'email' => $record->getAttribute('email'),
             'lang' => $this->languageName($record),
+            'roles' => $this->roleNames($record),
             'editPayload' => $this->editPayload($record),
             ...$extra,
         ];
@@ -75,6 +76,29 @@ class UserListTransformer extends ListTransformer
         }
 
         return array_values($roles->map(static fn (Model $role): string => (string) $role->getKey())->all());
+    }
+
+    /**
+     * The roles the account holds, by name, for the list column. An archived role grants nothing,
+     * so it is flagged for the badge to say so.
+     *
+     * @return list<array{name: string, active: bool}>
+     */
+    private function roleNames(Model $record): array
+    {
+        $roles = $record->relationLoaded('roles') ? $record->getRelation('roles') : null;
+
+        if (! $roles instanceof Collection) {
+            return [];
+        }
+
+        return array_values($roles
+            ->sortBy(static fn (Model $role): string => (string) $role->getAttribute('name'))
+            ->map(static fn (Model $role): array => [
+                'name' => (string) $role->getAttribute('name'),
+                'active' => (bool) $role->getAttribute('active'),
+            ])
+            ->all());
     }
 
     /**

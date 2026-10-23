@@ -35,27 +35,27 @@ trait AssertsRoleSchema
         $this->insertRole(['name' => 'Editors', 'slug' => 'editors', 'deleted_at' => now()]);
         $this->insertRole(['name' => 'Editors', 'slug' => 'editors']);
 
-        $this->assertSame(2, DB::table('roles')->where('slug', 'editors')->count());
+        $this->assertSame(2, DB::table('BAS_roles')->where('slug', 'editors')->count());
     }
 
     public function test_a_role_held_by_an_account_cannot_be_deleted(): void
     {
         $roleId = $this->insertRole(['name' => 'Editors', 'slug' => 'editors']);
         $userId = User::factory()->create()->id;
-        DB::table('role_user')->insert(['role_id' => $roleId, 'user_id' => $userId, 'created_at' => now()]);
+        DB::table('BAS_role_user')->insert(['role_id' => $roleId, 'user_id' => $userId, 'created_at' => now()]);
 
         try {
-            DB::table('roles')->where('id', $roleId)->delete();
+            DB::table('BAS_roles')->where('id', $roleId)->delete();
             $this->fail('The foreign key of role_user must restrict the delete.');
         } catch (QueryException) {
-            $this->assertDatabaseHas('roles', ['id' => $roleId]);
+            $this->assertDatabaseHas('BAS_roles', ['id' => $roleId]);
         }
 
         // Deleting the account drops its assignments, and then the role can go.
         DB::table('users')->where('id', $userId)->delete();
-        DB::table('roles')->where('id', $roleId)->delete();
+        DB::table('BAS_roles')->where('id', $roleId)->delete();
 
-        $this->assertDatabaseMissing('roles', ['id' => $roleId]);
+        $this->assertDatabaseMissing('BAS_roles', ['id' => $roleId]);
     }
 
     public function test_users_have_a_super_admin_flag_that_defaults_to_false(): void
@@ -74,6 +74,6 @@ trait AssertsRoleSchema
      */
     private function insertRole(array $attributes): int
     {
-        return DB::table('roles')->insertGetId([...$attributes, 'created_at' => now(), 'updated_at' => now()]);
+        return DB::table('BAS_roles')->insertGetId([...$attributes, 'created_at' => now(), 'updated_at' => now()]);
     }
 }

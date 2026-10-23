@@ -50,14 +50,14 @@ return new class extends Migration
             }
         }
 
-        DB::table('permissions')->insertOrIgnore($permissions);
+        DB::table('BAS_permissions')->insertOrIgnore($permissions);
 
-        $permissionIds = DB::table('permissions')->pluck('id', 'slug');
+        $permissionIds = DB::table('BAS_permissions')->pluck('id', 'slug');
 
         foreach (self::ROLES as $slug => $role) {
             $roleId = $this->roleId($slug, $role['name'], $role['is_system']);
 
-            DB::table('permission_role')->insertOrIgnore(array_map(
+            DB::table('BAS_permission_role')->insertOrIgnore(array_map(
                 static fn (string $permission): array => ['permission_id' => $permissionIds[$permission], 'role_id' => $roleId],
                 $role['permissions'],
             ));
@@ -70,7 +70,7 @@ return new class extends Migration
             ->whereNull('deleted_at')
             ->where('is_super_admin', false)
             ->chunkById(500, static function ($users) use ($adminId, $now): void {
-                DB::table('role_user')->insertOrIgnore($users->map(static fn (object $user): array => [
+                DB::table('BAS_role_user')->insertOrIgnore($users->map(static fn (object $user): array => [
                     'role_id' => $adminId,
                     'user_id' => $user->id,
                     'created_at' => $now,
@@ -88,13 +88,13 @@ return new class extends Migration
      */
     private function roleId(string $slug, string $name, bool $isSystem): int
     {
-        $id = DB::table('roles')->whereNull('deleted_at')->where('slug', $slug)->value('id');
+        $id = DB::table('BAS_roles')->whereNull('deleted_at')->where('slug', $slug)->value('id');
 
         if ($id !== null) {
             return (int) $id;
         }
 
-        return (int) DB::table('roles')->insertGetId([
+        return (int) DB::table('BAS_roles')->insertGetId([
             'name' => $name,
             'slug' => $slug,
             'is_system' => $isSystem,

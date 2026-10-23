@@ -89,6 +89,7 @@
                         <flux:table.column scope="col">{{ __('Name') }}</flux:table.column>
                         <flux:table.column scope="col">{{ __('Email') }}</flux:table.column>
                         <flux:table.column scope="col">{{ __('Language') }}</flux:table.column>
+                        <flux:table.column scope="col">{{ __('Roles') }}</flux:table.column>
                         <flux:table.column scope="col" align="end" sticky class="text-end">
                             <span class="sr-only">{{ __('Actions') }}</span>
                         </flux:table.column>
@@ -112,6 +113,25 @@
                                 <flux:table.cell data-test="user-lang-{{ $row['id'] }}">
                                     {{ $row['lang'] }}
                                 </flux:table.cell>
+                                <flux:table.cell data-test="user-roles-{{ $row['id'] }}">
+                                    @if ($row['roles'] === [])
+                                        <span class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('No role') }}</span>
+                                    @else
+                                        <span class="flex flex-wrap justify-end gap-1 sm:justify-start">
+                                            @foreach ($row['roles'] as $role)
+                                                <span class="inline-flex items-center gap-1">
+                                                    <flux:badge size="sm">{{ $role['name'] }}</flux:badge>
+                                                    {{-- An archived role grants nothing, which the list says in words. --}}
+                                                    @unless ($role['active'])
+                                                        <span class="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                                                            {{ __('basics13::messages.archived_label') }}
+                                                        </span>
+                                                    @endunless
+                                                </span>
+                                            @endforeach
+                                        </span>
+                                    @endif
+                                </flux:table.cell>
                                 <flux:table.cell align="end" sticky
                                     class="bg-white dark:bg-zinc-900">
                                     <x-basics13::list.row-actions :actions="$row['actions']" prefix="user"
@@ -119,7 +139,7 @@
                                 </flux:table.cell>
                             </flux:table.row>
                         @empty
-                            <x-basics13::list.empty-state :narrowed="$list['narrowed']" :colspan="4" :message="$list['emptyMessage']">
+                            <x-basics13::list.empty-state :narrowed="$list['narrowed']" :colspan="5" :message="$list['emptyMessage']">
                                 @if ($list['create'] && ! $list['narrowed'])
                                     <flux:modal.trigger name="user-form">
                                         <flux:button size="sm" variant="primary" icon="plus"

@@ -28,6 +28,8 @@ class Permission extends Model
     /** @use HasFactory<PermissionFactory> */
     use HasFactory;
 
+    protected $table = 'BAS_permissions';
+
     /**
      * The actions a permission slug may end with. `manage` grants every other action of its module.
      *
@@ -57,6 +59,6 @@ class Permission extends Model
      */
     public function roles(): BelongsToMany
     {
-        return $this->belongsToMany(Role::class, 'permission_role');
+        return $this->belongsToMany(Role::class, 'BAS_permission_role');
     }
 }

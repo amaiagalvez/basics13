@@ -104,7 +104,7 @@ class RoleController extends Controller
     /**
      * A write that passed validation and still hit a unique index lost a race against a concurrent
      * one. The index the database names tells whether the name or the slug collided: MySQL names
-     * the index (`roles_active_slug_unique`), SQLite and PostgreSQL the column (`roles.slug`).
+     * the index (`roles_active_slug_unique`), SQLite and PostgreSQL the column (`BAS_roles.slug`).
      */
     private function failOnDuplicatedRole(QueryException $exception): never
     {

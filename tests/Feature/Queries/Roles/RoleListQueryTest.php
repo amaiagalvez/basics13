@@ -152,7 +152,7 @@ class RoleListQueryTest extends FeatureTestCase
         $method->setAccessible(true);
         $integration = $method->invoke($query);
 
-        $baseColumns = ['roles.name', 'roles.slug', 'roles.description'];
+        $baseColumns = ['BAS_roles.name', 'BAS_roles.slug', 'BAS_roles.description'];
         $result = $integration->searchColumns('active', $baseColumns);
 
         $this->assertSame($baseColumns, $result);

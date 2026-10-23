@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::create('roles', function (Blueprint $table) {
+        Schema::create('BAS_roles', function (Blueprint $table) {
             $table->id();
             $table->string('name');
             $table->string('slug');
@@ -20,12 +20,12 @@ return new class extends Migration
         });
 
         // Archived roles keep their name and slug: only the trash frees them for reuse.
-        addUniqueActiveNameIndex('roles');
-        addUniqueActiveColumnIndex('roles', 'slug');
+        addUniqueActiveNameIndex('BAS_roles');
+        addUniqueActiveColumnIndex('BAS_roles', 'slug');
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('roles');
+        Schema::dropIfExists('BAS_roles');
     }
 };

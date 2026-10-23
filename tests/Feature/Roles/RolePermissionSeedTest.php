@@ -84,7 +84,7 @@ class RolePermissionSeedTest extends FeatureTestCase
     {
         return array_map(
             static fn (string $table): int => DB::table($table)->count(),
-            ['permissions' => 'permissions', 'roles' => 'roles', 'permission_role' => 'permission_role', 'role_user' => 'role_user'],
+            ['permissions' => 'BAS_permissions', 'roles' => 'BAS_roles', 'permission_role' => 'BAS_permission_role', 'role_user' => 'BAS_role_user'],
         );
     }
 }

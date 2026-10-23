@@ -108,15 +108,15 @@ function seedPermissions(array $modules, array $grantToAdmin = []): void
         }
     }
 
-    DB::table('permissions')->insertOrIgnore($permissions);
+    DB::table('BAS_permissions')->insertOrIgnore($permissions);
 
-    $adminId = DB::table('roles')->whereNull('deleted_at')->where('slug', 'admin')->value('id');
+    $adminId = DB::table('BAS_roles')->whereNull('deleted_at')->where('slug', 'admin')->value('id');
 
     if ($adminId === null || $grantToAdmin === []) {
         return;
     }
 
-    DB::table('permission_role')->insertOrIgnore(DB::table('permissions')
+    DB::table('BAS_permission_role')->insertOrIgnore(DB::table('BAS_permissions')
         ->whereIn('slug', $grantToAdmin)
         ->pluck('id')
         ->map(static fn (mixed $permissionId): array => ['permission_id' => $permissionId, 'role_id' => $adminId])

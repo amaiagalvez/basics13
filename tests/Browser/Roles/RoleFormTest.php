@@ -72,7 +72,7 @@ class RoleFormTest extends DuskTestCase
         $role->refresh();
         $this->assertSame('Account editors', $role->name);
         $this->assertSame('editors', $role->slug);
-        $this->assertSame([Permission::query()->where('slug', 'users.edit')->value('id')], $role->permissions()->pluck('permissions.id')->all());
+        $this->assertSame([Permission::query()->where('slug', 'users.edit')->value('id')], $role->permissions()->pluck('BAS_permissions.id')->all());
     }
 
     public function test_the_slug_of_a_system_role_is_read_only_for_the_super_admin(): void

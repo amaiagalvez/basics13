@@ -43,6 +43,8 @@ class Role extends Model
     /** @use HasFactory<RoleFactory> */
     use HasFactory, ResolvesUserModel, SoftDeletes, TracksAuditColumns, TransactionalDelete;
 
+    protected $table = 'BAS_roles';
+
     /**
      * @var array{active: bool, is_system: bool}
      */
@@ -67,7 +69,7 @@ class Role extends Model
      */
     public function permissions(): BelongsToMany
     {
-        return $this->belongsToMany(Permission::class, 'permission_role');
+        return $this->belongsToMany(Permission::class, 'BAS_permission_role');
     }
 
     /**
@@ -79,7 +81,7 @@ class Role extends Model
      */
     public function users(): BelongsToMany
     {
-        return $this->belongsToMany($this->userModelClass(), 'role_user', 'role_id', 'user_id');
+        return $this->belongsToMany($this->userModelClass(), 'BAS_role_user', 'role_id', 'user_id');
     }
 
     /**
@@ -96,7 +98,7 @@ class Role extends Model
                 ->lockForUpdate()
                 ->firstOrFail());
 
-            return ! DB::table('role_user')
+            return ! DB::table('BAS_role_user')
                 ->where('role_id', $locked->getKey())
                 ->exists();
         });

@@ -18,7 +18,7 @@ final class RoleListQuery extends ListQueryBase
     /**
      * @var non-empty-list<literal-string>
      */
-    private const SEARCH_COLUMNS = ['roles.name', 'roles.slug', 'roles.description'];
+    private const SEARCH_COLUMNS = ['BAS_roles.name', 'BAS_roles.slug', 'BAS_roles.description'];
 
     /**
      * @param  SearchFilters  $filters
@@ -27,7 +27,7 @@ final class RoleListQuery extends ListQueryBase
     public function active(string $search, array $filters = []): LengthAwarePaginator
     {
         return $this->paginate(
-            $this->listed(Role::query()->where('roles.active', true)->orderBy('roles.name')->orderBy('roles.id')),
+            $this->listed(Role::query()->where('BAS_roles.active', true)->orderBy('BAS_roles.name')->orderBy('BAS_roles.id')),
             $search,
             searchColumns: self::SEARCH_COLUMNS,
             filters: $filters,
@@ -42,9 +42,9 @@ final class RoleListQuery extends ListQueryBase
     public function archived(string $search, array $filters = []): LengthAwarePaginator
     {
         return $this->paginate(
-            $this->listed(Role::query()->where('roles.active', false)->orderBy('roles.name')->orderBy('roles.id')),
+            $this->listed(Role::query()->where('BAS_roles.active', false)->orderBy('BAS_roles.name')->orderBy('BAS_roles.id')),
             $search,
-            searchColumns: [...self::SEARCH_COLUMNS, 'roles.updated_at'],
+            searchColumns: [...self::SEARCH_COLUMNS, 'BAS_roles.updated_at'],
             filters: $filters,
             scope: 'archived',
         );
@@ -59,7 +59,7 @@ final class RoleListQuery extends ListQueryBase
         return $this->paginate(
             $this->listed(Role::onlyTrashed()->latest('deleted_at')->orderBy('id')),
             $search,
-            searchColumns: [...self::SEARCH_COLUMNS, 'roles.deleted_at'],
+            searchColumns: [...self::SEARCH_COLUMNS, 'BAS_roles.deleted_at'],
             filters: $filters,
             scope: 'trashed',
         );

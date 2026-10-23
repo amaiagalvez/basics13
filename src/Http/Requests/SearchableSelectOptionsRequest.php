@@ -18,7 +18,17 @@ abstract class SearchableSelectOptionsRequest extends FormRequest
     {
         return [
             'q' => ['nullable', 'string', 'max:'.MaxLength::string()],
+            'context' => ['nullable', 'string', 'max:'.MaxLength::string()],
         ];
+    }
+
+    /**
+     * Where the selector is being used, for an integration that offers different options there,
+     * e.g. `edit` while a record is being edited. Empty when the caller says nothing.
+     */
+    final public function context(): string
+    {
+        return $this->string('context')->trim()->toString();
     }
 
     final public function search(): string

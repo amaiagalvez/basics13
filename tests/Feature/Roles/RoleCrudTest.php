@@ -52,7 +52,7 @@ class RoleCrudTest extends RoleTestCase
 
         $this->post(route('roles.store'), ['name' => 'Área técnica', 'slug' => ''])->assertSessionHasNoErrors();
 
-        $this->assertDatabaseHas('roles', ['name' => 'Área técnica', 'slug' => 'area-tecnica']);
+        $this->assertDatabaseHas('BAS_roles', ['name' => 'Área técnica', 'slug' => 'area-tecnica']);
     }
 
     public function test_the_slug_of_an_archived_role_is_taken(): void
@@ -143,7 +143,7 @@ class RoleCrudTest extends RoleTestCase
         $this->patch(route('roles.trash.restore', $trashed->id))->assertForbidden();
         $this->delete(route('roles.trash.destroy', $trashed->id))->assertForbidden();
 
-        $this->assertDatabaseMissing('roles', ['slug' => 'editors']);
+        $this->assertDatabaseMissing('BAS_roles', ['slug' => 'editors']);
         $this->assertSoftDeleted($trashed);
     }
 

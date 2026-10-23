@@ -61,14 +61,14 @@ class UserRoleAssignmentTest extends UserTestCase
     public function test_nobody_changes_their_own_roles(): void
     {
         $actor = User::factory()->withPermissions(['users.manage', 'roles.manage'])->create();
-        $before = $actor->roles()->pluck('roles.id')->all();
+        $before = $actor->roles()->pluck('BAS_roles.id')->all();
         $this->actingAs($actor);
 
         $this->from(route('users.index'))
             ->put(route('users.update', $actor->id), $this->edit($actor, [$this->role('manager')->id]))
             ->assertSessionHasErrors('role_ids');
 
-        $this->assertSame($before, $actor->roles()->pluck('roles.id')->all());
+        $this->assertSame($before, $actor->roles()->pluck('BAS_roles.id')->all());
     }
 
     public function test_assigning_roles_needs_roles_manage(): void
@@ -124,6 +124,20 @@ class UserRoleAssignmentTest extends UserTestCase
 
         $this->actingAs(User::factory()->withPermissions(['users.manage'])->create());
         $this->get(route('users.index'))->assertDontSee('data-test="user-role-ids"', false);
+    }
+
+    public function test_the_list_shows_the_roles_of_each_account(): void
+    {
+        $this->actingAs(User::factory()->withPermissions(['users.view'])->create(['name' => 'Zzz actor']));
+        $account = User::factory()->create(['name' => 'Aaa account']);
+        $account->assignRole($this->role('viewer'));
+        $account->assignRole(Role::factory()->archived()->create(['name' => 'Old editors']));
+        $plain = User::factory()->create(['name' => 'Bbb plain']);
+
+        $this->get(route('users.index'))
+            ->assertOk()
+            ->assertSeeInOrder(['data-test="user-roles-'.$account->id.'"', 'Old editors', __('basics13::messages.archived_label'), 'Viewer'], false)
+            ->assertSeeInOrder(['data-test="user-roles-'.$plain->id.'"', __('No role')], false);
     }
 
     private function role(string $slug): Role

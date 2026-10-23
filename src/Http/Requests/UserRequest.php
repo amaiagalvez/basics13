@@ -157,7 +157,7 @@ class UserRequest extends FormRequest
 
         return array_values(array_map(intval(...), $record->roles()
             ->when($systemOnly, static fn ($query) => $query->where('is_system', true))
-            ->pluck('roles.id')
+            ->pluck('BAS_roles.id')
             ->all()));
     }
 
