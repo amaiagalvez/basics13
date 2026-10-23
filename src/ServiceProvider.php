@@ -29,6 +29,8 @@ class ServiceProvider extends BaseServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../routes/settings.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/users.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/roles.php');
+        $this->loadRoutesFrom(__DIR__.'/../routes/sessions.php');
+        $this->loadRoutesFrom(__DIR__.'/../routes/configuration.php');
 
         if ($this->app->runningInConsole()) {
             $this->commands([MakeSuperAdmin::class]);

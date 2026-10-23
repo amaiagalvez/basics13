@@ -103,6 +103,7 @@ return [
     // Impersonation
     'impersonation_started' => 'Now impersonating :name.',
     'impersonation_ended' => 'Impersonation ended. Back to your account.',
+    'login_locked' => 'Too many failed attempts. Try again in :minutes minutes.',
     'no_active_impersonation' => 'No active impersonation to leave.',
     'impersonate_confirm_title' => 'Impersonate :name?',
     'impersonate_confirm_text' => 'You will be logged in as :name with their permissions. Your original session will be saved so you can return.',

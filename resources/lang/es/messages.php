@@ -103,6 +103,7 @@ return [
     // Impersonación
     'impersonation_started' => 'Ahora personificando a :name.',
     'impersonation_ended' => 'Personificación finalizada. Volviste a tu cuenta.',
+    'login_locked' => 'Demasiados intentos fallidos. Vuelve a intentarlo dentro de :minutes minutos.',
     'no_active_impersonation' => 'No hay personificación activa para salir.',
     'impersonate_confirm_title' => '¿Personificar a :name?',
     'impersonate_confirm_text' => 'Iniciarás sesión como :name con sus permisos. Tu sesión original se guardará para poder volver.',

@@ -32,6 +32,17 @@ abstract class AuthFeatureTestCase extends FeatureTestCase
         ];
     }
 
+    /**
+     * The named limiters, as the host's `config/fortify.php` references them; Fortify reads them
+     * when it registers its routes, so they cannot be set in setUp().
+     */
+    protected function getEnvironmentSetUp($app): void
+    {
+        parent::getEnvironmentSetUp($app);
+
+        $app['config']->set('fortify.limiters.login', 'login');
+    }
+
     protected function setUp(): void
     {
         parent::setUp();

@@ -4,11 +4,12 @@ namespace Basics13\Auth;
 
 use LogicException;
 use Livewire\Livewire;
-use Illuminate\Support\Str;
 use Illuminate\Http\Request;
 use Laravel\Fortify\Fortify;
 use Laravel\Fortify\Features;
 use Illuminate\Auth\Events\Login;
+use Illuminate\Auth\Events\Failed;
+use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Database\Eloquent\Model;
@@ -42,6 +43,7 @@ class FortifyServiceProvider extends ServiceProvider
         $this->configureViews();
         $this->configureRateLimiting();
         $this->configureActiveUsers();
+        $this->registerLoginAudit();
 
         if ($this->featureEnabled('password_confirmation')) {
             Livewire::addPersistentMiddleware([RequirePasswordForLivewire::class]);
@@ -131,6 +133,8 @@ class FortifyServiceProvider extends ServiceProvider
     private function configureActiveUsers(): void
     {
         Fortify::authenticateUsing(function (Request $request): ?Authenticatable {
+            app(LoginAudit::class)->rejectIfLocked($request);
+
             $username = Fortify::username();
             $userModel = $this->userModelClass();
             $user = $userModel::query()
@@ -174,6 +178,17 @@ class FortifyServiceProvider extends ServiceProvider
                 Fortify::username() => [__('auth.failed')],
             ]);
         });
+    }
+
+    /**
+     * The access register listeners. Registered after the active-users one, which throws first
+     * for an inactive account; LoginAudit does not rely on that order and skips them itself.
+     */
+    private function registerLoginAudit(): void
+    {
+        Event::listen(Login::class, [LoginAudit::class, 'handleLogin']);
+        Event::listen(Failed::class, [LoginAudit::class, 'handleFailed']);
+        Event::listen(Logout::class, [LoginAudit::class, 'handleLogout']);
     }
 
     /**
@@ -226,12 +241,9 @@ class FortifyServiceProvider extends ServiceProvider
 
     private function configureRateLimiting(): void
     {
+        // A cap per IP against password spraying; the lock of each login lives in LoginAudit.
         RateLimiter::for('login', function (Request $request) {
-            $username = $request->input(Fortify::username());
-            $username = is_string($username) ? $username : '';
-            $throttleKey = Str::transliterate(Str::lower($username).'|'.$request->ip());
-
-            return Limit::perMinute(5)->by($throttleKey);
+            return Limit::perMinute(10)->by((string) $request->ip());
         });
 
         if ($this->featureEnabled('two_factor_authentication')) {

@@ -77,9 +77,10 @@ final class AuthMigrationCompatibilityTest extends FeatureTestCase
             'id' => 1,
             'credential_id' => 'existing-credential',
         ]);
-        // The language column, the super-admin flag and the role tables are new to an existing
-        // install: the kept row gains the columns empty and keeps its access through `admin`.
-        $this->assertSame(10, DB::table('migrations')->count());
+        // The language column, the super-admin flag, the role tables, the settings and the session
+        // log are new to an existing install: the kept row gains the columns empty and keeps its
+        // access through `admin`.
+        $this->assertSame(14, DB::table('migrations')->count());
         $this->assertDatabaseHas('users', ['id' => 1, 'lang' => null, 'is_super_admin' => false]);
         $this->assertSame(['admin'], DB::table('BAS_role_user')
             ->join('BAS_roles', 'BAS_roles.id', '=', 'BAS_role_user.role_id')

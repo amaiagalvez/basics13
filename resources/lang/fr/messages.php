@@ -104,6 +104,7 @@ return [
     // Impersonnification
     'impersonation_started' => 'Vous personnifiez maintenant :name.',
     'impersonation_ended' => 'Personnification terminée. Retour à votre compte.',
+    'login_locked' => 'Trop de tentatives échouées. Réessayez dans :minutes minutes.',
     'no_active_impersonation' => 'Aucune personnification active à quitter.',
     'impersonate_confirm_title' => 'Personnifier :name ?',
     'impersonate_confirm_text' => 'Vous serez connecté en tant que :name avec ses permissions. Votre session d\'origine sera conservée pour pouvoir revenir.',

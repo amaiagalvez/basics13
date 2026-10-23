@@ -16,16 +16,17 @@ use Basics13\Tests\Feature\Auth\AuthFeatureTestCase;
  */
 class FortifyServiceProviderTest extends AuthFeatureTestCase
 {
-    public function test_login_limiter_keys_on_a_lowercased_username_and_the_client_ip(): void
+    public function test_login_limiter_keys_on_the_client_ip_only(): void
     {
         $limiter = RateLimiter::limiter('login');
         $this->assertNotNull($limiter);
 
+        // The lock of each login lives in LoginAudit; this cap only stops spraying from one IP.
         $limit = $limiter(Request::create('/login', 'POST', ['email' => 'Mikel@Example.COM']));
 
         $this->assertInstanceOf(Limit::class, $limit);
-        $this->assertSame(5, $limit->maxAttempts);
-        $this->assertSame('mikel@example.com|127.0.0.1', $limit->key);
+        $this->assertSame(10, $limit->maxAttempts);
+        $this->assertSame('127.0.0.1', $limit->key);
     }
 
     public function test_two_factor_limiter_keys_on_the_challenged_login_id(): void

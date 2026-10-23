@@ -104,6 +104,7 @@ return [
     // Personifikazioa
     'impersonation_started' => 'Orain :name personifikatzen.',
     'impersonation_ended' => 'Personifikazioa amaitu da. Zure kontura itzuli zara.',
+    'login_locked' => 'Huts egindako saiakera gehiegi. Saiatu berriro :minutes minutu barru.',
     'no_active_impersonation' => 'Ez dago personifikazio aktiborik irten ahal izateko.',
     'impersonate_confirm_title' => 'Personifikatu :name?',
     'impersonate_confirm_text' => ':name bezala saioa hasiko duzu, haien baimenekin. Zure saioa originala gordeta egongo da itzultzeko.',

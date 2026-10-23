@@ -16,10 +16,11 @@ class RolePermissionSeedTest extends FeatureTestCase
 
     public function test_it_seeds_the_user_and_role_permissions_and_the_three_starting_roles(): void
     {
-        $this->assertSame(18, Permission::query()->count());
-        $this->assertSame(['roles', 'users'], Permission::query()->distinct()->orderBy('module')->pluck('module')->all());
+        $this->assertSame(18, Permission::query()->whereIn('module', ['roles', 'users'])->count());
+        // The session log and the configuration seed their own modules in a later migration.
+        $this->assertSame(['roles', 'sessions', 'settings', 'users'], Permission::query()->distinct()->orderBy('module')->pluck('module')->all());
 
-        $this->assertEqualsCanonicalizing(['users.manage', 'roles.manage'], $this->permissionsOf('admin'));
+        $this->assertEqualsCanonicalizing(['users.manage', 'roles.manage', 'sessions.manage', 'settings.manage'], $this->permissionsOf('admin'));
         $this->assertEqualsCanonicalizing(['users.view', 'users.create', 'users.edit', 'roles.view'], $this->permissionsOf('manager'));
         $this->assertEqualsCanonicalizing(['users.view', 'roles.view'], $this->permissionsOf('viewer'));
 

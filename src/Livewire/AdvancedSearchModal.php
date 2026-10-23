@@ -155,7 +155,7 @@ class AdvancedSearchModal extends Component
      * Get options for a select field.
      *
      * @param  SearchField  $field
-     * @return array<int, string>
+     * @return array<array-key, string>
      */
     public function getSelectOptions(array $field): array
     {
@@ -165,7 +165,7 @@ class AdvancedSearchModal extends Component
             return [];
         }
 
-        /** @var array<int, string> $options Mount already resolved any callable into its list. */
+        /** @var array<array-key, string> $options Mount already resolved any callable into its list. */
         return $options;
     }
 

@@ -146,8 +146,9 @@ class UserController extends Controller
         $this->authorize('impersonate', $user);
 
         $originalId = Auth::id();
-        Auth::login($user);
+        // Before the login, so the login audit sees the impersonation and records nothing.
         session(['impersonator_id' => $originalId]);
+        Auth::login($user);
 
         return redirect()->route('dashboard')->with('status', __('basics13::messages.impersonation_started', ['name' => $user->getAttribute('name')]));
     }
@@ -164,8 +165,9 @@ class UserController extends Controller
         $originalId = session('impersonator_id');
         /** @var Authenticatable $originalUser */
         $originalUser = $this->userModelClass()::findOrFail($originalId);
-        session()->forget('impersonator_id');
         Auth::login($originalUser);
+        // After the login, so the login audit sees the impersonation and records nothing.
+        session()->forget('impersonator_id');
 
         return redirect()->route('users.index')->with('status', __('basics13::messages.impersonation_ended'));
     }

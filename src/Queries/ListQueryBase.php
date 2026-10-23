@@ -22,7 +22,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
  *     placeholder?: string,
  *     help?: string,
  *     condition?: callable(string): bool,
- *     options?: array<int, string>|callable(string): array<int, string>,
+ *     options?: array<array-key, string>|callable(string): array<array-key, string>,
  *     multiple?: bool,
  *     relation?: string
  * }

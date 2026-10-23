@@ -40,21 +40,27 @@ class AuthenticationTest extends AuthFeatureTestCase
         $this->assertGuest();
     }
 
-    public function test_login_is_rate_limited_after_five_failed_attempts(): void
+    public function test_login_is_rate_limited_per_ip_after_ten_attempts(): void
     {
-        $user = User::factory()->create();
-
-        foreach (range(1, 5) as $attempt) {
+        // A different login each time: the cap is per IP, whatever login is tried.
+        foreach (range(1, 10) as $attempt) {
             $this->post(route('login.store'), [
-                'email' => $user->email,
+                'email' => "spray{$attempt}@example.com",
                 'password' => 'wrong-password',
             ])->assertSessionHasErrorsIn('email');
         }
 
         $this->postJson(route('login.store'), [
-            'email' => $user->email,
+            'email' => 'spray11@example.com',
             'password' => 'wrong-password',
         ])->assertTooManyRequests();
+
+        // Another IP is not affected.
+        $this->withServerVariables(['REMOTE_ADDR' => '10.0.0.2'])
+            ->post(route('login.store'), [
+                'email' => 'spray12@example.com',
+                'password' => 'wrong-password',
+            ])->assertSessionHasErrorsIn('email');
 
         $this->assertGuest();
     }
