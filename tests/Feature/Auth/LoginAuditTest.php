@@ -4,6 +4,7 @@ namespace Basics13\Tests\Feature\Auth;
 
 use Basics13\Models\User;
 use Basics13\Auth\LoginAudit;
+use Basics13\Enums\DeviceType;
 use Basics13\Models\SessionLog;
 use Basics13\Enums\SessionEvent;
 use Basics13\Enums\LoginFailureReason;
@@ -35,6 +36,21 @@ class LoginAuditTest extends AuthFeatureTestCase
 
         // Fortify regenerates the session at login; the key migrates with its data.
         $response->assertSessionHas(LoginAudit::SESSION_KEY, $row->session_key);
+    }
+
+    public function test_the_device_type_is_recorded_from_the_user_agent(): void
+    {
+        $user = User::factory()->create();
+
+        $this->withHeader('User-Agent', 'Mozilla/5.0 (Linux; Android 14; SM-X710) AppleWebKit/537.36 Chrome/124.0 Safari/537.36')
+            ->post(route('login.store'), ['email' => 'nobody@example.com', 'password' => 'whatever']);
+        $this->withHeader('User-Agent', 'Mozilla/5.0 (iPhone; CPU iPhone OS 17_0 like Mac OS X) AppleWebKit/605.1.15 Mobile/15E148')
+            ->post(route('login.store'), ['email' => $user->email, 'password' => 'password']);
+
+        $this->assertSame(
+            [SessionEvent::Failed->value => DeviceType::Tablet, SessionEvent::Login->value => DeviceType::Mobile],
+            SessionLog::query()->orderBy('id')->get()->mapWithKeys(static fn (SessionLog $row): array => [$row->event->value => $row->device_type])->all(),
+        );
     }
 
     public function test_a_wrong_password_is_recorded_with_the_user(): void
@@ -178,21 +194,47 @@ class LoginAuditTest extends AuthFeatureTestCase
         $this->assertSame(1, SessionLog::query()->where('event', SessionEvent::Login->value)->count());
     }
 
-    public function test_impersonating_and_leaving_create_no_rows(): void
+    public function test_impersonating_records_a_marked_login_closed_when_leaving(): void
     {
         $admin = User::factory()->superAdmin()->create();
         $target = User::factory()->create();
+        $adminRow = SessionLog::factory()->login()->create(['user_id' => $admin->id]);
 
         $this->actingAs($admin)
+            ->withSession([LoginAudit::SESSION_KEY => $adminRow->session_key])
             ->post(route('users.impersonate', $target))
             ->assertRedirect(route('dashboard', absolute: false));
         $this->assertAuthenticatedAs($target);
+
+        $row = $this->onlyRow(SessionEvent::Login, [$adminRow->id]);
+        $this->assertSame($target->id, $row->user_id);
+        $this->assertSame($admin->id, $row->impersonator_id);
+        $this->assertSame($target->email, $row->login);
+        $this->assertNull($row->logged_out_at);
 
         $this->post(route('impersonation.leave'))
             ->assertRedirect(route('users.index', absolute: false));
         $this->assertAuthenticatedAs($admin);
 
-        $this->assertSame(0, SessionLog::query()->count());
+        $this->assertNotNull($row->refresh()->logged_out_at);
+        $this->assertNull($adminRow->refresh()->logged_out_at);
+        $this->assertSame($adminRow->session_key, session(LoginAudit::SESSION_KEY));
+        $this->assertSame(2, SessionLog::query()->count());
+    }
+
+    public function test_logging_out_while_impersonating_closes_both_rows(): void
+    {
+        $admin = User::factory()->superAdmin()->create();
+        $target = User::factory()->create();
+        $adminRow = SessionLog::factory()->login()->create(['user_id' => $admin->id]);
+
+        $this->actingAs($admin)
+            ->withSession([LoginAudit::SESSION_KEY => $adminRow->session_key])
+            ->post(route('users.impersonate', $target));
+
+        $this->post(route('logout'));
+
+        $this->assertSame(0, SessionLog::query()->whereNull('logged_out_at')->count());
     }
 
     /**

@@ -102,4 +102,16 @@ class UserRequestTest extends TestCase
 
         $this->assertSame([], $result);
     }
+
+    public function test_held_types_returns_empty_when_record_has_no_user_types_method(): void
+    {
+        $record = new class extends Model
+        {
+            protected $table = 'users';
+        };
+
+        $reflection = new \ReflectionMethod(new UserRequest, 'heldTypes');
+
+        $this->assertSame([], $reflection->invoke(new UserRequest, $record));
+    }
 }

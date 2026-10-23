@@ -2,6 +2,7 @@
 
 namespace Basics13\Database\Factories;
 
+use Basics13\Enums\DeviceType;
 use Basics13\Models\SessionLog;
 use Basics13\Enums\SessionEvent;
 use Basics13\Enums\LoginFailureReason;
@@ -28,7 +29,8 @@ class SessionLogFactory extends Factory
             'failure_reason' => LoginFailureReason::WrongPassword,
             'login' => fake()->userName(),
             'ip' => fake()->ipv4(),
-            'user_agent' => fake()->userAgent(),
+            'user_agent' => $userAgent = fake()->userAgent(),
+            'device_type' => DeviceType::fromUserAgent($userAgent),
             'lockout_minutes' => null,
             'session_key' => null,
         ];

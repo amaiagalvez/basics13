@@ -3,6 +3,7 @@
 namespace Basics13\Tests\Feature\Sessions;
 
 use Basics13\Models\User;
+use Basics13\Enums\DeviceType;
 use Illuminate\Support\Carbon;
 use Basics13\Models\SessionLog;
 use Basics13\Enums\LoginFailureReason;
@@ -44,6 +45,36 @@ class SessionDashboardTest extends RoleTestCase
                 && $summary['signIns'] === [1, 0, 0, 0, 0, 0, 3]
                 && $summary['uniqueUsers'] === [1, 0, 0, 0, 0, 0, 2])
             ->assertSeeInOrder(['data-test="admin-dashboard-users"', '4', 'data-test="admin-dashboard-failed"', '3'], false);
+    }
+
+    public function test_it_splits_the_sign_ins_of_the_period_by_device(): void
+    {
+        $this->travelTo(Carbon::parse('2026-10-23 12:00:00'));
+        $viewer = User::factory()->withPermissions(['sessions.view'])->create();
+
+        SessionLog::factory()->login()->count(3)->create(['device_type' => DeviceType::Desktop, 'created_at' => now()]);
+        SessionLog::factory()->login()->create(['device_type' => DeviceType::Mobile, 'created_at' => now()->subDay()]);
+        SessionLog::factory()->create(['device_type' => DeviceType::Mobile, 'created_at' => now()]);
+        SessionLog::factory()->login()->create(['device_type' => DeviceType::Tablet, 'created_at' => now()->subDays(8)]);
+
+        $this->actingAs($viewer)
+            ->get(route('sessions.dashboard', ['period' => 7]))
+            ->assertOk()
+            ->assertViewHas('summary', static fn (array $summary): bool => $summary['devices'] === ['desktop' => 3, 'mobile' => 1, 'tablet' => 0])
+            ->assertSeeInOrder(['data-test="admin-dashboard-devices-total"', '4'], false)
+            ->assertSeeInOrder(['data-test="admin-dashboard-device-desktop-percent"', '75%'], false)
+            ->assertSeeInOrder(['data-test="admin-dashboard-device-mobile-percent"', '25%'], false)
+            ->assertSeeInOrder(['data-test="admin-dashboard-device-tablet-percent"', '0%'], false)
+            ->assertDontSee('data-test="admin-dashboard-devices-empty"', false);
+    }
+
+    public function test_the_device_split_says_so_without_sign_ins(): void
+    {
+        $this->actingAs(User::factory()->withPermissions(['sessions.view'])->create())
+            ->get(route('sessions.dashboard'))
+            ->assertOk()
+            ->assertSee('data-test="admin-dashboard-devices-empty"', false)
+            ->assertDontSee('data-test="admin-dashboard-devices-total"', false);
     }
 
     public function test_it_sums_up_the_accounts_of_the_period(): void

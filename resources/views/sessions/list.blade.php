@@ -62,6 +62,9 @@
                                         @if ($row['userTrashed'])
                                             <span class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('basics13::messages.trash_label') }}</span>
                                         @endif
+                                        @if ($row['impersonator'] !== null)
+                                            <flux:badge size="sm" color="amber" data-test="session-impersonator-{{ $row['id'] }}">{{ __('Impersonated by :name', ['name' => $row['impersonator']]) }}</flux:badge>
+                                        @endif
                                     @else
                                         <span class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('Unknown login') }}</span>
                                     @endif

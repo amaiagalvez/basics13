@@ -8,12 +8,14 @@ use Illuminate\Support\Str;
 use Basics13\Models\Setting;
 use Illuminate\Http\Request;
 use Laravel\Fortify\Fortify;
+use Basics13\Enums\DeviceType;
 use Basics13\Models\SessionLog;
 use Basics13\Enums\SessionEvent;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
 use Basics13\Enums\LoginFailureReason;
@@ -25,8 +27,9 @@ use Illuminate\Validation\ValidationException;
 
 /**
  * The writer of the access register. Every successful login, failed attempt and logout leaves
- * its row; impersonations, remember-cookie restorations and inactive accounts kicked out by the
- * active-users listener leave none. The password is never read: only the login field is.
+ * its row; an impersonation leaves a login row marked with its impersonator, closed when it is
+ * left. Remember-cookie restorations and inactive accounts kicked out by the active-users
+ * listener leave none. The password is never read: only the login field is.
  *
  * It also locks a login after `max_login_attempts` consecutive failures for `lockout_minutes`
  * full minutes. The counter starts its timer at the first failure, so the lock has its own key
@@ -44,6 +47,11 @@ class LoginAudit
      * login (Fortify regenerates it), while this uuid migrates with the session data.
      */
     public const SESSION_KEY = 'basics13.session_key';
+
+    /**
+     * The impersonator's own session key, put aside while the impersonation row is the open one.
+     */
+    public const IMPERSONATOR_SESSION_KEY = 'basics13.impersonator_session_key';
 
     /**
      * The cache prefix of a locked login; the value is the timestamp the lock ends at.
@@ -64,7 +72,8 @@ class LoginAudit
 
     /**
      * Record a successful login and link the row to the session, unless the sign-in comes from a
-     * remember cookie, is an impersonation or belongs to an inactive account.
+     * remember cookie or belongs to an inactive account. Starting an impersonation records a row
+     * marked with the impersonator; going back to the impersonator closes it instead.
      */
     public function handleLogin(Login $event): void
     {
@@ -86,7 +95,11 @@ class LoginAudit
 
         $session = $request->session();
 
-        if ($session->has('impersonator_id')) {
+        $impersonatorId = $session->get('impersonator_id');
+
+        if ($impersonatorId !== null && (int) $impersonatorId === (int) $user->getAuthIdentifier()) {
+            $this->closeImpersonation($session);
+
             return;
         }
 
@@ -101,13 +114,22 @@ class LoginAudit
 
         SessionLog::create([
             'user_id' => $user->getAuthIdentifier(),
+            'impersonator_id' => $impersonatorId,
             'event' => SessionEvent::Login,
             'failure_reason' => null,
             'login' => $login,
             'ip' => (string) $request->ip(),
             'user_agent' => (string) $request->userAgent(),
+            'device_type' => DeviceType::fromUserAgent((string) $request->userAgent()),
             'session_key' => $key,
         ]);
+
+        if ($impersonatorId !== null) {
+            $session->put(self::IMPERSONATOR_SESSION_KEY, $session->get(self::SESSION_KEY));
+            $session->put(self::SESSION_KEY, $key);
+
+            return;
+        }
 
         $session->put(self::SESSION_KEY, $key);
         RateLimiter::clear($this->lockoutKey($login));
@@ -147,6 +169,7 @@ class LoginAudit
             'login' => $login,
             'ip' => (string) $request->ip(),
             'user_agent' => (string) $request->userAgent(),
+            'device_type' => DeviceType::fromUserAgent((string) $request->userAgent()),
             'lockout_minutes' => intdiv($lockoutSeconds, 60),
         ]);
     }
@@ -177,9 +200,9 @@ class LoginAudit
     }
 
     /**
-     * Stamp the logout on the row of this session's login, once. Repeating it changes nothing
-     * and never fails, and a session without the key (an `actingAs` in a test, a very old one)
-     * is simply ignored.
+     * Stamp the logout on the row of this session's login, once, and on the impersonator's when
+     * the session ends during an impersonation. Repeating it changes nothing and never fails, and
+     * a session without the key (an `actingAs` in a test, a very old one) is simply ignored.
      */
     public function handleLogout(Logout $event): void
     {
@@ -189,8 +212,24 @@ class LoginAudit
             return;
         }
 
-        $key = $request->session()->get(self::SESSION_KEY);
+        $session = $request->session();
 
+        $this->stampLogout($session->get(self::SESSION_KEY));
+        $this->stampLogout($session->get(self::IMPERSONATOR_SESSION_KEY));
+    }
+
+    /**
+     * Leaving an impersonation: its row gets the logout and the impersonator's key is back.
+     */
+    private function closeImpersonation(Session $session): void
+    {
+        $this->stampLogout($session->get(self::SESSION_KEY));
+
+        $session->put(self::SESSION_KEY, $session->pull(self::IMPERSONATOR_SESSION_KEY));
+    }
+
+    private function stampLogout(mixed $key): void
+    {
         if (! is_string($key) || $key === '') {
             return;
         }
@@ -221,6 +260,7 @@ class LoginAudit
             'login' => $login,
             'ip' => (string) $request->ip(),
             'user_agent' => (string) $request->userAgent(),
+            'device_type' => DeviceType::fromUserAgent((string) $request->userAgent()),
         ]);
 
         $this->alertOnSpike();

@@ -142,6 +142,91 @@ class UserTypeCrudTest extends UserTestCase
         $this->assertDatabaseMissing('BAS_user_types', ['id' => $type->id]);
     }
 
+    public function test_an_archived_type_is_activated_again(): void
+    {
+        $this->actingAs($this->manager());
+        $type = UserType::factory()->archived()->create();
+
+        $this->patch(route('user-types.archived.activate', $type))
+            ->assertRedirect(route('user-types.archived.index'))
+            ->assertSessionHasNoErrors();
+        $this->assertTrue($type->refresh()->active);
+    }
+
+    public function test_store_answers_a_json_caller_with_the_created_type(): void
+    {
+        $this->actingAs($this->manager());
+
+        $this->postJson(route('user-types.store'), ['name_eu' => 'Ikasleak'])
+            ->assertCreated()
+            ->assertJson(['name_eu' => 'Ikasleak']);
+    }
+
+    public function test_a_name_taken_by_a_trashed_type_opens_the_conflict(): void
+    {
+        $this->actingAs($this->manager());
+        $trashed = UserType::factory()->create(['name_eu' => 'Zaharra', 'name_es' => 'Viejo']);
+        $trashed->delete();
+
+        $this->post(route('user-types.store'), ['name_eu' => 'Zaharra'])
+            ->assertRedirect(route('user-types.index'))
+            ->assertSessionHas('deleted_user_type_conflict', fn (array $payload): bool => $payload['id'] === $trashed->id && $payload['name_es'] === 'Viejo');
+
+        $this->postJson(route('user-types.store'), ['name_eu' => 'Zaharra'])
+            ->assertConflict()
+            ->assertJsonValidationErrors('name_eu');
+
+        $this->post(route('user-types.store'), ['name_eu' => 'Zaharra', 'reuse_deleted_name' => true])
+            ->assertSessionHas('status', __('basics13::messages.created'));
+        $this->assertDatabaseCount('BAS_user_types', 2);
+    }
+
+    public function test_a_trashed_type_whose_name_is_taken_again_is_not_restored(): void
+    {
+        $this->actingAs($this->manager());
+        $trashed = UserType::factory()->create(['name_eu' => 'Bikoitza']);
+        $trashed->delete();
+        UserType::factory()->create(['name_eu' => 'Bikoitza']);
+
+        $this->patch(route('user-types.trash.restore', $trashed->id));
+
+        $this->assertSoftDeleted($trashed);
+    }
+
+    public function test_the_trash_flags_a_held_type_as_not_deletable_for_good(): void
+    {
+        $this->actingAs($this->manager());
+        $type = UserType::factory()->create();
+        User::factory()->create()->userTypes()->attach($type);
+        UserType::withoutEvents(static fn () => $type->delete());
+
+        $this->get(route('user-types.trash.index'))
+            ->assertOk()
+            ->assertSee(__('basics13::messages.cannot_force_delete_related'));
+    }
+
+    public function test_the_select_options_list_active_types_matched_in_any_language(): void
+    {
+        $this->actingAs($this->manager());
+        $teachers = UserType::factory()->create(['name_eu' => 'Irakasleak', 'name_es' => 'Profesorado']);
+        UserType::factory()->create(['name_eu' => 'Ikasleak']);
+        UserType::factory()->archived()->create(['name_eu' => 'Zaharrak']);
+
+        $this->getJson(route('user-types.options'))
+            ->assertOk()
+            ->assertJsonCount(2, 'results');
+
+        $this->getJson(route('user-types.options', ['q' => 'profe']))
+            ->assertExactJson(['results' => [['id' => $teachers->id, 'text' => 'Irakasleak']]]);
+    }
+
+    public function test_the_select_options_need_the_user_type_permissions(): void
+    {
+        $this->actingAs(User::factory()->withPermissions(['users.manage'])->create());
+
+        $this->getJson(route('user-types.options'))->assertForbidden();
+    }
+
     private function manager(): User
     {
         return User::factory()->withPermissions(['user_types.manage'])->create();

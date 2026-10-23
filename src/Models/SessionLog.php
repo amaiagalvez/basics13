@@ -5,6 +5,7 @@ namespace Basics13\Models;
 use LogicException;
 use Carbon\CarbonImmutable;
 use Illuminate\Support\Str;
+use Basics13\Enums\DeviceType;
 use Basics13\Enums\SessionEvent;
 use Basics13\Enums\LoginFailureReason;
 use Basics13\Policies\SessionLogPolicy;
@@ -27,17 +28,19 @@ use Illuminate\Database\Eloquent\Attributes\UseFactory;
  *
  * @property int $id
  * @property int|null $user_id
+ * @property int|null $impersonator_id
  * @property SessionEvent $event
  * @property LoginFailureReason|null $failure_reason
  * @property string $login
  * @property string $ip
  * @property string $user_agent
+ * @property DeviceType $device_type
  * @property int|null $lockout_minutes
  * @property string|null $session_key
  * @property CarbonImmutable|null $created_at
  * @property CarbonImmutable|null $logged_out_at
  */
-#[Fillable(['user_id', 'event', 'failure_reason', 'login', 'ip', 'user_agent', 'lockout_minutes', 'session_key', 'logged_out_at'])]
+#[Fillable(['user_id', 'impersonator_id', 'event', 'failure_reason', 'login', 'ip', 'user_agent', 'device_type', 'lockout_minutes', 'session_key', 'logged_out_at'])]
 #[UsePolicy(SessionLogPolicy::class)]
 #[UseFactory(SessionLogFactory::class)]
 class SessionLog extends Model
@@ -54,13 +57,14 @@ class SessionLog extends Model
     protected $table = 'BAS_sessions';
 
     /**
-     * @return array{event: class-string<SessionEvent>, failure_reason: class-string<LoginFailureReason>, logged_out_at: string}
+     * @return array{event: class-string<SessionEvent>, failure_reason: class-string<LoginFailureReason>, device_type: class-string<DeviceType>, logged_out_at: string}
      */
     protected function casts(): array
     {
         return [
             'event' => SessionEvent::class,
             'failure_reason' => LoginFailureReason::class,
+            'device_type' => DeviceType::class,
             'logged_out_at' => 'datetime',
         ];
     }
@@ -96,6 +100,17 @@ class SessionLog extends Model
     {
         /** @phpstan-ignore method.notFound (the configured users model soft-deletes) */
         return $this->belongsTo($this->userModelClass(), 'user_id')->withTrashed();
+    }
+
+    /**
+     * The superadmin who was impersonating when this login was written, trashed ones included.
+     *
+     * @return BelongsTo<Model, $this>
+     */
+    public function impersonator(): BelongsTo
+    {
+        /** @phpstan-ignore method.notFound (the configured users model soft-deletes) */
+        return $this->belongsTo($this->userModelClass(), 'impersonator_id')->withTrashed();
     }
 
     /**

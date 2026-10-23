@@ -38,7 +38,7 @@ final class SessionLogListQuery extends ListQueryBase
     {
         return $this->paginate(
             SessionLog::query()
-                ->with('user')
+                ->with(['user', 'impersonator'])
                 ->orderByDesc('BAS_sessions.created_at')
                 ->orderByDesc('BAS_sessions.id'),
             $search,

@@ -574,6 +574,8 @@ document.addEventListener('alpine:init', () => {
 
             const ApexCharts = await window.loadApexCharts();
             const dark = document.documentElement.classList.contains('dark');
+            // A donut takes one number per slice and names them with its own labels.
+            const donut = options.type === 'donut';
 
             this.instance = new ApexCharts(this.$refs.canvas, {
                 chart: {
@@ -586,12 +588,14 @@ document.addEventListener('alpine:init', () => {
                     animations: { enabled: !window.matchMedia('(prefers-reduced-motion: reduce)').matches },
                 },
                 series: options.series,
-                xaxis: { categories: options.labels ?? [] },
+                ...(donut
+                    ? { labels: options.labels ?? [], legend: { show: false }, plotOptions: { pie: { donut: { size: '72%' } } } }
+                    : { xaxis: { categories: options.labels ?? [] } }),
                 colors: options.colors > 0
                     ? Array.from({ length: options.colors }, (_, index) => getComputedStyle(this.$refs[`color${index}`]).color)
                     : [getComputedStyle(this.$el).color],
-                stroke: { curve: 'smooth', width: 2 },
-                fill: { type: 'gradient', gradient: { opacityFrom: 0.35, opacityTo: 0 } },
+                stroke: donut ? { width: 0 } : { curve: 'smooth', width: 2 },
+                fill: donut ? { type: 'solid' } : { type: 'gradient', gradient: { opacityFrom: 0.35, opacityTo: 0 } },
                 dataLabels: { enabled: false },
                 tooltip: { enabled: !(options.sparkline ?? false), theme: dark ? 'dark' : 'light' },
                 theme: { mode: dark ? 'dark' : 'light' },

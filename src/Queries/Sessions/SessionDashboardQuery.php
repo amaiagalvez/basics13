@@ -3,6 +3,7 @@
 namespace Basics13\Queries\Sessions;
 
 use Carbon\CarbonImmutable;
+use Basics13\Enums\DeviceType;
 use Basics13\Models\SessionLog;
 use Basics13\Enums\SessionEvent;
 use Illuminate\Support\Collection;
@@ -56,6 +57,7 @@ final class SessionDashboardQuery
      *     days: list<string>,
      *     signIns: list<int>,
      *     uniqueUsers: list<int>,
+     *     devices: array<string, int>,
      *     alerts: array{pending: int, inactive: int, surge: bool, suspended: int}
      * }
      */
@@ -80,6 +82,7 @@ final class SessionDashboardQuery
             'growth' => $before > 0 ? round($new / $before * 100, 1) : null,
             'failed' => ['current' => $this->failures($from, $to), 'previous' => $this->failures($previousFrom, $from)],
             ...$this->daily($from, $days),
+            'devices' => $this->devices($from, $to),
             'alerts' => [
                 'pending' => $pending,
                 'inactive' => $this->accounts()->where('active', true)
@@ -123,6 +126,31 @@ final class SessionDashboardQuery
             ->where('created_at', '>=', $from)
             ->where('created_at', '<', $to)
             ->count();
+    }
+
+    /**
+     * Successful sign-ins of the window per device type, every type present.
+     *
+     * @return array<string, int>
+     */
+    private function devices(CarbonImmutable $from, CarbonImmutable $to): array
+    {
+        $counts = SessionLog::query()
+            ->toBase()
+            ->selectRaw('device_type, COUNT(*) as total')
+            ->where('event', SessionEvent::Login->value)
+            ->where('created_at', '>=', $from)
+            ->where('created_at', '<', $to)
+            ->groupBy('device_type')
+            ->pluck('total', 'device_type');
+
+        $devices = [];
+
+        foreach (DeviceType::cases() as $device) {
+            $devices[$device->value] = (int) ($counts[$device->value] ?? 0);
+        }
+
+        return $devices;
     }
 
     /**

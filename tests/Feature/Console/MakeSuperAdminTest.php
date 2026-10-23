@@ -3,9 +3,11 @@
 namespace Basics13\Tests\Feature\Console;
 
 use Basics13\Models\User;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Testing\PendingCommand;
 use Basics13\Tests\Feature\FeatureTestCase;
+use Illuminate\Database\Events\QueryExecuted;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class MakeSuperAdminTest extends FeatureTestCase
@@ -128,6 +130,29 @@ class MakeSuperAdminTest extends FeatureTestCase
 
         // Only the original super admin should exist
         $this->assertSame(1, User::withTrashed()->where('is_super_admin', true)->count());
+    }
+
+    public function test_it_fails_when_another_run_creates_the_super_admin_while_it_asks(): void
+    {
+        $competitorCreated = false;
+
+        DB::listen(static function (QueryExecuted $query) use (&$competitorCreated): void {
+            if ($competitorCreated || ! str_contains($query->sql, 'is_super_admin')) {
+                return;
+            }
+
+            $competitorCreated = true;
+            User::factory()->superAdmin()->create(['email' => 'other@example.test']);
+        });
+
+        $this->command()
+            ->expectsQuestion(__('Name'), 'Root')
+            ->expectsQuestion(__('Email'), 'root@example.test')
+            ->expectsQuestion(__('Password'), 'a-strong-password')
+            ->expectsOutputToContain(__('A super-admin account already exists.'))
+            ->assertFailed();
+
+        $this->assertDatabaseMissing('users', ['email' => 'root@example.test']);
     }
 
     private function command(): PendingCommand

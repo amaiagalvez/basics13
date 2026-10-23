@@ -64,4 +64,18 @@ class SearchableSelectOptionsRequestTest extends TestCase
 
         $this->assertSame('', $testRequest->search());
     }
+
+    public function test_context_returns_trimmed_string(): void
+    {
+        $testRequest = new class extends SearchableSelectOptionsRequest
+        {
+            public function authorize(): bool
+            {
+                return true;
+            }
+        };
+        $testRequest->merge(['context' => '  edit  ']);
+
+        $this->assertSame('edit', $testRequest->context());
+    }
 }

@@ -24,4 +24,15 @@ class SeedPermissionsTest extends FeatureTestCase
         $this->assertSame(1, $admin->permissions()->where('slug', 'reports.manage')->count());
         $this->assertSame(0, $admin->permissions()->where('slug', 'reports.view')->count());
     }
+
+    public function test_it_only_seeds_the_permissions_when_there_is_no_admin_role(): void
+    {
+        // A system role refuses the model delete, so it is trashed underneath.
+        Role::query()->where('slug', 'admin')->toBase()->update(['deleted_at' => now()]);
+
+        seedPermissions(['reports'], ['reports.manage']);
+
+        $this->assertSame(count(Permission::ACTIONS), Permission::query()->where('module', 'reports')->count());
+        $this->assertSame(0, Role::withTrashed()->where('slug', 'admin')->firstOrFail()->permissions()->where('slug', 'reports.manage')->count());
+    }
 }

@@ -170,7 +170,7 @@ class UserController extends Controller
         $this->authorize('impersonate', $user);
 
         $originalId = Auth::id();
-        // Before the login, so the login audit sees the impersonation and records nothing.
+        // Before the login, so the login audit records the row marked with its impersonator.
         session(['impersonator_id' => $originalId]);
         Auth::login($user);
 
@@ -190,7 +190,7 @@ class UserController extends Controller
         /** @var Authenticatable $originalUser */
         $originalUser = $this->userModelClass()::findOrFail($originalId);
         Auth::login($originalUser);
-        // After the login, so the login audit sees the impersonation and records nothing.
+        // After the login, so the login audit sees the impersonation and closes its row.
         session()->forget('impersonator_id');
 
         return redirect()->route('users.index')->with('status', __('basics13::messages.impersonation_ended'));
