@@ -4,6 +4,7 @@ namespace Basics13\Concerns;
 
 use LogicException;
 use Basics13\Models\Role;
+use Basics13\Models\UserType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -35,6 +36,19 @@ trait HasRoles
     {
         return $this->belongsToMany(Role::class, 'BAS_role_user', 'user_id', 'role_id')
             ->withPivot(['assigned_by', 'created_at']);
+    }
+
+    /**
+     * The types the account belongs to, and in which of them it is an admin. They live here rather
+     * than on the default model so a host that replaces it keeps them, like the roles.
+     *
+     * @return BelongsToMany<UserType, $this>
+     */
+    public function userTypes(): BelongsToMany
+    {
+        return $this->belongsToMany(UserType::class, 'BAS_user_user_type', 'user_id', 'user_type_id')
+            ->withPivot('is_admin')
+            ->withTimestamps();
     }
 
     public function isSuperAdmin(): bool

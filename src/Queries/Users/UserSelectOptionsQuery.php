@@ -5,8 +5,11 @@ namespace Basics13\Queries\Users;
 use Illuminate\Support\Collection;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Database\Eloquent\Model;
+use Basics13\Concerns\ChecksPermissions;
 use Basics13\Concerns\ResolvesUserModel;
 use Illuminate\Database\Eloquent\Builder;
+use Basics13\Concerns\DelegatesUserManagement;
+use Illuminate\Contracts\Auth\Authenticatable;
 
 /**
  * Options for a remote selector: the active accounts, capped at the shared page size. The
@@ -16,7 +19,28 @@ use Illuminate\Database\Eloquent\Builder;
  */
 final class UserSelectOptionsQuery extends ListQueryBase
 {
+    use ChecksPermissions;
+    use DelegatesUserManagement;
     use ResolvesUserModel;
+
+    /**
+     * The type admin whose accounts are offered, or null for every account.
+     */
+    private ?Authenticatable $manager = null;
+
+    /**
+     * Narrow the accounts to what a type admin may see: everything with `users.view`, only the
+     * accounts it manages otherwise.
+     */
+    public function visibleTo(?Authenticatable $actor): static
+    {
+        $this->manager = $actor !== null && ! $this->permits($actor, 'users.view')
+            && ($this->permits($actor, 'users.view_own') || $this->permits($actor, 'users.manage_own'))
+            ? $actor
+            : null;
+
+        return $this;
+    }
 
     /**
      * @return Collection<int, array{id: int, text: string}>
@@ -26,7 +50,13 @@ final class UserSelectOptionsQuery extends ListQueryBase
         $pattern = $this->searchPattern($search);
         $modelClass = $this->userModelClass();
 
-        return $modelClass::query()
+        $query = $modelClass::query();
+
+        if ($this->manager !== null) {
+            $this->whereManagedBy($query, $this->manager);
+        }
+
+        return $query
             ->where('active', true)
             ->where('is_super_admin', false)
             ->when($search !== '', fn (Builder $query) => $query->where(

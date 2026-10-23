@@ -4,10 +4,15 @@ namespace Basics13\Policies;
 
 use Illuminate\Database\Eloquent\Model;
 use Basics13\Concerns\ChecksPermissions;
+use Basics13\Concerns\DelegatesUserManagement;
 use Illuminate\Contracts\Auth\Authenticatable as User;
 
 /**
  * Account management abilities, each one granted by its `users.{action}` permission.
+ *
+ * `users.view_own` and `users.manage_own` grant the same abilities over the accounts the actor
+ * manages as a type admin (see DelegatesUserManagement): the global permission is checked first,
+ * and the delegated one only when it is missing. Impersonation is never delegated.
  *
  * The super-admin account is out of reach of everybody else: no permission lets another user edit,
  * archive, trash, restore or delete it. That rule is checked before the permission. The account
@@ -20,13 +25,16 @@ use Illuminate\Contracts\Auth\Authenticatable as User;
 class UserPolicy
 {
     use ChecksPermissions;
+    use DelegatesUserManagement;
 
     /**
      * Determine whether the user can view any models.
      */
     public function viewAny(User $user): bool
     {
-        return $this->permits($user, 'users.view');
+        return $this->permits($user, 'users.view')
+            || $this->permits($user, 'users.view_own')
+            || $this->permits($user, 'users.manage_own');
     }
 
     /**
@@ -34,7 +42,7 @@ class UserPolicy
      */
     public function create(User $user): bool
     {
-        return $this->permits($user, 'users.create');
+        return $this->permits($user, 'users.create') || $this->permits($user, 'users.manage_own');
     }
 
     /**
@@ -42,7 +50,7 @@ class UserPolicy
      */
     public function update(User $user, Model $record): bool
     {
-        return $this->reachable($user, $record) && $this->permits($user, 'users.edit');
+        return $this->reachable($user, $record) && $this->allows($user, $record, 'users.edit');
     }
 
     /**
@@ -50,7 +58,7 @@ class UserPolicy
      */
     public function delete(User $user, Model $record): bool
     {
-        return $this->reachable($user, $record) && $this->permits($user, 'users.delete');
+        return $this->reachable($user, $record) && $this->allows($user, $record, 'users.delete');
     }
 
     /**
@@ -58,7 +66,7 @@ class UserPolicy
      */
     public function restore(User $user, Model $record): bool
     {
-        return $this->reachable($user, $record) && $this->permits($user, 'users.restore');
+        return $this->reachable($user, $record) && $this->allows($user, $record, 'users.restore');
     }
 
     /**
@@ -66,7 +74,7 @@ class UserPolicy
      */
     public function forceDelete(User $user, Model $record): bool
     {
-        return $this->reachable($user, $record) && $this->permits($user, 'users.force_delete');
+        return $this->reachable($user, $record) && $this->allows($user, $record, 'users.force_delete');
     }
 
     /**
@@ -74,7 +82,7 @@ class UserPolicy
      */
     public function archive(User $user, Model $record): bool
     {
-        return $this->reachable($user, $record) && $this->permits($user, 'users.archive');
+        return $this->reachable($user, $record) && $this->allows($user, $record, 'users.archive');
     }
 
     /**
@@ -82,7 +90,16 @@ class UserPolicy
      */
     public function activate(User $user, Model $record): bool
     {
-        return $this->reachable($user, $record) && $this->permits($user, 'users.archive');
+        return $this->reachable($user, $record) && $this->allows($user, $record, 'users.archive');
+    }
+
+    /**
+     * The global permission, or the delegated one over an account the user manages.
+     */
+    private function allows(User $user, Model $record, string $permission): bool
+    {
+        return $this->permits($user, $permission)
+            || ($this->permits($user, 'users.manage_own') && $this->manages($user, $record));
     }
 
     /**

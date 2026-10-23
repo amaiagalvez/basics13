@@ -8,8 +8,11 @@ use Illuminate\Support\Collection;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Support\LazyCollection;
 use Illuminate\Database\Eloquent\Model;
+use Basics13\Concerns\ChecksPermissions;
 use Basics13\Concerns\ResolvesUserModel;
 use Illuminate\Database\Eloquent\Builder;
+use Basics13\Concerns\DelegatesUserManagement;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Relations\Relation;
 
@@ -25,7 +28,28 @@ use Illuminate\Database\Eloquent\Relations\Relation;
  */
 final class PermissionSummaryQuery extends ListQueryBase
 {
+    use ChecksPermissions;
+    use DelegatesUserManagement;
     use ResolvesUserModel;
+
+    /**
+     * The type admin whose accounts are offered, or null for every account.
+     */
+    private ?Authenticatable $manager = null;
+
+    /**
+     * Narrow the accounts to what a type admin may see: everything with `users.view`, only the
+     * accounts it manages otherwise.
+     */
+    public function visibleTo(?Authenticatable $actor): static
+    {
+        $this->manager = $actor !== null && ! $this->permits($actor, 'users.view')
+            && ($this->permits($actor, 'users.view_own') || $this->permits($actor, 'users.manage_own'))
+            ? $actor
+            : null;
+
+        return $this;
+    }
 
     /**
      * @var non-empty-list<literal-string>
@@ -143,8 +167,13 @@ final class PermissionSummaryQuery extends ListQueryBase
     private function accounts(): Builder
     {
         $modelClass = $this->userModelClass();
+        $query = $modelClass::query();
 
-        return $modelClass::query()
+        if ($this->manager !== null) {
+            $this->whereManagedBy($query, $this->manager);
+        }
+
+        return $query
             ->where('active', true)
             ->where('is_super_admin', false)
             ->with(['roles' => static fn (Relation $roles): Relation => $roles

@@ -25,6 +25,7 @@ class UserListTransformer extends ListTransformer
             'email' => $record->getAttribute('email'),
             'lang' => $this->languageName($record),
             'roles' => $this->roleNames($record),
+            'types' => $this->typeNames($record),
             'editPayload' => $this->editPayload($record),
             ...$extra,
         ];
@@ -59,7 +60,52 @@ class UserListTransformer extends ListTransformer
             ...$record->only(['id', 'name', 'email', 'lang', 'notes']),
             'own' => (int) $record->getKey() === (int) Auth::id(),
             'role_ids' => $this->roleIds($record),
+            'user_type_ids' => $this->typeIds($record),
+            'admin_type_ids' => $this->typeIds($record, adminOnly: true),
         ];
+    }
+
+    /**
+     * The types the account holds, or only those it administers, as the strings the checkboxes of
+     * the form carry.
+     *
+     * @return list<string>
+     */
+    private function typeIds(Model $record, bool $adminOnly = false): array
+    {
+        $types = $record->relationLoaded('userTypes') ? $record->getRelation('userTypes') : null;
+
+        if (! $types instanceof Collection) {
+            return [];
+        }
+
+        return array_values($types
+            ->filter(static fn (Model $type): bool => ! $adminOnly || (bool) $type->getRelationValue('pivot')?->getAttribute('is_admin'))
+            ->map(static fn (Model $type): string => (string) $type->getKey())
+            ->all());
+    }
+
+    /**
+     * The types the account holds, by Basque name, for the list column, flagged where the account
+     * is an admin.
+     *
+     * @return list<array{name: string, admin: bool}>
+     */
+    private function typeNames(Model $record): array
+    {
+        $types = $record->relationLoaded('userTypes') ? $record->getRelation('userTypes') : null;
+
+        if (! $types instanceof Collection) {
+            return [];
+        }
+
+        return array_values($types
+            ->sortBy(static fn (Model $type): string => (string) $type->getAttribute('name_eu'))
+            ->map(static fn (Model $type): array => [
+                'name' => (string) $type->getAttribute('name_eu'),
+                'admin' => (bool) $type->getRelationValue('pivot')?->getAttribute('is_admin'),
+            ])
+            ->all());
     }
 
     /**

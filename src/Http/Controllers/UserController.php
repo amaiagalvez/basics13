@@ -30,12 +30,15 @@ class UserController extends Controller
     ): View|string {
         $search = $request->search();
         $filters = $request->filters() ?? [];
-        $users = $query->active($search, $filters);
+        $users = $query->visibleTo($request->user())->active($search, $filters);
 
         return $this->listView($request, 'basics13::users.list', [
             'users' => $users,
             // Null when the user cannot assign roles: the form then shows no selector.
-            'assignableRoles' => $request->assignsRoles() ? $query->assignableRoles($request->assignsSystemRoles()) : null,
+            'assignableRoles' => $request->assignsRoles() ? $query->assignableRoles($request->assignsSystemRoles(), $request->roleGrantor()) : null,
+            // Null when the user cannot assign types; the admin flag only for a global editor.
+            'assignableTypes' => $request->assignsTypes() ? $query->assignableTypes($request->typeAdmin()) : null,
+            'assignsTypeAdmins' => $request->typeAdmin() === null,
             'list' => $transformer->active(
                 $users,
                 $search,
@@ -52,7 +55,7 @@ class UserController extends Controller
         UserSelectOptionsQuery $query,
     ): JsonResponse {
         return response()->json([
-            'results' => $query->search($request->search()),
+            'results' => $query->visibleTo($request->user())->search($request->search()),
         ]);
     }
 
@@ -61,7 +64,9 @@ class UserController extends Controller
         try {
             DB::transaction(function () use ($request): void {
                 $modelClass = $this->userModelClass();
-                $this->syncRoles($request, $modelClass::query()->create($this->attributes($request)));
+                $user = $modelClass::query()->create($this->attributes($request));
+                $this->syncRoles($request, $user);
+                $this->syncTypes($request, $user);
             });
         } catch (QueryException $exception) {
             UniqueConstraintViolation::rethrowAsValidationError($exception, 'email');
@@ -76,6 +81,7 @@ class UserController extends Controller
             DB::transaction(function () use ($request, $user): void {
                 $user->update($this->attributes($request));
                 $this->syncRoles($request, $user);
+                $this->syncTypes($request, $user);
             });
         } catch (QueryException $exception) {
             UniqueConstraintViolation::rethrowAsValidationError($exception, 'email');
@@ -119,6 +125,24 @@ class UserController extends Controller
     }
 
     /**
+     * Leaves the account with the types the form chose and the admin flag of each. A form without
+     * the type selector leaves them as they are.
+     */
+    private function syncTypes(UserRequest $request, Model $user): void
+    {
+        $types = $request->types();
+
+        if ($types === null) {
+            return;
+        }
+
+        // The configured users model uses the HasRoles concern, which PHPStan cannot see through
+        // the shared `Model` base.
+        /** @phpstan-ignore method.notFound */
+        $user->userTypes()->sync($types);
+    }
+
+    /**
      * The validated columns, without a null password: an edit that leaves the field out keeps the
      * current one, so the null must never reach the update.
      *
@@ -127,7 +151,7 @@ class UserController extends Controller
     private function attributes(UserRequest $request): array
     {
         $attributes = $request->validated();
-        unset($attributes['assign_roles'], $attributes['role_ids']);
+        unset($attributes['assign_roles'], $attributes['role_ids'], $attributes['assign_types'], $attributes['user_type_ids'], $attributes['admin_type_ids']);
 
         if (($attributes['password'] ?? null) === null) {
             unset($attributes['password']);

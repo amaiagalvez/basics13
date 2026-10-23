@@ -26,7 +26,7 @@ class UserTrashController extends TrashController
     ): View|string {
         $search = $request->search();
         $filters = $request->filters() ?? [];
-        $users = $query->trashed($search, $filters);
+        $users = $query->visibleTo($request->user())->trashed($search, $filters);
 
         return $this->listView($request, 'basics13::users.list', [
             'users' => $users,

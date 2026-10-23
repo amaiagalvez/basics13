@@ -116,7 +116,7 @@ class SessionLogListTest extends RoleTestCase
         $sessionRoutes = collect(Route::getRoutes()->getRoutes())
             ->filter(static fn ($route): bool => str_starts_with((string) $route->getName(), 'sessions.'));
 
-        $this->assertSame(['sessions.index'], $sessionRoutes->map->getName()->values()->all());
-        $this->assertSame(['GET', 'HEAD'], $sessionRoutes->first()->methods());
+        $this->assertSame(['sessions.index', 'sessions.dashboard'], $sessionRoutes->map->getName()->values()->all());
+        $sessionRoutes->each(fn ($route) => $this->assertSame(['GET', 'HEAD'], $route->methods()));
     }
 }

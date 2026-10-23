@@ -19,6 +19,12 @@ parameters:
 			path: database/factories/RoleFactory.php
 
 		-
+			message: '#^Call to an undefined static method TModel of Illuminate\\Database\\Eloquent\\Model\:\:factory\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: database/factories/UserTypeFactory.php
+
+		-
 			message: '#^Access to an undefined property Illuminate\\Foundation\\Auth\\User\:\:\$two_factor_recovery_codes\.$#'
 			identifier: property.notFound
 			count: 1

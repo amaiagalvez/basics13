@@ -18,7 +18,7 @@ class UserArchivedController extends ArchivedController
     ): View|string {
         $search = $request->search();
         $filters = $request->filters() ?? [];
-        $users = $query->archived($search, $filters);
+        $users = $query->visibleTo($request->user())->archived($search, $filters);
 
         return $this->listView($request, 'basics13::users.list', [
             'users' => $users,

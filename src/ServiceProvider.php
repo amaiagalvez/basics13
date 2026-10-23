@@ -28,6 +28,7 @@ class ServiceProvider extends BaseServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../database/migrations');
         $this->loadRoutesFrom(__DIR__.'/../routes/settings.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/users.php');
+        $this->loadRoutesFrom(__DIR__.'/../routes/user-types.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/roles.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/sessions.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/configuration.php');

@@ -2,6 +2,8 @@
     // The selector is only rendered from the active list, and only for a user who may assign roles;
     // every other list passes nothing.
     $assignableRoles = $assignableRoles ?? null;
+    $assignableTypes = $assignableTypes ?? null;
+    $assignsTypeAdmins = $assignsTypeAdmins ?? false;
 @endphp
 
 <x-basics13::forms.tracked-resource prefix="user" context-field="_user_form" id-field="_user_id">
@@ -87,6 +89,59 @@
 
             <flux:error name="role_ids" />
             <flux:error name="role_ids.*" />
+        </flux:field>
+    @endif
+
+    @if ($assignableTypes !== null)
+        {{--
+            `assign_types` tells an emptied selection apart from a form without selector. The admin
+            flag of each type is only set by whoever edits accounts globally; a type admin is offered
+            only the types it administers.
+        --}}
+        <flux:field>
+            <input type="hidden" name="assign_types" value="1" />
+            <x-basics13::forms.field-label :request="\Basics13\Http\Requests\UserRequest::class" field="user_type_ids"
+                test="user-type-ids-info" for="user-type-ids" :notices="[__('You can pick several types.')]">
+                {{ __('User types') }}
+            </x-basics13::forms.field-label>
+
+            <div id="user-type-ids" data-test="user-type-ids" role="group" aria-label="{{ __('User types') }}"
+                class="max-h-64 divide-y divide-zinc-100 overflow-y-auto rounded-lg border border-zinc-200 border-b-zinc-300/80 bg-white shadow-xs dark:divide-white/5 dark:border-white/10 dark:bg-white/10">
+                @forelse ($assignableTypes as $type)
+                    <div data-type-active="{{ $type->active ? 'true' : 'false' }}"
+                        x-show="$el.dataset.typeActive === 'true' || (form.user_type_ids ?? []).includes('{{ (string) $type->id }}')"
+                        class="flex items-center gap-3 px-3 py-2.5 text-sm text-zinc-700 has-[:checked]:bg-brand-50 dark:text-zinc-300 dark:has-[:checked]:bg-brand-500/10">
+                        <label class="flex min-w-0 flex-1 cursor-pointer items-center gap-3">
+                            <input type="checkbox" name="user_type_ids[]" value="{{ (string) $type->id }}"
+                                x-model="form.user_type_ids" data-test="user-type-{{ $type->id }}"
+                                class="size-4 shrink-0 rounded accent-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus dark:accent-brand-400" />
+                            <span class="min-w-0 flex-1 truncate">{{ $type->name_eu }}</span>
+                        </label>
+                        @unless ($type->active)
+                            <span
+                                class="shrink-0 rounded-full bg-zinc-800/5 px-2 py-0.5 text-xs text-zinc-600 dark:bg-white/10 dark:text-zinc-300">
+                                {{ __('basics13::messages.archived_label') }}
+                            </span>
+                        @endunless
+                        @if ($assignsTypeAdmins)
+                            <label class="flex shrink-0 cursor-pointer items-center gap-2 text-xs">
+                                <input type="checkbox" name="admin_type_ids[]" value="{{ (string) $type->id }}"
+                                    x-model="form.admin_type_ids"
+                                    x-bind:disabled="! (form.user_type_ids ?? []).includes('{{ (string) $type->id }}')"
+                                    data-test="user-type-admin-{{ $type->id }}"
+                                    class="size-4 rounded accent-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus dark:accent-brand-400" />
+                                {{ __('Type admin') }}
+                            </label>
+                        @endif
+                    </div>
+                @empty
+                    <p class="px-3 py-2.5 text-sm text-zinc-500 dark:text-zinc-400">{{ __('No user types yet.') }}</p>
+                @endforelse
+            </div>
+
+            <flux:error name="user_type_ids" />
+            <flux:error name="user_type_ids.*" />
+            <flux:error name="admin_type_ids.*" />
         </flux:field>
     @endif
 

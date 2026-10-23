@@ -10,5 +10,6 @@ class BasicsDevelopSeeder extends Seeder
     {
         $this->call(UserSeeder::class);
         $this->call(DevelopUserSeeder::class);
+        $this->call(DevelopUserTypeSeeder::class);
     }
 }

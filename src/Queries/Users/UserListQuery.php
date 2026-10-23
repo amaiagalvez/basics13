@@ -3,16 +3,21 @@
 namespace Basics13\Queries\Users;
 
 use Basics13\Models\Role;
+use Basics13\Models\UserType;
 use Illuminate\Support\Collection;
 use Basics13\Queries\ListQueryBase;
 use Illuminate\Database\Eloquent\Model;
+use Basics13\Concerns\ChecksPermissions;
 use Basics13\Concerns\ResolvesUserModel;
 use Illuminate\Database\Eloquent\Builder;
+use Basics13\Concerns\DelegatesUserManagement;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * Lists user accounts in each of their states, over the model the host configures. The super-admin
- * is never listed, nor counted in the tabs: other users cannot act on it.
+ * is never listed, nor counted in the tabs: other users cannot act on it. An actor without
+ * `users.view` sees only the accounts it manages as a type admin, set through `visibleTo()`.
  *
  * @extends ListQueryBase<Model>
  *
@@ -21,7 +26,14 @@ use Illuminate\Pagination\LengthAwarePaginator;
  */
 final class UserListQuery extends ListQueryBase
 {
+    use ChecksPermissions;
+    use DelegatesUserManagement;
     use ResolvesUserModel;
+
+    /**
+     * The type admin whose accounts the lists are narrowed to, or null for every account.
+     */
+    private ?Authenticatable $manager = null;
 
     /**
      * The list the columns below belong to, named the way the base reads it.
@@ -31,6 +43,20 @@ final class UserListQuery extends ListQueryBase
     private const SCOPE_ARCHIVED = 'archived';
 
     private const SCOPE_TRASHED = 'trashed';
+
+    /**
+     * Narrow every list and count for a type admin: everything with `users.view`, only the
+     * accounts it manages otherwise.
+     */
+    public function visibleTo(?Authenticatable $actor): static
+    {
+        $this->manager = $actor !== null && ! $this->permits($actor, 'users.view')
+            && ($this->permits($actor, 'users.view_own') || $this->permits($actor, 'users.manage_own'))
+            ? $actor
+            : null;
+
+        return $this;
+    }
 
     /**
      * @param  SearchFilters  $filters
@@ -72,7 +98,7 @@ final class UserListQuery extends ListQueryBase
             // The configured model is soft deletable. That scope is invisible through the shared
             // `Model` base, hence the ignore.
             /** @phpstan-ignore method.notFound */
-            $this->accounts()->onlyTrashed()->with('roles')->latest('deleted_at')->orderBy('id'),
+            $this->accounts()->onlyTrashed()->with(['roles', 'userTypes'])->latest('deleted_at')->orderBy('id'),
             $search,
             $this->searchColumns(self::SCOPE_TRASHED, ['name', 'email', 'deleted_at']),
             filters: $filters,
@@ -82,15 +108,33 @@ final class UserListQuery extends ListQueryBase
 
     /**
      * The roles the account form can offer: every one outside the trash, archived ones included so
-     * an edit keeps the roles an account already holds. System roles only for the super-admin.
+     * an edit keeps the roles an account already holds. System roles only for the super-admin. A
+     * type admin is offered only the roles it could grant (see DelegatesUserManagement).
      *
      * @return Collection<int, Role>
      */
-    public function assignableRoles(bool $withSystemRoles): Collection
+    public function assignableRoles(bool $withSystemRoles, ?Authenticatable $grantor = null): Collection
     {
         return Role::query()
             ->when(! $withSystemRoles, static fn (Builder $query): Builder => $query->where('is_system', false))
+            ->when($grantor !== null, fn (Builder $query): Builder => $query->whereIn('id', $this->grantableRoleIds($grantor)))
             ->orderBy('name')
+            ->orderBy('id')
+            ->get();
+    }
+
+    /**
+     * The types the account form can offer: every one outside the trash for whoever assigns types
+     * globally, archived ones included so an edit keeps the types an account already holds; only
+     * the types it administers for a type admin.
+     *
+     * @return Collection<int, UserType>
+     */
+    public function assignableTypes(?Authenticatable $typeAdmin = null): Collection
+    {
+        return UserType::query()
+            ->when($typeAdmin !== null, fn (Builder $query): Builder => $query->whereIn('id', $this->administeredTypeIds($typeAdmin)))
+            ->orderBy('name_eu')
             ->orderBy('id')
             ->get();
     }
@@ -154,6 +198,22 @@ final class UserListQuery extends ListQueryBase
                 'order' => 20,
                 'group' => 'dates',
             ],
+            'user_type_ids' => [
+                'column' => 'BAS_user_types.id',
+                'relation' => 'userTypes',
+                'label' => 'User types',
+                'help' => 'Equals shows the users holding at least one of the selected types; not equals, those holding none of them.',
+                'type' => 'select',
+                'visible' => true,
+                'order' => 10,
+                'group' => 'relations',
+                'options' => fn (string $scope) => UserType::query()
+                    ->where('active', true)
+                    ->orderBy('name_eu')
+                    ->pluck('name_eu', 'id')
+                    ->all(),
+                'multiple' => true,
+            ],
         ];
     }
 
@@ -173,11 +233,11 @@ final class UserListQuery extends ListQueryBase
      */
     private function ordered(): Builder
     {
-        return $this->accounts()->with('roles')->orderBy('name')->orderBy('id');
+        return $this->accounts()->with(['roles', 'userTypes'])->orderBy('name')->orderBy('id');
     }
 
     /**
-     * Every account but the super-admin. An explicit condition rather than a global scope, which
+     * Every account but the super-admin, or only the ones the type admin manages. An explicit condition rather than a global scope, which
      * would also hide the account from the login.
      *
      * @return Builder<Model>
@@ -185,8 +245,9 @@ final class UserListQuery extends ListQueryBase
     private function accounts(): Builder
     {
         $modelClass = $this->userModelClass();
+        $query = $modelClass::query()->where('is_super_admin', false);
 
-        return $modelClass::query()->where('is_super_admin', false);
+        return $this->manager === null ? $query : $this->whereManagedBy($query, $this->manager);
     }
 
     /**

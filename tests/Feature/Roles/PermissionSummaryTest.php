@@ -77,8 +77,8 @@ class PermissionSummaryTest extends RoleTestCase
         $this->assertCount(2, $lines);
         $this->assertSame(str_getcsv($lines[0], escape: '')[0], __('Name'));
         $this->assertSame(
-            // The modules in order: roles, sessions, settings, users.
-            ['Ane viewer', 'ane@example.test', 'Viewer', __('roles.view'), '', '', __('users.view')],
+            // The modules in order: roles, sessions, settings, user_types, users.
+            ['Ane viewer', 'ane@example.test', 'Viewer', __('roles.view'), '', '', '', __('users.view')],
             str_getcsv($lines[1], escape: ''),
         );
     }

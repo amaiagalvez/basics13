@@ -22,7 +22,7 @@ class PermissionSummaryController extends Controller
     ): View|string {
         $search = $request->search();
         $filters = $request->filters() ?? [];
-        $users = $query->page($search, $filters);
+        $users = $query->visibleTo($request->user())->page($search, $filters);
         $modules = $query->modules();
 
         return $this->listView($request, 'basics13::users.permissions-summary', [
@@ -47,6 +47,7 @@ class PermissionSummaryController extends Controller
         $search = $request->search();
         $filters = $request->filters() ?? [];
         $modules = $query->modules();
+        $query->visibleTo($request->user());
 
         return response()->streamDownload(static function () use ($query, $transformer, $search, $filters, $modules): void {
             $output = fopen('php://output', 'wb');

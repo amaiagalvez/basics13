@@ -559,7 +559,8 @@ document.addEventListener('alpine:init', () => {
      * A chart drawn with ApexCharts. The host bundles the library and exposes it as
      * window.loadApexCharts (a lazy import), as it does with jQuery and select2, so pages without a
      * chart never download it. The series colour is the element's text colour, so it comes from a
-     * token class and follows dark mode; motion is off for users who ask for less of it. The
+     * token class and follows dark mode; a chart with several series reads one colour per series
+     * from the hidden spans the component renders for its `colors`; motion is off for users who ask for less of it. The
      * element carries the chart's conclusion in its aria-label, which is what assistive
      * technology reads instead of the drawing.
      */
@@ -586,7 +587,9 @@ document.addEventListener('alpine:init', () => {
                 },
                 series: options.series,
                 xaxis: { categories: options.labels ?? [] },
-                colors: [getComputedStyle(this.$el).color],
+                colors: options.colors > 0
+                    ? Array.from({ length: options.colors }, (_, index) => getComputedStyle(this.$refs[`color${index}`]).color)
+                    : [getComputedStyle(this.$el).color],
                 stroke: { curve: 'smooth', width: 2 },
                 fill: { type: 'gradient', gradient: { opacityFrom: 0.35, opacityTo: 0 } },
                 dataLabels: { enabled: false },

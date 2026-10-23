@@ -9,6 +9,8 @@
             'lang' => old('lang', ''),
             'notes' => old('notes', ''),
             'role_ids' => old('role_ids', []),
+            'user_type_ids' => old('user_type_ids', []),
+            'admin_type_ids' => old('admin_type_ids', []),
             'password' => '',
             'password_confirmation' => '',
             'context' => $editingUser ? old('_user_form') : 'create',
@@ -41,6 +43,8 @@
                 lang: '',
                 notes: '',
                 role_ids: [],
+                user_type_ids: [],
+                admin_type_ids: [],
                 password: '',
                 password_confirmation: '',
                 context: 'create',
@@ -90,6 +94,7 @@
                         <flux:table.column scope="col">{{ __('Email') }}</flux:table.column>
                         <flux:table.column scope="col">{{ __('Language') }}</flux:table.column>
                         <flux:table.column scope="col">{{ __('Roles') }}</flux:table.column>
+                        <flux:table.column scope="col">{{ __('User types') }}</flux:table.column>
                         <flux:table.column scope="col" align="end" sticky class="text-end">
                             <span class="sr-only">{{ __('Actions') }}</span>
                         </flux:table.column>
@@ -132,6 +137,23 @@
                                         </span>
                                     @endif
                                 </flux:table.cell>
+                                <flux:table.cell data-test="user-types-{{ $row['id'] }}">
+                                    @if ($row['types'] === [])
+                                        <span class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('No type') }}</span>
+                                    @else
+                                        <span class="flex flex-wrap justify-end gap-1 sm:justify-start">
+                                            @foreach ($row['types'] as $type)
+                                                <flux:badge size="sm" :color="$type['admin'] ? 'blue' : null">
+                                                    {{ $type['name'] }}
+                                                    @if ($type['admin'])
+                                                        <span class="sr-only">({{ __('Type admin') }})</span>
+                                                        <span aria-hidden="true">· {{ __('Type admin') }}</span>
+                                                    @endif
+                                                </flux:badge>
+                                            @endforeach
+                                        </span>
+                                    @endif
+                                </flux:table.cell>
                                 <flux:table.cell align="end" sticky
                                     class="bg-white dark:bg-zinc-900">
                                     <x-basics13::list.row-actions :actions="$row['actions']" prefix="user"
@@ -139,7 +161,7 @@
                                 </flux:table.cell>
                             </flux:table.row>
                         @empty
-                            <x-basics13::list.empty-state :narrowed="$list['narrowed']" :colspan="5" :message="$list['emptyMessage']">
+                            <x-basics13::list.empty-state :narrowed="$list['narrowed']" :colspan="6" :message="$list['emptyMessage']">
                                 @if ($list['create'] && ! $list['narrowed'])
                                     <flux:modal.trigger name="user-form">
                                         <flux:button size="sm" variant="primary" icon="plus"
