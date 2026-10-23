@@ -17,15 +17,18 @@ use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
+/**
+ * @template TModel of Model
+ */
 final class ExcelExportService implements FromCollection, ShouldAutoSize, WithHeadings, WithTitle
 {
     use Exportable;
 
     /**
-     * @param  Builder<Model>  $query
+     * @param  Builder<TModel>  $query
      * @param  array<string, array<string, mixed>>  $filters
      * @param  array<int, string>  $columns
-     * @param  array<int, array{key: string, label: string, transformer?: callable(Model): mixed}>  $columnDefinitions
+     * @param  array<int, array{key: string, label: string, transformer?: callable(TModel): mixed}>  $columnDefinitions
      */
     public function __construct(
         private readonly Builder $query,
@@ -39,9 +42,12 @@ final class ExcelExportService implements FromCollection, ShouldAutoSize, WithHe
     /**
      * Create a new export service from the current request.
      *
-     * @param  Builder<Model>  $query
+     * @template TExportModel of Model
+     *
+     * @param  Builder<TExportModel>  $query
      * @param  array<int, string>  $columns
-     * @param  array<int, array{key: string, label: string, transformer?: callable(Model): mixed}>  $columnDefinitions
+     * @param  array<int, array{key: string, label: string, transformer?: callable(TExportModel): mixed}>  $columnDefinitions
+     * @return self<TExportModel>
      */
     public static function fromRequest(
         Request $request,
@@ -70,7 +76,7 @@ final class ExcelExportService implements FromCollection, ShouldAutoSize, WithHe
     /**
      * Get the query with filters applied.
      *
-     * @return Builder<Model>
+     * @return Builder<TModel>
      */
     public function getFilteredQuery(): Builder
     {
@@ -86,7 +92,7 @@ final class ExcelExportService implements FromCollection, ShouldAutoSize, WithHe
     /**
      * Apply the simple search filter.
      *
-     * @param  Builder<Model>  $query
+     * @param  Builder<TModel>  $query
      */
     protected function applySearchFilter(Builder $query): void
     {
@@ -117,7 +123,7 @@ final class ExcelExportService implements FromCollection, ShouldAutoSize, WithHe
     /**
      * Apply advanced filters from the request.
      *
-     * @param  Builder<Model>  $query
+     * @param  Builder<TModel>  $query
      */
     protected function applyAdvancedFilters(Builder $query): void
     {
@@ -129,7 +135,7 @@ final class ExcelExportService implements FromCollection, ShouldAutoSize, WithHe
     /**
      * Apply a single filter to the query.
      *
-     * @param  Builder<Model>  $query
+     * @param  Builder<TModel>  $query
      * @param  array<string, mixed>  $filter
      */
     protected function applyFilter(Builder $query, string $fieldKey, array $filter): void
@@ -172,7 +178,7 @@ final class ExcelExportService implements FromCollection, ShouldAutoSize, WithHe
     /**
      * Apply equals filter (handles multiple select).
      *
-     * @param  Builder<Model>  $query
+     * @param  Builder<TModel>  $query
      */
     protected function applyEqualsFilter(Builder $query, string $column, mixed $value): void
     {
@@ -186,7 +192,7 @@ final class ExcelExportService implements FromCollection, ShouldAutoSize, WithHe
     /**
      * Apply not equals filter (handles multiple select).
      *
-     * @param  Builder<Model>  $query
+     * @param  Builder<TModel>  $query
      */
     protected function applyNotEqualsFilter(Builder $query, string $column, mixed $value): void
     {
@@ -200,7 +206,7 @@ final class ExcelExportService implements FromCollection, ShouldAutoSize, WithHe
     /**
      * Apply contains filter with wildcard escaping.
      *
-     * @param  Builder<Model>  $query
+     * @param  Builder<TModel>  $query
      */
     protected function applyContainsFilter(Builder $query, string $column, string $value): void
     {
@@ -211,7 +217,7 @@ final class ExcelExportService implements FromCollection, ShouldAutoSize, WithHe
     /**
      * Apply not contains filter with wildcard escaping.
      *
-     * @param  Builder<Model>  $query
+     * @param  Builder<TModel>  $query
      */
     protected function applyNotContainsFilter(Builder $query, string $column, string $value): void
     {
@@ -222,7 +228,7 @@ final class ExcelExportService implements FromCollection, ShouldAutoSize, WithHe
     /**
      * Apply scope filter (active/trash/archived).
      *
-     * @param  Builder<Model>  $query
+     * @param  Builder<TModel>  $query
      */
     protected function applyScopeFilter(Builder $query): void
     {
