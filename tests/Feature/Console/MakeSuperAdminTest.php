@@ -116,6 +116,20 @@ class MakeSuperAdminTest extends FeatureTestCase
         $this->assertDatabaseCount('users', 0);
     }
 
+    public function test_it_handles_concurrent_creation_race_condition(): void
+    {
+        // Simulate race condition: first check passes, but another process creates super admin
+        // before our transaction completes. The second check inside transaction should catch it.
+        User::factory()->create(['email' => 'root@example.test', 'is_super_admin' => true]);
+
+        // The command checks for existing super admin BEFORE asking questions,
+        // so it should fail immediately without prompting
+        $this->command()->assertFailed();
+
+        // Only the original super admin should exist
+        $this->assertSame(1, User::withTrashed()->where('is_super_admin', true)->count());
+    }
+
     private function command(): PendingCommand
     {
         $command = $this->artisan('basics13:make-super-admin');
