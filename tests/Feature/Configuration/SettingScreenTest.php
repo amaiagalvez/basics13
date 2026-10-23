@@ -27,6 +27,16 @@ class SettingScreenTest extends RoleTestCase
             ->assertSee('data-test="configuration-submit"', false);
     }
 
+    public function test_a_package_can_be_asked_for_by_name(): void
+    {
+        $this->actingAs(User::factory()->withPermissions(['settings.view'])->create());
+
+        $this->get(route('configuration.index', ['package' => 'basics13']))
+            ->assertOk()
+            ->assertViewHas('package', 'basics13')
+            ->assertSee('data-test="configuration-basics13-tab"', false);
+    }
+
     public function test_an_unknown_package_is_not_found(): void
     {
         $this->actingAs(User::factory()->withPermissions(['settings.manage'])->create());

@@ -38,6 +38,27 @@ class SessionLogListTest extends RoleTestCase
             ->assertViewHas('rows', static fn (array $rows): bool => array_column($rows, 'id') === [$lastDay->id, $inside->id]);
     }
 
+    public function test_the_single_date_operators_use_whole_days(): void
+    {
+        $this->actingAs(User::factory()->withPermissions(['sessions.view'])->create());
+        $before = SessionLog::factory()->create(['created_at' => Carbon::parse('2026-10-04 23:59:59')]);
+        $startOfDay = SessionLog::factory()->create(['created_at' => Carbon::parse('2026-10-05 00:00:00')]);
+        $endOfDay = SessionLog::factory()->create(['created_at' => Carbon::parse('2026-10-05 23:59:59')]);
+        $after = SessionLog::factory()->create(['created_at' => Carbon::parse('2026-10-06 00:00:00')]);
+
+        $ids = fn (string $operator, mixed $value): array => array_column(
+            $this->get(route('sessions.index', ['filters' => ['created_at' => ['operator' => $operator, 'value' => $value]]]))->viewData('rows'),
+            'id',
+        );
+
+        $this->assertSame([$endOfDay->id, $startOfDay->id], $ids('equals', '2026-10-05'));
+        $this->assertSame([$before->id], $ids('before', '2026-10-05'));
+        $this->assertSame([$after->id], $ids('after', '2026-10-05'));
+        // A value that is not a date filters nothing instead of failing.
+        $this->assertCount(4, $ids('equals', 'not-a-date'));
+        $this->assertCount(4, $ids('between', ['2026-10-05', '']));
+    }
+
     public function test_the_search_matches_the_typed_login_and_rows_come_newest_first(): void
     {
         $this->actingAs(User::factory()->withPermissions(['sessions.view'])->create());
