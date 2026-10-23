@@ -2,6 +2,8 @@
 
 namespace Basics13\Http\Requests;
 
+use Illuminate\Auth\Access\Response;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Database\Eloquent\Model;
 
 /**
@@ -13,9 +15,21 @@ use Illuminate\Database\Eloquent\Model;
  */
 abstract class RestoreRequest extends TrashRecordRequest
 {
-    public function authorize(): bool
+    /**
+     * The policy's response is handed back as it is, so a policy that answers "not found" for a
+     * record the user may not even know about is not turned into a 403.
+     */
+    public function authorize(): bool|Response
     {
-        return $this->user()?->can('restore', $this->record()) ?? false;
+        $user = $this->user();
+
+        if ($user === null) {
+            return false;
+        }
+
+        $response = Gate::forUser($user)->inspect('restore', $this->record());
+
+        return $response->allowed() ?: $response;
     }
 
     /**

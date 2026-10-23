@@ -3,6 +3,7 @@
 namespace Basics13\Concerns;
 
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Session;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 trait TracksAuditColumns
@@ -10,18 +11,18 @@ trait TracksAuditColumns
     public static function bootTracksAuditColumns(): void
     {
         static::creating(static function (self $model): void {
-            $model->stampAuditColumn('created_by');
-            $model->stampAuditColumn('updated_by');
+            $model->stampCreatedBy();
+            $model->stampUpdatedBy();
         });
 
         static::updating(static function (self $model): void {
-            $model->stampAuditColumn('updated_by');
+            $model->stampUpdatedBy();
         });
 
         if (in_array(SoftDeletes::class, class_uses_recursive(static::class), true)) {
             static::registerModelEvent('trashed', static function (self $model): void {
-                $model->stampAuditColumn('deleted_by');
-                $model->stampAuditColumn('updated_by');
+                $model->stampDeletedBy();
+                $model->stampUpdatedBy();
 
                 $model->writeStampedAuditColumns();
             });
@@ -32,10 +33,24 @@ trait TracksAuditColumns
         }
     }
 
-    protected function stampAuditColumn(string $column): void
+    protected function stampCreatedBy(): void
     {
-        if (($actor = $this->auditActorId()) !== null) {
-            $this->setAttribute($column, $actor);
+        if (($actor = $this->creatorActorId()) !== null) {
+            $this->setAttribute('created_by', $actor);
+        }
+    }
+
+    protected function stampUpdatedBy(): void
+    {
+        if (($actor = $this->updaterActorId()) !== null) {
+            $this->setAttribute('updated_by', $actor);
+        }
+    }
+
+    protected function stampDeletedBy(): void
+    {
+        if (($actor = $this->updaterActorId()) !== null) {
+            $this->setAttribute('deleted_by', $actor);
         }
     }
 
@@ -65,9 +80,22 @@ trait TracksAuditColumns
         $this->syncOriginalAttributes(array_keys($audit));
     }
 
-    protected function auditActorId(): ?int
+    /**
+     * Get the actor ID for created_by: during impersonation, this is the impersonated user (Auth::id()).
+     */
+    protected function creatorActorId(): ?int
     {
         $actor = Auth::id();
+
+        return $actor === null ? null : (int) $actor;
+    }
+
+    /**
+     * Get the actor ID for updated_by/deleted_by: during impersonation, this is the original superadmin (session('impersonator_id')).
+     */
+    protected function updaterActorId(): ?int
+    {
+        $actor = Session::get('impersonator_id') ?? Auth::id();
 
         return $actor === null ? null : (int) $actor;
     }

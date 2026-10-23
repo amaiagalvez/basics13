@@ -93,4 +93,14 @@ class UserPolicy
         return ! (bool) $record->getAttribute('is_super_admin')
             || (int) $record->getKey() === (int) $user->getAuthIdentifier();
     }
+
+    /**
+     * Determine whether the user can impersonate the model.
+     */
+    public function impersonate(User $user, Model $record): bool
+    {
+        return $this->isSuperAdmin($user)
+            && ! (bool) $record->getAttribute('is_super_admin')
+            && (int) $record->getKey() !== (int) $user->getAuthIdentifier();
+    }
 }

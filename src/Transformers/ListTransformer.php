@@ -315,7 +315,7 @@ abstract class ListTransformer
     /**
      * Key of the record as the data-test attributes spell it.
      */
-    private function key(Model $record): string
+    protected function key(Model $record): string
     {
         $key = $record->getKey();
 

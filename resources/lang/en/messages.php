@@ -95,4 +95,13 @@ return [
     'operator_less_than_or_equal' => 'less than or equal',
 
     'own_account_only' => 'Only the account holder can change the email and the password.',
+
+    // Impersonation
+    'impersonation_started' => 'Now impersonating :name.',
+    'impersonation_ended' => 'Impersonation ended. Back to your account.',
+    'no_active_impersonation' => 'No active impersonation to leave.',
+    'impersonate_confirm_title' => 'Impersonate :name?',
+    'impersonate_confirm_text' => 'You will be logged in as :name with their permissions. Your original session will be saved so you can return.',
+    'leave_impersonation' => 'Leave impersonation',
+    'impersonating_as' => 'impersonating',
 ];

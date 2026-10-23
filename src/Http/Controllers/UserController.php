@@ -5,6 +5,7 @@ namespace Basics13\Http\Controllers;
 use Illuminate\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Http\RedirectResponse;
 use Basics13\Http\Requests\UserRequest;
 use Illuminate\Database\Eloquent\Model;
@@ -13,6 +14,7 @@ use Basics13\Concerns\ResolvesUserModel;
 use Basics13\Queries\Users\UserListQuery;
 use Basics13\Http\Requests\UserListRequest;
 use Basics13\Transformers\UserListTransformer;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Basics13\Queries\Users\UserSelectOptionsQuery;
 use Basics13\Http\Requests\UserSelectOptionsRequest;
 use Basics13\Support\Database\UniqueConstraintViolation;
@@ -132,5 +134,39 @@ class UserController extends Controller
         }
 
         return $attributes;
+    }
+
+    /**
+     * Start impersonating the given user.
+     *
+     * @param  Model&Authenticatable  $user
+     */
+    public function impersonate(Model $user): RedirectResponse
+    {
+        $this->authorize('impersonate', $user);
+
+        $originalId = Auth::id();
+        Auth::login($user);
+        session(['impersonator_id' => $originalId]);
+
+        return redirect()->route('dashboard')->with('status', __('basics13::messages.impersonation_started', ['name' => $user->getAttribute('name')]));
+    }
+
+    /**
+     * Leave the current impersonation and return to the original user.
+     */
+    public function leaveImpersonation(): RedirectResponse
+    {
+        if (! session()->has('impersonator_id')) {
+            return redirect()->route('dashboard')->with('error', __('basics13::messages.no_active_impersonation'));
+        }
+
+        $originalId = session('impersonator_id');
+        /** @var Authenticatable $originalUser */
+        $originalUser = $this->userModelClass()::findOrFail($originalId);
+        session()->forget('impersonator_id');
+        Auth::login($originalUser);
+
+        return redirect()->route('users.index')->with('status', __('basics13::messages.impersonation_ended'));
     }
 }

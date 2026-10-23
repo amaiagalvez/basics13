@@ -3,8 +3,10 @@
 namespace Basics13\Transformers;
 
 use Basics13\Enums\Language;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
  * @extends ListTransformer<Model>
@@ -54,7 +56,7 @@ class UserListTransformer extends ListTransformer
     {
         return [
             ...$record->only(['id', 'name', 'email', 'lang', 'notes']),
-            'own' => (int) $record->getKey() === (int) auth()->id(),
+            'own' => (int) $record->getKey() === (int) Auth::id(),
             'role_ids' => $this->roleIds($record),
         ];
     }
@@ -84,6 +86,67 @@ class UserListTransformer extends ListTransformer
         $lang = $record->getAttribute('lang');
 
         return is_string($lang) ? (Language::tryFrom($lang)?->nativeName() ?? '') : '';
+    }
+
+    /**
+     * Impersonate action for superadmins on non-superadmin users (not themselves).
+     *
+     * @return array<string, mixed>
+     */
+    protected function impersonateAction(Model $record): array
+    {
+        return [
+            'type' => 'confirm-modal',
+            'label' => __('actions.impersonate'),
+            'icon' => 'user',
+            'test' => $this->resourceKey().'-impersonate-'.$this->key($record),
+            'danger' => false,
+            'action' => route('users.impersonate', $record),
+            'method' => 'POST',
+            'confirmTitle' => __('basics13::messages.impersonate_confirm_title', ['name' => $this->recordName($record)]),
+            'confirmText' => __('basics13::messages.impersonate_confirm_text', ['name' => $this->recordName($record)]),
+            'confirmLabel' => __('actions.impersonate'),
+        ];
+    }
+
+    /**
+     * Active list view: rows with edit, delete/archive, and impersonate actions.
+     *
+     * @param  LengthAwarePaginator<int, Model>  $records
+     * @param  array{active: int, archived: int, trashed: int}|null  $counts
+     * @return array<string, mixed>
+     */
+    public function active(LengthAwarePaginator $records, string $search, ?array $counts = null): array
+    {
+        return [
+            ...$this->envelope('active', $search, $counts),
+            'rows' => collect($records->items())->map(function (Model $record): array {
+                $extra = $this->integrationRow($record);
+                $actions = [
+                    $this->editAction($record),
+                    $this->getDeleteBlockCondition($record)
+                        ? $this->archiveAction($record, __('basics13::messages.archive_instead_of_delete'))
+                        : $this->deleteAction($record),
+                ];
+
+                // Add impersonate action for superadmins on non-superadmin users (not themselves)
+                $currentUser = Auth::user();
+                if ($currentUser !== null
+                    && method_exists($currentUser, 'isSuperAdmin')
+                    && $currentUser->isSuperAdmin()
+                    && ! (bool) $record->getAttribute('is_super_admin')
+                    && (int) $record->getKey() !== (int) $currentUser->getAuthIdentifier()
+                ) {
+                    $actions[] = $this->impersonateAction($record);
+                }
+
+                return [
+                    ...$this->columns($record, $extra),
+                    'extraDate' => $this->getExtraDate($record, 'active'),
+                    'actions' => $actions,
+                ];
+            })->all(),
+        ];
     }
 
     protected function resourceLabel(): string

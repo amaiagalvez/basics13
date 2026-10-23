@@ -16,7 +16,7 @@ return new class extends Migration
     private const MODULES = ['users', 'roles'];
 
     /** @var list<string> */
-    private const ACTIONS = ['view', 'create', 'edit', 'delete', 'archive', 'restore', 'force_delete', 'manage'];
+    private const ACTIONS = ['view', 'create', 'edit', 'delete', 'archive', 'restore', 'force_delete', 'impersonate', 'manage'];
 
     /**
      * @var array<string, array{name: string, is_system: bool, permissions: list<string>}>

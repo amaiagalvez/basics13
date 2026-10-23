@@ -96,4 +96,13 @@ return [
     'operator_less_than_or_equal' => 'inférieur ou égal à',
 
     'own_account_only' => 'Seul le titulaire du compte peut modifier l’adresse e-mail et le mot de passe.',
+
+    // Impersonnification
+    'impersonation_started' => 'Vous personnifiez maintenant :name.',
+    'impersonation_ended' => 'Personnification terminée. Retour à votre compte.',
+    'no_active_impersonation' => 'Aucune personnification active à quitter.',
+    'impersonate_confirm_title' => 'Personnifier :name ?',
+    'impersonate_confirm_text' => 'Vous serez connecté en tant que :name avec ses permissions. Votre session d\'origine sera conservée pour pouvoir revenir.',
+    'leave_impersonation' => 'Quitter la personnification',
+    'impersonating_as' => 'en train de personnifier',
 ];

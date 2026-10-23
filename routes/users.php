@@ -31,4 +31,8 @@ Route::middleware(['web', 'auth', 'verified'])->group(function (): void {
 
     Route::get('users/options', [UserController::class, 'selectOptions'])->name('users.options');
     Route::resource('users', UserController::class)->only(['index', 'store', 'update', 'destroy']);
+
+    // Impersonation routes
+    Route::post('users/{user}/impersonate', [UserController::class, 'impersonate'])->whereNumber('user')->name('users.impersonate');
+    Route::post('impersonation/leave', [UserController::class, 'leaveImpersonation'])->name('impersonation.leave');
 });

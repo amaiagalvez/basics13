@@ -96,4 +96,13 @@ return [
     'operator_less_than_or_equal' => 'hau bezain txikia edo txikiagoa',
 
     'own_account_only' => 'Kontuaren jabeak bakarrik alda ditzake helbide elektronikoa eta pasahitza.',
+
+    // Personifikazioa
+    'impersonation_started' => 'Orain :name personifikatzen.',
+    'impersonation_ended' => 'Personifikazioa amaitu da. Zure kontura itzuli zara.',
+    'no_active_impersonation' => 'Ez dago personifikazio aktiborik irten ahal izateko.',
+    'impersonate_confirm_title' => 'Personifikatu :name?',
+    'impersonate_confirm_text' => ':name bezala saioa hasiko duzu, haien baimenekin. Zure saioa originela gordeta egongo da itzultzeko.',
+    'leave_impersonation' => 'Utzi personifikazioa',
+    'impersonating_as' => 'personifikatzen',
 ];
