@@ -26,6 +26,17 @@ abstract class SearchableListRequest extends FormRequest
     }
 
     /**
+     * The list scope the request asks for: the active list unless the query string names another
+     * one. A crafted value that is not a string falls back to active instead of breaking the list.
+     */
+    final public function scope(): string
+    {
+        $scope = $this->query('scope');
+
+        return is_string($scope) ? $scope : 'active';
+    }
+
+    /**
      * Get the advanced search filters from the request.
      *
      * @return array<string, array{operator: string, value: mixed}>|null

@@ -215,4 +215,46 @@ class SearchableListRequestTest extends TestCase
 
         $this->assertNull($testRequest->filters());
     }
+
+    public function test_scope_returns_the_requested_scope(): void
+    {
+        $request = Request::create('/', 'GET', ['scope' => 'archived']);
+        $request->setLaravelSession(app('session.store'));
+        $request->setRouteResolver(fn () => null);
+
+        $testRequest = new class extends SearchableListRequest
+        {
+            public function authorize(): bool
+            {
+                return true;
+            }
+        };
+        $testRequest->setRouteResolver(fn () => null);
+        $testRequest->merge($request->all());
+
+        $this->assertSame('archived', $testRequest->scope());
+    }
+
+    public function test_scope_falls_back_to_active_when_missing_or_not_a_string(): void
+    {
+        $request = Request::create('/', 'GET', []);
+        $request->setLaravelSession(app('session.store'));
+        $request->setRouteResolver(fn () => null);
+
+        $testRequest = new class extends SearchableListRequest
+        {
+            public function authorize(): bool
+            {
+                return true;
+            }
+        };
+        $testRequest->setRouteResolver(fn () => null);
+        $testRequest->merge($request->all());
+
+        $this->assertSame('active', $testRequest->scope());
+
+        $testRequest->merge(['scope' => ['archived']]);
+
+        $this->assertSame('active', $testRequest->scope());
+    }
 }

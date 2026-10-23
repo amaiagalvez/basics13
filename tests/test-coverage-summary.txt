@@ -34,3 +34,33 @@ Tests: 606, Assertions: 12399, Skipped: 13.
 Classes: 83.33% (55/66)
 Methods: 90.21% (295/327)
 Lines:   93.43% (1848/1978)
+Executed at: 2026-10-23 11:32:50 CEST
+Time: 02:02.444, Memory: 113.00 MB
+Tests: 681, Assertions: 12622, Skipped: 13.
+Classes: 89.39% (59/66)
+Methods: 96.54% (307/318)
+Lines:   98.80% (1896/1919)
+Executed at: 2026-10-23 11:35:14 CEST
+Time: 02:01.202, Memory: 113.00 MB
+Tests: 681, Assertions: 12622, Skipped: 13.
+Classes: 89.39% (59/66)
+Methods: 96.54% (307/318)
+Lines:   98.80% (1896/1919)
+Executed at: 2026-10-23 11:39:33 CEST
+Time: 02:03.941, Memory: 113.00 MB
+Tests: 681, Assertions: 12622, Skipped: 13.
+Classes: 89.39% (59/66)
+Methods: 96.54% (307/318)
+Lines:   98.80% (1896/1919)
+Executed at: 2026-10-23 11:45:03 CEST
+Time: 01:58.782, Memory: 113.00 MB
+Tests: 683, Assertions: 12630, Skipped: 13.
+Classes: 89.39% (59/66)
+Methods: 96.54% (307/318)
+Lines:   98.80% (1896/1919)
+Executed at: 2026-10-23 12:31:44 CEST
+Time: 02:03.373, Memory: 115.00 MB
+Tests: 697, Assertions: 12651, Skipped: 14.
+Classes: 95.45% (63/66)
+Methods: 99.06% (315/318)
+Lines:   99.69% (1913/1919)

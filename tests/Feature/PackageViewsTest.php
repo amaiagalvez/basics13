@@ -3,6 +3,7 @@
 namespace Basics13\Tests\Feature;
 
 use Livewire\Livewire;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
@@ -150,5 +151,50 @@ final class PackageViewsTest extends FeatureTestCase
             __('basics13::messages.pagination_summary', ['first' => 0, 'last' => 0, 'total' => 0]),
             $html,
         );
+    }
+
+    public function test_the_excel_export_button_carries_the_search_filters_and_scope(): void
+    {
+        $this->get('/dashboard?search=ald&scope=archived&filters[name][operator]=contains&filters[name][value]=ald');
+
+        $html = Blade::render('<x-basics13::list.excel-export prefix="entity" route="/entities/export" />');
+
+        $this->assertStringContainsString('action="/entities/export"', $html);
+        $this->assertStringContainsString('name="search" value="ald"', $html);
+        $this->assertStringContainsString('name="scope" value="archived"', $html);
+        $this->assertStringContainsString('name="filters[name][operator]" value="contains"', $html);
+        $this->assertStringContainsString('name="filters[name][value]" value="ald"', $html);
+        $this->assertStringContainsString('data-test="entity-excel-export"', $html);
+        $this->assertStringContainsString(__('basics13::messages.export_to_excel'), $html);
+    }
+
+    public function test_the_excel_export_button_is_not_rendered_when_disabled(): void
+    {
+        $html = Blade::render('<x-basics13::list.excel-export prefix="entity" :enabled="false" />');
+
+        $this->assertSame('', trim($html));
+    }
+
+    public function test_the_excel_export_button_takes_the_scope_the_listing_gives_it(): void
+    {
+        $html = Blade::render('<x-basics13::list.excel-export prefix="project" route="/projects/export" scope="archived" />');
+
+        $this->assertStringContainsString('name="scope" value="archived"', $html);
+    }
+
+    public function test_the_excel_export_button_submits_filter_values_as_lists(): void
+    {
+        $this->app->instance('request', Request::create('/entities', 'GET', [
+            'filters' => [
+                'entity_type_ids' => ['operator' => 'equals', 'value' => ['1', '2']],
+                'name' => ['operator' => 'contains', 'value' => 'ald'],
+            ],
+        ]));
+
+        $html = Blade::render('<x-basics13::list.excel-export prefix="entity" route="/entities/export" />');
+
+        $this->assertStringContainsString('name="filters[entity_type_ids][value][0]" value="1"', $html);
+        $this->assertStringContainsString('name="filters[entity_type_ids][value][1]" value="2"', $html);
+        $this->assertStringContainsString('name="filters[name][value]" value="ald"', $html);
     }
 }

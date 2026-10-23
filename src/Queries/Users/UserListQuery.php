@@ -41,7 +41,6 @@ final class UserListQuery extends ListQueryBase
         return $this->paginate(
             $this->ordered()->where('active', true),
             $search,
-            /** @phpstan-ignore argument.type */
             $this->searchColumns(self::SCOPE_ACTIVE, ['name', 'email']),
             filters: $filters,
             scope: self::SCOPE_ACTIVE,
@@ -57,7 +56,6 @@ final class UserListQuery extends ListQueryBase
         return $this->paginate(
             $this->ordered()->where('active', false),
             $search,
-            /** @phpstan-ignore argument.type */
             $this->searchColumns(self::SCOPE_ARCHIVED, ['name', 'email', 'updated_at']),
             filters: $filters,
             scope: self::SCOPE_ARCHIVED,
@@ -76,7 +74,6 @@ final class UserListQuery extends ListQueryBase
             /** @phpstan-ignore method.notFound */
             $this->accounts()->onlyTrashed()->with('roles')->latest('deleted_at')->orderBy('id'),
             $search,
-            /** @phpstan-ignore argument.type */
             $this->searchColumns(self::SCOPE_TRASHED, ['name', 'email', 'deleted_at']),
             filters: $filters,
             scope: self::SCOPE_TRASHED,

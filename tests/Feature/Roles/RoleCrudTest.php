@@ -225,6 +225,44 @@ class RoleCrudTest extends RoleTestCase
         $this->assertSame(1, Role::query()->where('slug', 'editors')->count());
     }
 
+    public function test_store_converts_a_concurrent_duplicate_name_into_a_validation_error(): void
+    {
+        $this->actingAs(User::factory()->withPermissions(['roles.manage'])->create());
+        $this->createDuplicateAfterValidation('Editors', 'name');
+
+        $this->postJson(route('roles.store'), ['name' => 'Editors', 'slug' => 'editors'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('name');
+
+        $this->assertSame(1, Role::query()->where('name', 'Editors')->count());
+    }
+
+    public function test_update_converts_a_concurrent_duplicate_slug_into_a_validation_error(): void
+    {
+        $this->actingAs(User::factory()->withPermissions(['roles.manage'])->create());
+        $role = Role::factory()->create(['name' => 'Original', 'slug' => 'original']);
+        $this->createDuplicateAfterValidation('editors', 'slug');
+
+        $this->putJson(route('roles.update', $role), ['name' => 'Editors', 'slug' => 'editors'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('slug');
+
+        $this->assertSame(1, Role::query()->where('slug', 'editors')->count());
+    }
+
+    public function test_update_converts_a_concurrent_duplicate_name_into_a_validation_error(): void
+    {
+        $this->actingAs(User::factory()->withPermissions(['roles.manage'])->create());
+        $role = Role::factory()->create(['name' => 'Original', 'slug' => 'original']);
+        $this->createDuplicateAfterValidation('Editors', 'name');
+
+        $this->putJson(route('roles.update', $role), ['name' => 'Editors', 'slug' => 'editors'])
+            ->assertUnprocessable()
+            ->assertJsonValidationErrors('name');
+
+        $this->assertSame(1, Role::query()->where('name', 'Editors')->count());
+    }
+
     private function permission(string $slug): int
     {
         return (int) Permission::query()->where('slug', $slug)->value('id');
@@ -233,17 +271,21 @@ class RoleCrudTest extends RoleTestCase
     /**
      * Slips a competing role with the same slug in between the unique rule and the write.
      */
-    private function createDuplicateAfterValidation(string $slug): void
+    private function createDuplicateAfterValidation(string $value, string $field = 'slug'): void
     {
         $created = false;
 
-        DB::listen(static function (QueryExecuted $query) use ($slug, &$created): void {
-            if ($created || ! str_starts_with(strtolower(ltrim($query->sql)), 'select') || ! in_array($slug, $query->bindings, true)) {
+        DB::listen(static function (QueryExecuted $query) use ($value, $field, &$created): void {
+            if ($created || ! str_starts_with(strtolower(ltrim($query->sql)), 'select') || ! in_array($value, $query->bindings, true)) {
                 return;
             }
 
             $created = true;
-            Role::factory()->create(['name' => 'Competitor', 'slug' => $slug]);
+            if ($field === 'slug') {
+                Role::factory()->create(['name' => 'Competitor', 'slug' => $value]);
+            } else {
+                Role::factory()->create(['name' => $value, 'slug' => 'competitor-'.$value]);
+            }
         });
     }
 }

@@ -61,6 +61,61 @@ class MakeSuperAdminTest extends FeatureTestCase
         $this->assertDatabaseCount('users', 0);
     }
 
+    public function test_it_fails_when_the_name_is_empty(): void
+    {
+        $this->command()
+            ->expectsQuestion(__('Name'), '')
+            ->expectsQuestion(__('Email'), 'root@example.test')
+            ->expectsQuestion(__('Password'), 'a-strong-password')
+            ->assertFailed();
+
+        $this->assertDatabaseCount('users', 0);
+    }
+
+    public function test_it_fails_when_the_name_is_too_long(): void
+    {
+        $this->command()
+            ->expectsQuestion(__('Name'), str_repeat('a', 256))
+            ->expectsQuestion(__('Email'), 'root@example.test')
+            ->expectsQuestion(__('Password'), 'a-strong-password')
+            ->assertFailed();
+
+        $this->assertDatabaseCount('users', 0);
+    }
+
+    public function test_it_fails_when_the_email_is_invalid(): void
+    {
+        $this->command()
+            ->expectsQuestion(__('Name'), 'Root')
+            ->expectsQuestion(__('Email'), 'not-an-email')
+            ->expectsQuestion(__('Password'), 'a-strong-password')
+            ->assertFailed();
+
+        $this->assertDatabaseCount('users', 0);
+    }
+
+    public function test_it_fails_when_the_email_is_too_long(): void
+    {
+        $this->command()
+            ->expectsQuestion(__('Name'), 'Root')
+            ->expectsQuestion(__('Email'), str_repeat('a', 250).'@example.test')
+            ->expectsQuestion(__('Password'), 'a-strong-password')
+            ->assertFailed();
+
+        $this->assertDatabaseCount('users', 0);
+    }
+
+    public function test_it_fails_when_the_password_is_too_weak(): void
+    {
+        $this->command()
+            ->expectsQuestion(__('Name'), 'Root')
+            ->expectsQuestion(__('Email'), 'root@example.test')
+            ->expectsQuestion(__('Password'), 'short')
+            ->assertFailed();
+
+        $this->assertDatabaseCount('users', 0);
+    }
+
     private function command(): PendingCommand
     {
         $command = $this->artisan('basics13:make-super-admin');

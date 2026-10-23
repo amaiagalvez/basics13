@@ -28,8 +28,6 @@ use Illuminate\Pagination\LengthAwarePaginator;
  * }
  * @phpstan-type SearchFields array<string, SearchField>
  * @phpstan-type SearchFilters array<string, array{operator: string, value: mixed}>
- *
- * @method array<literal-string> searchColumns(string $scope, array<literal-string> $columns)
  */
 abstract class ListQueryBase
 {
@@ -60,12 +58,7 @@ abstract class ListQueryBase
         array $filters = [],
         string $scope = 'active',
     ): LengthAwarePaginator {
-        $this->whereMatches($query, $search, $searchColumns);
-
-        if ($filters !== []) {
-            $searchableFields = $this->searchableFields($scope);
-            $this->applyFilters($query, $filters, $searchableFields, $scope);
-        }
+        $this->filtered($query, $search, $searchColumns, $filters, $scope);
 
         $items = $query->paginate(static::PER_PAGE);
 
@@ -78,6 +71,32 @@ abstract class ListQueryBase
         }
 
         return $items;
+    }
+
+    /**
+     * Apply the simple search and the advanced filters to the query, leaving pagination to the
+     * caller. The list and its export share this step, so both see exactly the same rows.
+     *
+     * @param  Builder<TModel>  $query
+     * @param  non-empty-list<literal-string>  $searchColumns
+     * @param  SearchFilters  $filters
+     * @return Builder<TModel>
+     */
+    protected function filtered(
+        Builder $query,
+        string $search,
+        array $searchColumns,
+        array $filters = [],
+        string $scope = 'active',
+    ): Builder {
+        $this->whereMatches($query, $search, $searchColumns);
+
+        if ($filters !== []) {
+            $searchableFields = $this->searchableFields($scope);
+            $this->applyFilters($query, $filters, $searchableFields, $scope);
+        }
+
+        return $query;
     }
 
     /**
