@@ -9,16 +9,16 @@
 @props(['tabs', 'prefix', 'label' => null])
 
 <nav aria-label="{{ $label ?? __('List views') }}" data-test="{{ $prefix }}-tabs"
-    class="flex flex-wrap items-center gap-x-1">
+    class="flex flex-wrap items-center gap-2">
     @foreach ($tabs as $tab)
         <a href="{{ $tab['current'] ? request()->fullUrl() : $tab['url'] }}" wire:navigate
             data-test="{{ $tab['test'] }}"
             @if ($tab['current']) aria-current="page" @endif
-            class="inline-flex h-10 items-center gap-2 rounded-t-md border-b-2 px-3 text-sm font-medium transition-colors {{ $tab['current'] ? 'border-brand-600 text-zinc-900 dark:border-brand-400 dark:text-white' : 'border-transparent text-zinc-600 hover:border-zinc-300 hover:text-zinc-900 dark:text-zinc-400 dark:hover:border-zinc-600 dark:hover:text-white' }}">
+            class="inline-flex h-11 items-center gap-2 rounded-full border px-4 text-sm font-medium transition-colors focus-visible:ring-2 focus-visible:ring-brand-600 focus-visible:ring-offset-2 focus-visible:outline-none sm:h-9 {{ $tab['current'] ? 'border-transparent bg-brand-700 text-white dark:bg-brand-400 dark:text-zinc-950' : 'border-zinc-200 bg-white text-zinc-700 hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-900 dark:border-zinc-700 dark:bg-zinc-900 dark:text-zinc-300 dark:hover:border-zinc-600 dark:hover:bg-zinc-800 dark:hover:text-white' }}">
             <span>{{ $tab['label'] }}</span>
             @if ($tab['count'] !== null)
                 <span
-                    class="rounded-full bg-zinc-200 px-1.5 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-700 dark:text-zinc-200">{{ $tab['count'] }}</span>
+                    class="text-xs font-medium tabular-nums {{ $tab['current'] ? 'text-white/80 dark:text-zinc-950/75' : 'text-zinc-600 dark:text-zinc-400' }}">{{ $tab['count'] }}</span>
             @endif
         </a>
     @endforeach

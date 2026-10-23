@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\ViewErrorBag;
 use Illuminate\Support\Facades\Blade;
 use Basics13\Livewire\AdvancedSearchModal;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -34,48 +35,90 @@ final class PackageViewsTest extends FeatureTestCase
         $this->assertStringContainsString('testClick()', $html);
     }
 
-    public function test_list_header_renders_create_and_advanced_search_actions_together(): void
+    public function test_list_header_renders_its_actions_and_the_state_tabs(): void
     {
         $html = Blade::render(
             <<<'BLADE'
-            <x-basics13::list.page-header
-                :list="$list"
-                prefix="entity"
-                :searchableFields="$searchableFields"
-            >
+            <x-basics13::list.page-header :list="$list" prefix="entity">
                 <x-slot:actions>
                     <button type="button">Create resource</button>
                 </x-slot:actions>
             </x-basics13::list.page-header>
             BLADE,
+            ['list' => $this->listPayload()],
+        );
+
+        $this->assertStringContainsString('Create resource', $html);
+        $this->assertStringContainsString('data-test="entity-active"', $html);
+        $this->assertStringNotContainsString('data-test="entity-advanced-search"', $html);
+    }
+
+    public function test_list_toolbar_renders_the_search_the_advanced_search_and_the_active_filters(): void
+    {
+        // Flux inputs read the shared error bag a request would provide.
+        View::share('errors', new ViewErrorBag);
+
+        $html = Blade::render(
+            <<<'BLADE'
+            <x-basics13::list.search :search="$search" prefix="entity" :searchableFields="$searchableFields" :filters="$filters" />
+            BLADE,
             [
-                'list' => [
-                    'resource' => 'Entities',
-                    'breadcrumbs' => [
-                        ['label' => 'Entities', 'url' => '/entities'],
-                    ],
-                    'tabs' => [
-                        [
-                            'current' => true,
-                            'url' => '/entities',
-                            'test' => 'entity-active',
-                            'label' => 'Active',
-                            'count' => 1,
-                        ],
-                    ],
-                ],
+                'search' => ['action' => '/entities', 'placeholder' => 'Search', 'value' => ''],
                 'searchableFields' => [
-                    'name' => [
-                        'label' => 'Name',
-                        'type' => 'text',
-                        'visible' => true,
-                    ],
+                    'name' => ['label' => 'Name', 'type' => 'text', 'visible' => true],
+                    'notes' => ['label' => 'Notes', 'type' => 'text', 'visible' => true],
+                ],
+                'filters' => [
+                    'name' => ['operator' => 'contains', 'value' => '001'],
+                    'notes' => ['operator' => 'starts_with', 'value' => 'Draft'],
                 ],
             ],
         );
 
-        $this->assertStringContainsString('Create resource', $html);
+        $this->assertStringContainsString('data-test="entity-search"', $html);
         $this->assertStringContainsString('data-test="entity-advanced-search"', $html);
+        $this->assertMatchesRegularExpression('/data-test="entity-advanced-search-count">\s*2\s*</', $html);
+        $this->assertStringContainsString('data-test="entity-filter-badges"', $html);
+        // The default operator goes without saying; any other one is spelled out.
+        $this->assertStringNotContainsString(__('basics13::messages.operator_contains'), $html);
+        $this->assertStringContainsString(__('basics13::messages.operator_starts_with'), $html);
+    }
+
+    public function test_list_toolbar_without_filterable_fields_renders_only_the_search(): void
+    {
+        // Flux inputs read the shared error bag a request would provide.
+        View::share('errors', new ViewErrorBag);
+
+        $html = Blade::render(
+            '<x-basics13::list.search :search="$search" prefix="entity" />',
+            ['search' => ['action' => '/entities', 'placeholder' => 'Search', 'value' => '']],
+        );
+
+        $this->assertStringContainsString('data-test="entity-search"', $html);
+        $this->assertStringNotContainsString('data-test="entity-advanced-search"', $html);
+        $this->assertStringNotContainsString('data-test="entity-filter-badges"', $html);
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function listPayload(): array
+    {
+        return [
+            'resource' => 'Entities',
+            'breadcrumbs' => [
+                ['label' => 'Entities', 'url' => '/entities'],
+            ],
+            'tabs' => [
+                [
+                    'current' => true,
+                    'url' => '/entities',
+                    'test' => 'entity-active',
+                    'label' => 'Active',
+                    'count' => 1,
+                ],
+            ],
+        ];
     }
 
     public function test_advanced_search_resolves_scope_dependent_field_callbacks_before_livewire_persistence(): void

@@ -1,11 +1,15 @@
+{{--
+    Secondary action of a resource list: downloads the rows on screen (scope, search and advanced
+    filters) as an Excel file. It goes before the primary action, which stays on the far right.
+--}}
 @props([
     'prefix',
     'route' => null,
     'scope' => null,
     'label' => null,
     'icon' => 'arrow-down-tray',
-    'variant' => 'outline',
-    'size' => 'sm',
+    'variant' => 'ghost',
+    'size' => 'base',
     'enabled' => true,
 ])
 
@@ -44,7 +48,6 @@
             :size="$size"
             :icon="$icon"
             :data-test="$prefix.'-excel-export'"
-            wire:loading.attr="disabled"
             class="whitespace-nowrap"
         >
             {{ $label }}

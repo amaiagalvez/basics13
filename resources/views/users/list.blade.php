@@ -67,7 +67,7 @@
         @elseif ($list['create'] && request()->boolean('create'))
             x-init="createUser(); $nextTick(() => $dispatch('modal-show', { name: 'user-form' }))" @endif
         class="flex flex-col gap-y-2 sm:gap-y-3">
-        <x-basics13::list.page-header :list="$list" prefix="user" :description="__('People who can sign in to the app.')" :scope="$scope" :searchableFields="$searchableFields" :filters="$filters">
+        <x-basics13::list.page-header :list="$list" prefix="user" :description="__('People who can sign in to the app.')">
             <x-slot:actions>
                 @if ($list['create'])
                     <x-basics13::list.create-action prefix="user" :label="__('New user')"
@@ -80,9 +80,11 @@
 
         @fragment('list-results')
             <x-basics13::list.searchable-results :search="$list['search']" :total="$users->total()" :scope="$scope" :filters="$filters">
-                <x-basics13::list.search :search="$list['search']" prefix="user" />
-
                 <x-basics13::list.table prefix="user" :paginator="$users">
+                    <x-slot:toolbar>
+                        <x-basics13::list.search :search="$list['search']" prefix="user" :scope="$scope" :searchableFields="$searchableFields" :filters="$filters" />
+                    </x-slot:toolbar>
+
                     <flux:table.columns>
                         <flux:table.column scope="col">{{ __('Name') }}</flux:table.column>
                         <flux:table.column scope="col">{{ __('Email') }}</flux:table.column>

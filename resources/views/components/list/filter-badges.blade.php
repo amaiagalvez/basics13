@@ -10,9 +10,11 @@
 
 <div class="flex flex-wrap items-center gap-2" data-test="{{ $prefix }}-filter-badges">
     @foreach ($filters as $filter)
-        <flux:badge variant="outline" class="gap-1">
+        <flux:badge variant="pill" class="gap-1">
             <span class="font-medium">{{ $filter['label'] }}:</span>
-            <span>{{ $filter['operator'] }}</span>
+            @if ($filter['operator'] !== '')
+                <span>{{ $filter['operator'] }}</span>
+            @endif
             @if ($filter['value'] !== '')
                 <span>{{ $filter['value'] }}</span>
             @endif

@@ -74,7 +74,7 @@
         @elseif ($list['create'] && request()->boolean('create'))
             x-init="createRole(); $nextTick(() => $dispatch('modal-show', { name: 'role-form' }))" @endif
         class="flex flex-col gap-y-2 sm:gap-y-3">
-        <x-basics13::list.page-header :list="$list" prefix="role" :description="__('Sets of permissions given to user accounts.')" :scope="$scope">
+        <x-basics13::list.page-header :list="$list" prefix="role" :description="__('Sets of permissions given to user accounts.')">
             <x-slot:actions>
                 @if ($list['create'])
                     @can('create', \Basics13\Models\Role::class)
@@ -88,9 +88,11 @@
 
         @fragment('list-results')
             <x-basics13::list.searchable-results :search="$list['search']" :total="$roles->total()" :scope="$scope">
-                <x-basics13::list.search :search="$list['search']" prefix="role" />
-
                 <x-basics13::list.table prefix="role" :paginator="$roles">
+                    <x-slot:toolbar>
+                        <x-basics13::list.search :search="$list['search']" prefix="role" :scope="$scope" />
+                    </x-slot:toolbar>
+
                     <flux:table.columns>
                         <flux:table.column scope="col">{{ __('Name') }}</flux:table.column>
                         <flux:table.column scope="col">{{ __('Slug') }}</flux:table.column>

@@ -69,7 +69,7 @@ abstract class ListTransformer
     final protected function tabs(string $state, ?array $counts): array
     {
         return [
-            $this->tab($this->resourceLabel(), route($this->routes()['active']), 'active', 'active', $state, $counts),
+            $this->tab(__('basics13::messages.active_tab'), route($this->routes()['active']), 'active', 'active', $state, $counts),
             $this->tab(__('basics13::messages.archived_label'), route($this->routes()['archived']), 'archived', 'archived', $state, $counts),
             $this->tab(__('basics13::messages.trash_label'), route($this->routes()['trash']), 'trash', 'trashed', $state, $counts),
         ];

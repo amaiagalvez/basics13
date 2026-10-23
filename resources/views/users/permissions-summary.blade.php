@@ -17,9 +17,8 @@
 
 <x-layouts::app :title="$summary['resource']">
     <div class="flex flex-col gap-y-2 sm:gap-y-3">
-        <x-basics13::list.page-header :list="$summary" prefix="permission-summary" scope="active"
-            :description="__('What each account can do through its active roles.')"
-            :searchableFields="$searchableFields" :filters="$filters">
+        <x-basics13::list.page-header :list="$summary" prefix="permission-summary"
+            :description="__('What each account can do through its active roles.')">
             <x-slot:actions>
                 {{-- The export carries the search and the filters, so it holds the rows on screen. --}}
                 <flux:button variant="primary" icon="arrow-down-tray" :href="$exportUrl"
@@ -31,9 +30,11 @@
 
         @fragment('list-results')
             <x-basics13::list.searchable-results :search="$summary['search']" :total="$users->total()" :filters="$filters">
-                <x-basics13::list.search :search="$summary['search']" prefix="permission-summary" />
-
                 <x-basics13::list.table prefix="permission-summary" :paginator="$users">
+                    <x-slot:toolbar>
+                        <x-basics13::list.search :search="$summary['search']" prefix="permission-summary" scope="active" :searchableFields="$searchableFields" :filters="$filters" />
+                    </x-slot:toolbar>
+
                     <flux:table.columns>
                         <flux:table.column scope="col">{{ __('Name') }}</flux:table.column>
                         <flux:table.column scope="col">{{ __('Assigned roles') }}</flux:table.column>
