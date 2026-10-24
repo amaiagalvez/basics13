@@ -3,6 +3,7 @@
 namespace Basics13\Tests\Feature\Transformers;
 
 use Basics13\Models\User;
+use Illuminate\Database\Eloquent\Model;
 use Basics13\Tests\Feature\FeatureTestCase;
 use Basics13\Transformers\UserListTransformer;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -18,6 +19,7 @@ class UserListTransformerTest extends FeatureTestCase
         $target = User::factory()->create(['name' => 'Target', 'email' => 'target@example.test']);
 
         $transformer = new UserListTransformer;
+        /** @var LengthAwarePaginator<int, Model> $paginator */
         $paginator = new LengthAwarePaginator([$target], 1, 15);
 
         $list = $transformer->active($paginator, '');
@@ -37,6 +39,7 @@ class UserListTransformerTest extends FeatureTestCase
         $trashedUser = User::factory()->trashed()->create();
 
         $transformer = new UserListTransformer;
+        /** @var LengthAwarePaginator<int, Model> $paginator */
         $paginator = new LengthAwarePaginator([$target], 1, 15);
 
         $list = $transformer->active($paginator, '');
@@ -57,6 +60,7 @@ class UserListTransformerTest extends FeatureTestCase
         $target = User::factory()->create(['name' => 'Target User', 'is_super_admin' => false]);
 
         $transformer = new UserListTransformer;
+        /** @var LengthAwarePaginator<int, Model> $paginator */
         $paginator = new LengthAwarePaginator([$target], 1, 15);
 
         $list = $transformer->active($paginator, '');
@@ -74,6 +78,7 @@ class UserListTransformerTest extends FeatureTestCase
         $target = User::factory()->create(['name' => 'Target User', 'is_super_admin' => false]);
 
         $transformer = new UserListTransformer;
+        /** @var LengthAwarePaginator<int, Model> $paginator */
         $paginator = new LengthAwarePaginator([$target], 1, 15);
 
         $list = $transformer->active($paginator, '');
@@ -88,6 +93,7 @@ class UserListTransformerTest extends FeatureTestCase
         $this->actingAs($superAdmin);
 
         $transformer = new UserListTransformer;
+        /** @var LengthAwarePaginator<int, Model> $paginator */
         $paginator = new LengthAwarePaginator([$superAdmin], 1, 15);
 
         $list = $transformer->active($paginator, '');
@@ -104,6 +110,7 @@ class UserListTransformerTest extends FeatureTestCase
         $otherSuperAdmin = User::factory()->superAdmin()->create();
 
         $transformer = new UserListTransformer;
+        /** @var LengthAwarePaginator<int, Model> $paginator */
         $paginator = new LengthAwarePaginator([$otherSuperAdmin], 1, 15);
 
         $list = $transformer->active($paginator, '');
@@ -120,6 +127,7 @@ class UserListTransformerTest extends FeatureTestCase
         $target = User::factory()->create(['name' => 'Target User', 'active' => false]);
 
         $transformer = new UserListTransformer;
+        /** @var LengthAwarePaginator<int, Model> $paginator */
         $paginator = new LengthAwarePaginator([$target], 1, 15);
 
         $list = $transformer->archived($paginator, '');
@@ -136,6 +144,7 @@ class UserListTransformerTest extends FeatureTestCase
         $target = User::factory()->trashed()->create(['name' => 'Target User']);
 
         $transformer = new UserListTransformer;
+        /** @var LengthAwarePaginator<int, Model> $paginator */
         $paginator = new LengthAwarePaginator([$target], 1, 15);
 
         $list = $transformer->trash($paginator, '');

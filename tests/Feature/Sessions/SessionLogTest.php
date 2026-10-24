@@ -3,6 +3,7 @@
 namespace Basics13\Tests\Feature\Sessions;
 
 use LogicException;
+use Carbon\CarbonImmutable;
 use Basics13\Models\SessionLog;
 use Basics13\Tests\Feature\FeatureTestCase;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,7 +16,7 @@ class SessionLogTest extends FeatureTestCase
     {
         $log = SessionLog::factory()->login()->create();
 
-        $log->logged_out_at = now();
+        $log->logged_out_at = CarbonImmutable::now();
         $log->save();
 
         $this->assertNotNull($log->refresh()->logged_out_at);
@@ -37,12 +38,12 @@ class SessionLogTest extends FeatureTestCase
     public function test_stamping_the_logout_twice_is_refused_and_the_row_stays(): void
     {
         $log = SessionLog::factory()->login()->create();
-        $log->logged_out_at = now()->subMinute();
+        $log->logged_out_at = CarbonImmutable::now()->subMinute();
         $log->save();
         $firstLogout = $log->refresh()->logged_out_at;
 
         try {
-            $log->logged_out_at = now();
+            $log->logged_out_at = CarbonImmutable::now();
             $log->save();
             $this->fail('Stamping the logout twice must throw.');
         } catch (LogicException) {

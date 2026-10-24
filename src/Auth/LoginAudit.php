@@ -15,13 +15,13 @@ use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Logout;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Cache;
 use Basics13\Enums\LoginFailureReason;
 use Illuminate\Database\Eloquent\Model;
 use Basics13\Concerns\ResolvesUserModel;
 use Basics13\Mail\LoginFailureSpikeMail;
+use Illuminate\Contracts\Session\Session;
 use Illuminate\Support\Facades\RateLimiter;
 use Illuminate\Validation\ValidationException;
 

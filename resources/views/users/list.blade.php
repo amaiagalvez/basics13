@@ -83,10 +83,12 @@
         <x-basics13::list.flash prefix="user" />
 
         @fragment('list-results')
-            <x-basics13::list.searchable-results :search="$list['search']" :total="$users->total()" :scope="$scope" :filters="$filters">
+            <x-basics13::list.searchable-results :search="$list['search']" :total="$users->total()" :scope="$scope"
+                :filters="$filters">
                 <x-basics13::list.table prefix="user" :paginator="$users">
                     <x-slot:toolbar>
-                        <x-basics13::list.search :search="$list['search']" prefix="user" :scope="$scope" :searchableFields="$searchableFields" :filters="$filters" />
+                        <x-basics13::list.search :search="$list['search']" prefix="user" :scope="$scope"
+                            :searchableFields="$searchableFields" :filters="$filters" />
                     </x-slot:toolbar>
 
                     <flux:table.columns>
@@ -111,7 +113,8 @@
                                     </span>
                                 </flux:table.cell>
                                 <flux:table.cell class="max-w-[16rem]">
-                                    <span class="block max-w-full truncate text-zinc-600 dark:text-zinc-300"
+                                    <span
+                                        class="block max-w-full truncate text-zinc-600 dark:text-zinc-300"
                                         title="{{ $row['email'] }}"
                                         data-test="user-email-{{ $row['id'] }}">{{ $row['email'] }}</span>
                                 </flux:table.cell>
@@ -119,40 +122,37 @@
                                     {{ $row['lang'] }}
                                 </flux:table.cell>
                                 <flux:table.cell data-test="user-roles-{{ $row['id'] }}">
-                                    @if ($row['roles'] === [])
-                                        <span class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('No role') }}</span>
-                                    @else
-                                        <span class="flex flex-wrap justify-end gap-1 sm:justify-start">
-                                            @foreach ($row['roles'] as $role)
-                                                <span class="inline-flex items-center gap-1">
-                                                    <flux:badge size="sm">{{ $role['name'] }}</flux:badge>
-                                                    {{-- An archived role grants nothing, which the list says in words. --}}
-                                                    @unless ($role['active'])
-                                                        <span class="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
-                                                            {{ __('basics13::messages.archived_label') }}
-                                                        </span>
-                                                    @endunless
-                                                </span>
-                                            @endforeach
-                                        </span>
-                                    @endif
+                                    <span class="flex flex-wrap justify-end gap-1 sm:justify-start">
+                                        @foreach ($row['roles'] as $role)
+                                            <span class="inline-flex items-center gap-1">
+                                                <flux:badge size="sm">{{ $role['name'] }}
+                                                </flux:badge>
+                                                {{-- An archived role grants nothing, which the list says in words. --}}
+                                                @unless ($role['active'])
+                                                    <span
+                                                        class="shrink-0 rounded-full bg-zinc-100 px-2 py-0.5 text-xs font-medium text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300">
+                                                        {{ __('basics13::messages.archived_label') }}
+                                                    </span>
+                                                @endunless
+                                            </span>
+                                        @endforeach
+                                    </span>
                                 </flux:table.cell>
                                 <flux:table.cell data-test="user-types-{{ $row['id'] }}">
-                                    @if ($row['types'] === [])
-                                        <span class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('No type') }}</span>
-                                    @else
-                                        <span class="flex flex-wrap justify-end gap-1 sm:justify-start">
-                                            @foreach ($row['types'] as $type)
-                                                <flux:badge size="sm" :color="$type['admin'] ? 'blue' : null">
-                                                    {{ $type['name'] }}
-                                                    @if ($type['admin'])
-                                                        <span class="sr-only">({{ __('Type admin') }})</span>
-                                                        <span aria-hidden="true">· {{ __('Type admin') }}</span>
-                                                    @endif
-                                                </flux:badge>
-                                            @endforeach
-                                        </span>
-                                    @endif
+                                    <span class="flex flex-wrap justify-end gap-1 sm:justify-start">
+                                        @foreach ($row['types'] as $type)
+                                            <flux:badge size="sm"
+                                                :color="$type['admin'] ? 'blue' : null">
+                                                {{ $type['name'] }}
+                                                @if ($type['admin'])
+                                                    <span
+                                                        class="sr-only">({{ __('Type admin') }})</span>
+                                                    <span aria-hidden="true">·
+                                                        {{ __('Type admin') }}</span>
+                                                @endif
+                                            </flux:badge>
+                                        @endforeach
+                                    </span>
                                 </flux:table.cell>
                                 <flux:table.cell align="end" sticky
                                     class="bg-white dark:bg-zinc-900">
@@ -161,12 +161,12 @@
                                 </flux:table.cell>
                             </flux:table.row>
                         @empty
-                            <x-basics13::list.empty-state :narrowed="$list['narrowed']" :colspan="6" :message="$list['emptyMessage']">
-                                @if ($list['create'] && ! $list['narrowed'])
+                            <x-basics13::list.empty-state :narrowed="$list['narrowed']" :colspan="6"
+                                :message="$list['emptyMessage']">
+                                @if ($list['create'] && !$list['narrowed'])
                                     <flux:modal.trigger name="user-form">
                                         <flux:button size="sm" variant="primary" icon="plus"
-                                            x-on:click="createUser()"
-                                            data-test="user-empty-create">
+                                            x-on:click="createUser()" data-test="user-empty-create">
                                             {{ __('New user') }}
                                         </flux:button>
                                     </flux:modal.trigger>
@@ -179,8 +179,8 @@
         @endfragment
 
         @if ($list['create'])
-            <flux:modal name="user-form" aria-labelledby="user-form-heading"
-                flyout variant="floating" position="right"
+            <flux:modal name="user-form" aria-labelledby="user-form-heading" flyout
+                variant="floating" position="right"
                 x-on:close="window.clearForm($el.querySelector('form')); window.resetTrackedForms($el)"
                 x-on:cancel.prevent="window.requestTrackedModalClose($el)"
                 class="form-drawer max-w-none">
@@ -188,9 +188,7 @@
             </flux:modal>
         @endif
 
-        <livewire:basics13.advanced-search-modal
-            :fields="$searchableFields"
-            :filters="$filters"
+        <livewire:basics13.advanced-search-modal :fields="$searchableFields" :filters="$filters"
             :scope="$scope" />
 
         <x-basics13::list.confirm-modal prefix="user" />

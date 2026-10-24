@@ -6,6 +6,7 @@ use Basics13\Models\User;
 use Basics13\Tests\TestCase;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Database\Eloquent\Model;
 use Basics13\Support\Testing\PermissionsActor;
 use Basics13\Transformers\UserListTransformer;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -37,6 +38,7 @@ class UserListTransformerImpersonateTest extends TestCase
         $transformer = new UserListTransformer;
 
         $target = User::factory()->make(['id' => 2, 'name' => 'Target User', 'is_super_admin' => false, 'active' => true]);
+        /** @var LengthAwarePaginator<int, Model> $records */
         $records = new LengthAwarePaginator(
             new Collection([$target]),
             1,
@@ -60,6 +62,7 @@ class UserListTransformerImpersonateTest extends TestCase
         $transformer = new UserListTransformer;
 
         $target = User::factory()->make(['id' => 2, 'name' => 'Target User', 'is_super_admin' => false, 'active' => true]);
+        /** @var LengthAwarePaginator<int, Model> $records */
         $records = new LengthAwarePaginator(
             new Collection([$target]),
             1,
@@ -81,6 +84,7 @@ class UserListTransformerImpersonateTest extends TestCase
         $transformer = new UserListTransformer;
 
         $target = User::factory()->make(['id' => 1, 'name' => 'Super Admin', 'is_super_admin' => true, 'active' => true]);
+        /** @var LengthAwarePaginator<int, Model> $records */
         $records = new LengthAwarePaginator(
             new Collection([$target]),
             1,
@@ -102,6 +106,7 @@ class UserListTransformerImpersonateTest extends TestCase
         $transformer = new UserListTransformer;
 
         $target = User::factory()->make(['id' => 3, 'name' => 'Other Super Admin', 'is_super_admin' => true, 'active' => true]);
+        /** @var LengthAwarePaginator<int, Model> $records */
         $records = new LengthAwarePaginator(
             new Collection([$target]),
             1,
@@ -123,6 +128,7 @@ class UserListTransformerImpersonateTest extends TestCase
         $transformer = new UserListTransformer;
 
         $target = User::factory()->make(['id' => 2, 'name' => 'Target User', 'is_super_admin' => false, 'active' => false]);
+        /** @var LengthAwarePaginator<int, Model> $records */
         $records = new LengthAwarePaginator(
             new Collection([$target]),
             1,
@@ -144,6 +150,7 @@ class UserListTransformerImpersonateTest extends TestCase
         $transformer = new UserListTransformer;
 
         $target = User::factory()->make(['id' => 2, 'name' => 'Target User', 'is_super_admin' => false, 'deleted_at' => now()]);
+        /** @var LengthAwarePaginator<int, Model> $records */
         $records = new LengthAwarePaginator(
             new Collection([$target]),
             1,

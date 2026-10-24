@@ -32,7 +32,8 @@
             <x-basics13::list.searchable-results :search="$summary['search']" :total="$users->total()" :filters="$filters">
                 <x-basics13::list.table prefix="permission-summary" :paginator="$users">
                     <x-slot:toolbar>
-                        <x-basics13::list.search :search="$summary['search']" prefix="permission-summary" scope="active" :searchableFields="$searchableFields" :filters="$filters" />
+                        <x-basics13::list.search :search="$summary['search']" prefix="permission-summary"
+                            scope="active" :searchableFields="$searchableFields" :filters="$filters" />
                     </x-slot:toolbar>
 
                     <flux:table.columns>
@@ -44,38 +45,42 @@
                         {{-- The card layout of small screens drops the label of the last cell, which is
                              meant for row actions; this empty one takes that place so every module keeps
                              its label. --}}
-                        <flux:table.column scope="col"><span class="sr-only">{{ __('Actions') }}</span></flux:table.column>
+                        <flux:table.column scope="col"><span
+                                class="sr-only">{{ __('Actions') }}</span></flux:table.column>
                     </flux:table.columns>
 
                     <flux:table.rows>
                         @forelse ($rows as $row)
-                            <flux:table.row :key="$row['id']" data-test="permission-summary-row-{{ $row['id'] }}">
+                            <flux:table.row :key="$row['id']"
+                                data-test="permission-summary-row-{{ $row['id'] }}">
                                 <flux:table.cell class="max-w-[16rem]">
-                                    <span class="block truncate font-medium" title="{{ $row['name'] }}">{{ $row['name'] }}</span>
-                                    <span class="block truncate text-sm text-zinc-600 dark:text-zinc-400"
+                                    <span class="block truncate font-medium"
+                                        title="{{ $row['name'] }}">{{ $row['name'] }}</span>
+                                    <span
+                                        class="block truncate text-sm text-zinc-600 dark:text-zinc-400"
                                         title="{{ $row['email'] }}">{{ $row['email'] }}</span>
                                 </flux:table.cell>
-                                <flux:table.cell data-test="permission-summary-roles-{{ $row['id'] }}">
-                                    @if ($row['roles'] === [])
-                                        <span class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('No role') }}</span>
-                                    @else
-                                        <span class="flex flex-wrap justify-end gap-1 sm:justify-start">
-                                            @foreach ($row['roles'] as $role)
-                                                <flux:badge size="sm">{{ $role }}</flux:badge>
-                                            @endforeach
-                                        </span>
-                                    @endif
+                                <flux:table.cell
+                                    data-test="permission-summary-roles-{{ $row['id'] }}">
+                                    <span class="flex flex-wrap justify-end gap-1 sm:justify-start">
+                                        @foreach ($row['roles'] as $role)
+                                            <flux:badge size="sm">{{ $role }}
+                                            </flux:badge>
+                                        @endforeach
+                                    </span>
                                 </flux:table.cell>
                                 @foreach ($row['modules'] as $module => $access)
-                                    <flux:table.cell data-test="permission-summary-{{ $module }}-{{ $row['id'] }}">
+                                    <flux:table.cell
+                                        data-test="permission-summary-{{ $module }}-{{ $row['id'] }}">
                                         @if ($access['full'])
-                                            <flux:badge size="sm" color="green" icon="check-badge">{{ __('Full access') }}</flux:badge>
-                                        @elseif ($access['permissions'] === [])
-                                            <span class="text-sm text-zinc-500 dark:text-zinc-400">{{ __('No access') }}</span>
+                                            <flux:badge size="sm" color="green"
+                                                icon="check-badge">{{ __('Full access') }}</flux:badge>
                                         @else
-                                            <span class="flex flex-wrap justify-end gap-1 sm:justify-start">
+                                            <span
+                                                class="flex flex-wrap justify-end gap-1 sm:justify-start">
                                                 @foreach ($access['permissions'] as $permission)
-                                                    <flux:badge size="sm" color="zinc">{{ $permission }}</flux:badge>
+                                                    <flux:badge size="sm" color="zinc">
+                                                        {{ $permission }}</flux:badge>
                                                 @endforeach
                                             </span>
                                         @endif
@@ -85,13 +90,16 @@
                             </flux:table.row>
                         @empty
                             <x-basics13::list.empty-state :narrowed="$narrowed" :colspan="3 + count($modules)"
-                                :message="$narrowed ? __('basics13::messages.no_matching_records') : __('basics13::messages.no_records')" />
+                                :message="$narrowed
+                                    ? __('basics13::messages.no_matching_records')
+                                    : __('basics13::messages.no_records')" />
                         @endforelse
                     </flux:table.rows>
                 </x-basics13::list.table>
             </x-basics13::list.searchable-results>
         @endfragment
 
-        <livewire:basics13.advanced-search-modal :fields="$searchableFields" :filters="$filters" scope="active" />
+        <livewire:basics13.advanced-search-modal :fields="$searchableFields" :filters="$filters"
+            scope="active" />
     </div>
 </x-layouts::app>

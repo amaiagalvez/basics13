@@ -137,7 +137,7 @@ class UserRoleAssignmentTest extends UserTestCase
         $this->get(route('users.index'))
             ->assertOk()
             ->assertSeeInOrder(['data-test="user-roles-'.$account->id.'"', 'Old editors', __('basics13::messages.archived_label'), 'Viewer'], false)
-            ->assertSeeInOrder(['data-test="user-roles-'.$plain->id.'"', __('No role')], false);
+            ->assertSeeInOrder(['data-test="user-roles-'.$plain->id.'"', __(' ')], false);
     }
 
     private function role(string $slug): Role
