@@ -29,6 +29,20 @@ abstract class Controller
     }
 
     /**
+     * Back to the list the user came from, keeping its page, search and filters; any other
+     * previous URL falls back to the bare list.
+     */
+    protected function backToList(string $indexRoute): RedirectResponse
+    {
+        $previous = url()->previous();
+        $list = route($indexRoute);
+
+        return $previous === $list || str_starts_with($previous, $list.'?')
+            ? redirect()->to($previous)
+            : to_route($indexRoute);
+    }
+
+    /**
      * A record in the trash already uses the name the user is trying to create. The browser is sent
      * back to its list with the conflict modal open; a JSON caller gets a 409 it can render on the
      * name field. Each resource supplies its route and session key explicitly.
@@ -50,7 +64,7 @@ abstract class Controller
             ], 409);
         }
 
-        return to_route($indexRoute)
+        return $this->backToList($indexRoute)
             ->withInput()
             ->with($sessionKey, [
                 'id' => $trashedRecord->getKey(),

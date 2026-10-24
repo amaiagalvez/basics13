@@ -63,7 +63,7 @@ abstract class TrashController extends Controller
             return $this->restoreMissingResponse();
         }
 
-        return to_route($this->trashRoute())->with('status', $message);
+        return $this->backToList($this->trashRoute())->with('status', $message);
     }
 
     /**
@@ -81,7 +81,7 @@ abstract class TrashController extends Controller
 
     private function restoreMissingResponse(): RedirectResponse
     {
-        return to_route($this->trashRoute())
+        return $this->backToList($this->trashRoute())
             ->with('error', __('basics13::messages.not_in_trash'));
     }
 
@@ -101,11 +101,11 @@ abstract class TrashController extends Controller
         }
 
         if (! $deleted) {
-            return to_route($this->trashRoute())
+            return $this->backToList($this->trashRoute())
                 ->with('error', __('basics13::messages.cannot_force_delete_related'));
         }
 
-        return to_route($this->trashRoute())->with('status', __('basics13::messages.permanently_deleted'));
+        return $this->backToList($this->trashRoute())->with('status', __('basics13::messages.permanently_deleted'));
     }
 
     /**
@@ -153,7 +153,7 @@ abstract class TrashController extends Controller
 
     private function restoreConflictResponse(): RedirectResponse
     {
-        return to_route($this->trashRoute())
+        return $this->backToList($this->trashRoute())
             ->with('error', __('basics13::messages.cannot_restore_name_taken'));
     }
 

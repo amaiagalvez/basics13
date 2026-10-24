@@ -55,7 +55,7 @@ class RoleController extends Controller
             $this->failOnDuplicatedRole($exception);
         }
 
-        return to_route('roles.index')->with('status', __('basics13::messages.created'));
+        return $this->backToList('roles.index')->with('status', __('basics13::messages.created'));
     }
 
     public function update(RoleRequest $request, Role $role): RedirectResponse
@@ -69,7 +69,7 @@ class RoleController extends Controller
             $this->failOnDuplicatedRole($exception);
         }
 
-        return to_route('roles.index')->with('status', __('basics13::messages.updated'));
+        return $this->backToList('roles.index')->with('status', __('basics13::messages.updated'));
     }
 
     public function destroy(Role $role): RedirectResponse
@@ -81,11 +81,11 @@ class RoleController extends Controller
         $deleted = DB::transaction(static fn (): bool => $role->delete() !== false);
 
         if (! $deleted) {
-            return to_route('roles.index')
+            return $this->backToList('roles.index')
                 ->with('error', __('basics13::messages.cannot_delete_related'));
         }
 
-        return to_route('roles.index')->with('status', __('basics13::messages.moved_to_trash'));
+        return $this->backToList('roles.index')->with('status', __('basics13::messages.moved_to_trash'));
     }
 
     /**

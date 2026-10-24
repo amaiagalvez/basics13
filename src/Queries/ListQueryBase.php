@@ -60,7 +60,12 @@ abstract class ListQueryBase
     ): LengthAwarePaginator {
         $this->filtered($query, $search, $searchColumns, $filters, $scope);
 
-        $items = $query->paginate(static::PER_PAGE);
+        $items = (clone $query)->paginate(static::PER_PAGE);
+
+        // A page emptied by a delete, archive or restore shows the last page that still has rows.
+        if ($items->isEmpty() && $items->currentPage() > $items->lastPage()) {
+            $items = $query->paginate(static::PER_PAGE, page: $items->lastPage());
+        }
 
         if ($search !== '') {
             $items->appends(['search' => $search]);

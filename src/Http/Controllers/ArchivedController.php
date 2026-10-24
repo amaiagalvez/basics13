@@ -21,7 +21,7 @@ abstract class ArchivedController extends Controller
         $record->setAttribute('active', false);
         $record->save();
 
-        return to_route($this->activeRoute())->with('status', __('basics13::messages.archived'));
+        return $this->backToList($this->activeRoute())->with('status', __('basics13::messages.archived'));
     }
 
     final protected function activateRecord(Model $record): RedirectResponse
@@ -31,7 +31,7 @@ abstract class ArchivedController extends Controller
         $record->setAttribute('active', true);
         $record->save();
 
-        return to_route($this->archivedRoute())->with('status', __('basics13::messages.activated'));
+        return $this->backToList($this->archivedRoute())->with('status', __('basics13::messages.activated'));
     }
 
     /**

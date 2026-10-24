@@ -72,7 +72,7 @@ class UserController extends Controller
             UniqueConstraintViolation::rethrowAsValidationError($exception, 'email');
         }
 
-        return to_route('users.index')->with('status', __('basics13::messages.created'));
+        return $this->backToList('users.index')->with('status', __('basics13::messages.created'));
     }
 
     public function update(UserRequest $request, Model $user): RedirectResponse
@@ -87,7 +87,7 @@ class UserController extends Controller
             UniqueConstraintViolation::rethrowAsValidationError($exception, 'email');
         }
 
-        return to_route('users.index')->with('status', __('basics13::messages.updated'));
+        return $this->backToList('users.index')->with('status', __('basics13::messages.updated'));
     }
 
     public function destroy(Model $user): RedirectResponse
@@ -99,11 +99,11 @@ class UserController extends Controller
         $deleted = $user->delete() !== false;
 
         if (! $deleted) {
-            return to_route('users.index')
+            return $this->backToList('users.index')
                 ->with('error', __('basics13::messages.cannot_delete_related'));
         }
 
-        return to_route('users.index')->with('status', __('basics13::messages.moved_to_trash'));
+        return $this->backToList('users.index')->with('status', __('basics13::messages.moved_to_trash'));
     }
 
     /**

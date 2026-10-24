@@ -65,7 +65,7 @@ class UserTypeController extends Controller
             return response()->json($userType->only(['id', 'name_eu']), 201);
         }
 
-        return to_route('user-types.index')->with('status', __('basics13::messages.created'));
+        return $this->backToList('user-types.index')->with('status', __('basics13::messages.created'));
     }
 
     public function update(UserTypeRequest $request, UserType $userType): RedirectResponse
@@ -76,7 +76,7 @@ class UserTypeController extends Controller
             $this->failOnDuplicatedName($exception);
         }
 
-        return to_route('user-types.index')->with('status', __('basics13::messages.updated'));
+        return $this->backToList('user-types.index')->with('status', __('basics13::messages.updated'));
     }
 
     public function destroy(UserType $userType): RedirectResponse
@@ -88,11 +88,11 @@ class UserTypeController extends Controller
         $deleted = DB::transaction(static fn (): bool => $userType->delete() !== false);
 
         if (! $deleted) {
-            return to_route('user-types.index')
+            return $this->backToList('user-types.index')
                 ->with('error', __('basics13::messages.cannot_delete_related'));
         }
 
-        return to_route('user-types.index')->with('status', __('basics13::messages.moved_to_trash'));
+        return $this->backToList('user-types.index')->with('status', __('basics13::messages.moved_to_trash'));
     }
 
     /**
@@ -121,7 +121,7 @@ class UserTypeController extends Controller
             ], 409);
         }
 
-        return to_route('user-types.index')
+        return $this->backToList('user-types.index')
             ->withInput()
             ->with('deleted_user_type_conflict', $payload);
     }
