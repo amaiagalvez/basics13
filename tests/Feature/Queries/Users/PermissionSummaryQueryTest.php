@@ -36,7 +36,8 @@ class PermissionSummaryQueryTest extends FeatureTestCase
 
     public function test_page_with_search_filters_by_name_and_email(): void
     {
-        $this->actingAs(User::factory()->withPermissions(['roles.view'])->create());
+        // A fixed actor: a random name such as "Diane" would also match the search.
+        $this->actingAs(User::factory()->withPermissions(['roles.view'])->create(['name' => 'Actor', 'email' => 'actor@example.test']));
         User::factory()->create(['name' => 'Ane Martinez', 'email' => 'ane@example.test']);
         User::factory()->create(['name' => 'Jon Lopez', 'email' => 'jon@example.test']);
 
