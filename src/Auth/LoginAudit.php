@@ -11,6 +11,7 @@ use Laravel\Fortify\Fortify;
 use Basics13\Enums\DeviceType;
 use Basics13\Models\SessionLog;
 use Basics13\Enums\SessionEvent;
+use Basics13\Mail\ManagedMailer;
 use Illuminate\Auth\Events\Login;
 use Illuminate\Auth\Events\Failed;
 use Illuminate\Auth\Events\Logout;
@@ -309,7 +310,7 @@ class LoginAudit
         }
 
         try {
-            Mail::to($email)->send(new LoginFailureSpikeMail($count, $logins, $ips, self::ALERT_MINUTES));
+            Mail::mailer(ManagedMailer::prepare())->to($email)->send(new LoginFailureSpikeMail($count, $logins, $ips, self::ALERT_MINUTES));
         } catch (Throwable $exception) {
             report($exception);
         }

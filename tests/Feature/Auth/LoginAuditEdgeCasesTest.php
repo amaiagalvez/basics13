@@ -96,6 +96,7 @@ class LoginAuditEdgeCasesTest extends AuthFeatureTestCase
         Exceptions::fake();
         Setting::query()->where('package', 'basics13')->where('variable', 'alert_email')->update(['value' => 'security@example.com']);
         SessionLog::factory()->count(10)->create();
+        Mail::shouldReceive('mailer')->andReturnSelf();
         Mail::shouldReceive('to')->andThrow(new RuntimeException('Mail server down'));
 
         $this->post(route('login.store'), ['email' => 'spike@example.com', 'password' => 'wrong'])

@@ -86,7 +86,7 @@ class NavigationMenuTest extends RoleTestCase
     public function test_the_super_admin_sees_every_item(): void
     {
         $this->assertSame(
-            ['admin-dashboard', 'users', 'user-types', 'roles', 'permissions', 'permissions-summary', 'sessions', 'configuration'],
+            ['admin-dashboard', 'users', 'user-types', 'roles', 'permissions', 'permissions-summary', 'sessions', 'configuration', 'email-configurations', 'email-templates'],
             $this->visibleKeys(User::factory()->superAdmin()->create()),
         );
     }

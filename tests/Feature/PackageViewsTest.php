@@ -183,6 +183,26 @@ final class PackageViewsTest extends FeatureTestCase
         }
     }
 
+    public function test_row_actions_keep_two_as_buttons_and_group_three_or_more_in_a_menu(): void
+    {
+        $edit = ['type' => 'form-modal', 'label' => 'Edit', 'icon' => 'pencil-square', 'test' => 'item-edit-4', 'payload' => ['id' => 4]];
+        $trash = ['type' => 'confirm-modal', 'label' => 'Trash', 'icon' => 'trash', 'test' => 'item-delete-4'];
+        $sendTest = ['type' => 'modal', 'modal' => 'item-send-test', 'handler' => 'openSendTest', 'label' => 'Send test', 'icon' => 'paper-airplane', 'test' => 'item-send-test-4', 'payload' => ['action' => '/x']];
+        $render = static fn (array $actions): string => Blade::render(
+            '<x-basics13::list.row-actions prefix="item" edit-handler="editItem" :actions="$actions" />',
+            ['actions' => $actions],
+        );
+
+        $this->assertStringNotContainsString('data-test="item-more-4"', $render([$edit, $trash]));
+
+        $grouped = $render([$edit, $trash, $sendTest]);
+        $this->assertStringContainsString('data-test="item-more-4"', $grouped);
+        $this->assertStringContainsString('data-flux-menu-item', $grouped);
+        $this->assertStringContainsString("name: 'item-send-test'", $grouped);
+        $this->assertStringContainsString('openSendTest(JSON.parse($el.dataset.payload))', $grouped);
+        $this->assertStringContainsString('data-test="item-delete-4"', $grouped);
+    }
+
     public function test_package_table_keeps_the_pagination_summary_for_an_empty_list(): void
     {
         $html = Blade::render(

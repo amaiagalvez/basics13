@@ -10,6 +10,16 @@ parameters:
 			message: '#^Call to an undefined static method TModel of Illuminate\\Database\\Eloquent\\Model\:\:factory\(\)\.$#'
 			identifier: staticMethod.notFound
 			count: 1
+			path: database/factories/EmailConfigurationFactory.php
+		-
+			message: '#^Call to an undefined static method TModel of Illuminate\\Database\\Eloquent\\Model\:\:factory\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
+			path: database/factories/EmailTemplateFactory.php
+		-
+			message: '#^Call to an undefined static method TModel of Illuminate\\Database\\Eloquent\\Model\:\:factory\(\)\.$#'
+			identifier: staticMethod.notFound
+			count: 1
 			path: database/factories/UserFactory.php
 
 		-

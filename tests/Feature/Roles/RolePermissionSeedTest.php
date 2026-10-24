@@ -18,10 +18,10 @@ class RolePermissionSeedTest extends FeatureTestCase
     {
         // 18 from the first seed plus `users.view_own` and `users.manage_own` of the user types.
         $this->assertSame(20, Permission::query()->whereIn('module', ['roles', 'users'])->count());
-        // The session log, the configuration and the user types seed their own modules later.
-        $this->assertSame(['roles', 'sessions', 'settings', 'user_types', 'users'], Permission::query()->distinct()->orderBy('module')->pluck('module')->all());
+        // The session log, the configuration, the user types and the email seed their own modules later.
+        $this->assertSame(['email', 'roles', 'sessions', 'settings', 'user_types', 'users'], Permission::query()->distinct()->orderBy('module')->pluck('module')->all());
 
-        $this->assertEqualsCanonicalizing(['users.manage', 'roles.manage', 'sessions.manage', 'settings.manage', 'user_types.manage'], $this->permissionsOf('admin'));
+        $this->assertEqualsCanonicalizing(['users.manage', 'roles.manage', 'sessions.manage', 'settings.manage', 'user_types.manage', 'email.manage'], $this->permissionsOf('admin'));
         $this->assertEqualsCanonicalizing(['users.view', 'users.create', 'users.edit', 'roles.view'], $this->permissionsOf('manager'));
         $this->assertEqualsCanonicalizing(['users.view', 'roles.view'], $this->permissionsOf('viewer'));
 

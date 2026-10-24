@@ -27,6 +27,9 @@ class UserImpersonationTest extends DuskTestCase
                 ->visit('/users')
                 ->assertMissing("[data-test='user-impersonate-{$superAdmin->getKey()}']")
                 ->assertMissing("[data-test='user-impersonate-{$otherSuperAdmin->getKey()}']")
+                // Edit, trash and impersonate are three actions: the last two live in the row menu.
+                ->click("[data-test='user-more-{$target->getKey()}']")
+                ->waitFor("[data-test='user-impersonate-{$target->getKey()}']")
                 ->click("[data-test='user-impersonate-{$target->getKey()}']")
                 ->waitFor('dialog[open] [data-test="user-confirm-submit"]')
                 ->assertSeeIn('dialog[open]', __('basics13::messages.impersonate_confirm_title', ['name' => $target->name]))

@@ -3,6 +3,8 @@
 namespace Basics13;
 
 use Livewire\Livewire;
+use Basics13\Mail\ManagedMailer;
+use Illuminate\Mail\MailManager;
 use Basics13\Policies\UserPolicy;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
@@ -17,6 +19,7 @@ class ServiceProvider extends BaseServiceProvider
     {
         $this->authorizeLogViewer();
         $this->registerUserPolicy();
+        $this->registerManagedMailer();
 
         $viewsPath = __DIR__.'/../resources/views';
         $publishedViewsPath = resource_path('views/vendor/basics13');
@@ -33,6 +36,7 @@ class ServiceProvider extends BaseServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../routes/sessions.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/configuration.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/personal-events.php');
+        $this->loadRoutesFrom(__DIR__.'/../routes/email.php');
 
         if ($this->app->runningInConsole()) {
             $this->commands([MakeSuperAdmin::class]);
@@ -112,6 +116,34 @@ class ServiceProvider extends BaseServiceProvider
         if (is_string($userModel) && is_subclass_of($userModel, Model::class)) {
             Gate::policy($userModel, UserPolicy::class);
         }
+    }
+
+    /**
+     * The `managed` transport is SMTP over the config ManagedMailer::prepare() writes. Resolved
+     * without it, it reads the default row itself, and with no row it hands over the transport of
+     * the global mailer, so the name never fails to resolve.
+     */
+    private function registerManagedMailer(): void
+    {
+        if (config('mail.mailers.'.ManagedMailer::NAME) === null) {
+            config(['mail.mailers.'.ManagedMailer::NAME => ['transport' => ManagedMailer::NAME]]);
+        }
+
+        $this->callAfterResolving('mail.manager', static function (MailManager $manager): void {
+            $manager->extend(ManagedMailer::NAME, static function (array $config) use ($manager) {
+                if (! isset($config['host'])) {
+                    $configuration = ManagedMailer::defaultConfiguration();
+
+                    if ($configuration === null) {
+                        return $manager->mailer(config('mail.default'))->getSymfonyTransport();
+                    }
+
+                    $config = ManagedMailer::mailerConfig($configuration);
+                }
+
+                return $manager->createSymfonyTransport([...$config, 'transport' => 'smtp']);
+            });
+        });
     }
 
     protected function authorizeLogViewer(): void
