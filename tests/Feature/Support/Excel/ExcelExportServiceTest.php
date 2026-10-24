@@ -21,12 +21,12 @@ class ExcelExportServiceTest extends TestCase
         AuditedRecord::factory()->create(['name' => 'Alpha']);
         AuditedRecord::factory()->create(['name' => 'Beta']);
 
-        $rows = (new ExcelExportService(
+        $rows = $this->rows(new ExcelExportService(
             query: AuditedRecord::query()->where('name', 'Alpha'),
             columnDefinitions: [['key' => 'name', 'label' => 'Name']],
-        ))->collection();
+        ));
 
-        $this->assertSame([['name' => 'Alpha']], $rows->all());
+        $this->assertSame([['name' => 'Alpha']], $rows);
     }
 
     public function test_the_column_definitions_shape_the_rows_and_the_headings(): void
@@ -46,7 +46,7 @@ class ExcelExportServiceTest extends TestCase
         );
 
         $this->assertSame(['Name', 'Status'], $export->headings());
-        $this->assertSame([['name' => 'Alpha', 'active' => 'Inactive']], $export->collection()->all());
+        $this->assertSame([['name' => 'Alpha', 'active' => 'Inactive']], $this->rows($export));
     }
 
     public function test_plain_columns_are_used_when_no_column_definitions_are_given(): void
@@ -59,7 +59,7 @@ class ExcelExportServiceTest extends TestCase
         );
 
         $this->assertSame(['name', 'notes'], $export->headings());
-        $this->assertSame(['name', 'notes'], array_keys($export->collection()->first()));
+        $this->assertSame(['name', 'notes'], array_keys($this->rows($export)[0]));
     }
 
     public function test_max_rows_caps_the_exported_rows(): void
@@ -72,7 +72,7 @@ class ExcelExportServiceTest extends TestCase
             maxRows: 2,
         );
 
-        $this->assertCount(2, $export->collection());
+        $this->assertCount(2, $this->rows($export));
     }
 
     public function test_a_max_rows_of_zero_exports_every_row(): void
@@ -85,7 +85,7 @@ class ExcelExportServiceTest extends TestCase
             maxRows: 0,
         );
 
-        $this->assertCount(3, $export->collection());
+        $this->assertCount(3, $this->rows($export));
     }
 
     public function test_the_title_is_exposed_to_the_sheet(): void
@@ -178,7 +178,7 @@ class ExcelExportServiceTest extends TestCase
             ],
         );
 
-        $rows = $export->collection()->all();
+        $rows = $this->rows($export);
 
         $this->assertSame('Alpha', $rows[0]['name']);
         $this->assertSame('', $rows[0]['nonexistent']);
@@ -199,7 +199,7 @@ class ExcelExportServiceTest extends TestCase
         );
 
         // The model doesn't have customMethod, so it should return empty string
-        $rows = $export->collection()->all();
+        $rows = $this->rows($export);
         $this->assertSame('', $rows[0]['customMethod']);
     }
 
@@ -238,7 +238,7 @@ class ExcelExportServiceTest extends TestCase
             ],
         );
 
-        $rows = $export->collection()->all();
+        $rows = $this->rows($export);
 
         // The model doesn't have customExportMethod attribute or method,
         // so it should return empty string for that column
@@ -252,11 +252,40 @@ class ExcelExportServiceTest extends TestCase
 
         $export = new ExcelExportService(query: AuditedRecord::query());
 
-        $rows = $export->collection()->all();
+        $rows = $this->rows($export);
 
         $this->assertArrayHasKey('name', $rows[0]);
         $this->assertArrayHasKey('active', $rows[0]);
         $this->assertArrayHasKey('notes', $rows[0]);
         $this->assertArrayHasKey('id', $rows[0]);
+    }
+
+    public function test_the_export_reads_the_query_in_chunks_respecting_max_rows(): void
+    {
+        AuditedRecord::factory()->count(5)->create();
+
+        $export = new ExcelExportService(
+            query: AuditedRecord::query()->orderBy('id'),
+            columnDefinitions: [['key' => 'name', 'label' => 'Name']],
+            maxRows: 3,
+        );
+
+        $chunks = [];
+        $export->query()->chunk(2, function ($records) use (&$chunks): void {
+            $chunks[] = $records->count();
+        });
+
+        $this->assertSame([2, 1], $chunks);
+    }
+
+    /**
+     * Rows as the writer builds them: the export query mapped record by record.
+     *
+     * @param  ExcelExportService<AuditedRecord>  $export
+     * @return array<int, array<string, mixed>>
+     */
+    private function rows(ExcelExportService $export): array
+    {
+        return $export->query()->get()->map(fn ($record): array => $export->map($record))->all();
     }
 }

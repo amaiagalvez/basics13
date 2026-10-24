@@ -5,15 +5,15 @@ declare(strict_types=1);
 namespace Basics13\Support\Excel;
 
 use Illuminate\Support\Str;
-use Illuminate\Support\Collection;
 use Maatwebsite\Excel\Facades\Excel;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Builder;
+use Maatwebsite\Excel\Concerns\FromQuery;
 use Maatwebsite\Excel\Concerns\WithTitle;
 use Maatwebsite\Excel\Concerns\Exportable;
+use Maatwebsite\Excel\Concerns\WithMapping;
 use Maatwebsite\Excel\Excel as ExcelFormat;
 use Maatwebsite\Excel\Concerns\WithHeadings;
-use Maatwebsite\Excel\Concerns\FromCollection;
 use Maatwebsite\Excel\Concerns\ShouldAutoSize;
 use Symfony\Component\HttpFoundation\BinaryFileResponse;
 
@@ -25,7 +25,7 @@ use Symfony\Component\HttpFoundation\BinaryFileResponse;
  *
  * @template TModel of Model
  */
-final class ExcelExportService implements FromCollection, ShouldAutoSize, WithHeadings, WithTitle
+final class ExcelExportService implements FromQuery, ShouldAutoSize, WithHeadings, WithMapping, WithTitle
 {
     use Exportable;
 
@@ -75,12 +75,12 @@ final class ExcelExportService implements FromCollection, ShouldAutoSize, WithHe
         return Excel::store($this, $fileName, $disk, ExcelFormat::XLSX);
     }
 
-    // FromCollection implementation
+    // FromQuery implementation: the writer reads the query in chunks instead of loading every row.
 
     /**
-     * @return Collection<int, array<string, mixed>>
+     * @return Builder<TModel>
      */
-    public function collection(): Collection
+    public function query(): Builder
     {
         $query = clone $this->query;
 
@@ -89,42 +89,44 @@ final class ExcelExportService implements FromCollection, ShouldAutoSize, WithHe
             $query->limit($this->maxRows);
         }
 
-        $records = $query->get();
+        return $query;
+    }
 
+    // WithMapping implementation
+
+    /**
+     * @param  TModel  $record
+     * @return array<string, mixed>
+     */
+    public function map($record): array
+    {
         if ($this->columnDefinitions !== []) {
-            /** @var Collection<int, array<string, mixed>> $rows */
-            $rows = $records->map(function (Model $record): array {
-                $row = [];
+            $row = [];
 
-                foreach ($this->columnDefinitions as $colDef) {
-                    $key = $colDef['key'];
-                    $transformer = $colDef['transformer'] ?? null;
+            foreach ($this->columnDefinitions as $colDef) {
+                $key = $colDef['key'];
+                $transformer = $colDef['transformer'] ?? null;
 
-                    if ($transformer !== null) {
-                        $row[$key] = $transformer($record);
-                    } elseif (isset($record->{$key})) {
-                        $row[$key] = $record->{$key};
-                    } elseif (method_exists($record, $key)) {
-                        $row[$key] = $record->{$key}();
-                    } else {
-                        $row[$key] = '';
-                    }
+                if ($transformer !== null) {
+                    $row[$key] = $transformer($record);
+                } elseif (isset($record->{$key})) {
+                    $row[$key] = $record->{$key};
+                } elseif (method_exists($record, $key)) {
+                    $row[$key] = $record->{$key}();
+                } else {
+                    $row[$key] = '';
                 }
+            }
 
-                return $row;
-            });
-
-            return $rows;
+            return $row;
         }
 
-        return $records->map(function (Model $record): array {
-            /** @var array<string, mixed> $attributes */
-            $attributes = $record->toArray();
+        /** @var array<string, mixed> $attributes */
+        $attributes = $record->toArray();
 
-            return $this->columns === []
-                ? $attributes
-                : array_intersect_key($attributes, array_flip($this->columns));
-        });
+        return $this->columns === []
+            ? $attributes
+            : array_intersect_key($attributes, array_flip($this->columns));
     }
 
     // WithHeadings implementation
