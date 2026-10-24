@@ -2,6 +2,7 @@
 
 use Basics13\Models\Permission;
 use Illuminate\Support\Facades\DB;
+use Basics13\Support\NavigationMenu;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Database\Schema\Blueprint;
 
@@ -121,4 +122,68 @@ function seedPermissions(array $modules, array $grantToAdmin = []): void
         ->pluck('id')
         ->map(static fn (mixed $permissionId): array => ['permission_id' => $permissionId, 'role_id' => $adminId])
         ->all());
+}
+
+/**
+ * Seed a package's menu items and leave each one with exactly the permissions listed, so a later
+ * version can take a permission away. Every slug MUST exist: an item left without permissions
+ * would show to every account, so an unknown slug throws before anything is written.
+ *
+ * Meant for a package's own data migration, after the one that seeds its permissions.
+ *
+ * @param  list<array{key: string, label: string, sort: int, parent?: string, icon?: string, route?: string, active?: string, except?: string, permissions?: list<string>}>  $items
+ */
+function seedMenus(string $package, array $items): void
+{
+    $slugs = array_values(array_unique(array_merge(...array_map(
+        static fn (array $item): array => $item['permissions'] ?? [],
+        $items,
+    ))));
+    $permissionIds = DB::table('BAS_permissions')->whereIn('slug', $slugs)->pluck('id', 'slug');
+    $unknown = array_diff($slugs, $permissionIds->keys()->all());
+
+    if ($unknown !== []) {
+        throw new RuntimeException("Menus of {$package} use unknown permissions: ".implode(', ', $unknown));
+    }
+
+    DB::transaction(static function () use ($package, $items, $permissionIds): void {
+        $now = now();
+
+        DB::table('BAS_menus')->upsert(array_map(static fn (array $item): array => [
+            'key' => $item['key'],
+            'parent_key' => $item['parent'] ?? null,
+            'package' => $package,
+            'label' => $item['label'],
+            'icon' => $item['icon'] ?? null,
+            'route' => $item['route'] ?? null,
+            'active_pattern' => $item['active'] ?? null,
+            'active_except' => $item['except'] ?? null,
+            'sort' => $item['sort'],
+            'created_at' => $now,
+            'updated_at' => $now,
+        ], $items), ['key'], ['parent_key', 'package', 'label', 'icon', 'route', 'active_pattern', 'active_except', 'sort', 'updated_at']);
+
+        $menuIds = DB::table('BAS_menus')->whereIn('key', array_column($items, 'key'))->pluck('id', 'key');
+
+        DB::table('BAS_menu_permission')->whereIn('menu_id', $menuIds->values())->delete();
+        DB::table('BAS_menu_permission')->insert(array_merge(...array_map(
+            static fn (array $item): array => array_map(
+                static fn (string $slug): array => ['menu_id' => $menuIds[$item['key']], 'permission_id' => $permissionIds[$slug]],
+                $item['permissions'] ?? [],
+            ),
+            $items,
+        )));
+    });
+
+    NavigationMenu::flush();
+}
+
+/**
+ * Remove the menu items a package seeded; their permission links go with them.
+ */
+function removeMenus(string $package): void
+{
+    DB::table('BAS_menus')->where('package', $package)->delete();
+
+    NavigationMenu::flush();
 }
