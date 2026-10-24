@@ -16,6 +16,7 @@ return [
 
     'created' => 'Registro creado correctamente.',
     'updated' => 'Registro actualizado correctamente.',
+    'deleted' => 'Registro eliminado.',
     'moved_to_trash' => 'Registro movido a la papelera.',
     'permanently_deleted' => 'Registro eliminado definitivamente.',
     'restored' => 'Registro restaurado correctamente.',

@@ -17,6 +17,7 @@ return [
 
     'created' => 'Erregistroa behar bezala sortu da.',
     'updated' => 'Erregistroa behar bezala eguneratu da.',
+    'deleted' => 'Erregistroa ezabatu da.',
     'moved_to_trash' => 'Erregistroa zakarrontzira eraman da.',
     'permanently_deleted' => 'Erregistroa behin betiko ezabatu da.',
     'restored' => 'Erregistroa behar bezala berreskuratu da.',

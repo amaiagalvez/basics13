@@ -16,6 +16,7 @@ return [
 
     'created' => 'Record created successfully.',
     'updated' => 'Record updated successfully.',
+    'deleted' => 'Record deleted.',
     'moved_to_trash' => 'Record moved to trash.',
     'permanently_deleted' => 'Record permanently deleted.',
     'restored' => 'Record restored successfully.',

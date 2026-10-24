@@ -17,6 +17,7 @@ return [
 
     'created' => 'Enregistrement créé avec succès.',
     'updated' => 'Enregistrement mis à jour avec succès.',
+    'deleted' => 'Enregistrement supprimé.',
     'moved_to_trash' => 'Enregistrement déplacé vers la corbeille.',
     'permanently_deleted' => 'Enregistrement supprimé définitivement.',
     'restored' => 'Enregistrement restauré avec succès.',
