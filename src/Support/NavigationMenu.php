@@ -14,8 +14,13 @@ use Illuminate\Contracts\Auth\Authenticatable;
  * clears, and read once per request. What an account sees is filtered in memory with the
  * permissions HasRoles already loaded, so painting the menu adds no query and is never stale.
  *
+ * The tree has three levels at most: a group holds links and subgroups, a subgroup holds links.
+ *
  * @phpstan-type MenuItem array{key: string, parent_key: string|null, label: string, icon: string|null, route: string|null, active_pattern: string|null, active_except: string|null, permissions: list<string>}
- * @phpstan-type MenuEntry array{item: MenuItem, children: list<MenuItem>}
+ * @phpstan-type MenuLink array{item: MenuItem, children: array{}}
+ * @phpstan-type MenuSubgroup array{item: MenuItem, children: non-empty-list<MenuLink>}
+ * @phpstan-type MenuGroup array{item: MenuItem, children: non-empty-list<MenuLink|MenuSubgroup>}
+ * @phpstan-type MenuEntry MenuLink|MenuGroup
  */
 class NavigationMenu
 {
@@ -55,19 +60,22 @@ class NavigationMenu
 
     /**
      * The top-level entries the account sees: links, and groups with at least one visible child.
+     * A subgroup without visible links is left out like an empty group.
      *
      * @return list<MenuEntry>
      */
     public static function for(Authenticatable $user): array
     {
-        $items = self::items();
+        /** @var array<string, list<MenuItem>> $childrenOf */
+        $childrenOf = [];
+
+        foreach (self::items() as $item) {
+            $childrenOf[$item['parent_key'] ?? ''][] = $item;
+        }
+
         $entries = [];
 
-        foreach ($items as $item) {
-            if ($item['parent_key'] !== null) {
-                continue;
-            }
-
+        foreach ($childrenOf[''] ?? [] as $item) {
             if ($item['route'] !== null) {
                 if (self::shows($item, $user)) {
                     $entries[] = ['item' => $item, 'children' => []];
@@ -76,10 +84,23 @@ class NavigationMenu
                 continue;
             }
 
-            $children = array_values(array_filter(
-                $items,
-                static fn (array $child): bool => $child['parent_key'] === $item['key'] && $child['route'] !== null && self::shows($child, $user),
-            ));
+            $children = [];
+
+            foreach ($childrenOf[$item['key']] ?? [] as $child) {
+                if ($child['route'] !== null) {
+                    if (self::shows($child, $user)) {
+                        $children[] = ['item' => $child, 'children' => []];
+                    }
+
+                    continue;
+                }
+
+                $links = self::links($childrenOf[$child['key']] ?? [], $user);
+
+                if ($links !== []) {
+                    $children[] = ['item' => $child, 'children' => $links];
+                }
+            }
 
             if ($children !== []) {
                 $entries[] = ['item' => $item, 'children' => $children];
@@ -87,6 +108,25 @@ class NavigationMenu
         }
 
         return $entries;
+    }
+
+    /**
+     * The links among these items the account sees.
+     *
+     * @param  list<MenuItem>  $items
+     * @return list<MenuLink>
+     */
+    private static function links(array $items, Authenticatable $user): array
+    {
+        $links = [];
+
+        foreach ($items as $item) {
+            if ($item['route'] !== null && self::shows($item, $user)) {
+                $links[] = ['item' => $item, 'children' => []];
+            }
+        }
+
+        return $links;
     }
 
     /**

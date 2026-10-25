@@ -11,6 +11,7 @@ use Basics13\Support\NavigationMenu;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Route;
 use Basics13\Tests\Feature\Roles\RoleTestCase;
+use PHPUnit\Framework\Attributes\DataProvider;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class NavigationMenuTest extends RoleTestCase
@@ -24,6 +25,8 @@ class NavigationMenuTest extends RoleTestCase
         // Pages named like the ones the exclusions guard, so the component paints there.
         Route::get('_menu/summary', static fn (): string => Blade::render('<x-basics13::sidebar-menu />'))
             ->middleware('web')->name('users.permissions-summary.probe');
+        Route::get('_menu/user-types', static fn (): string => Blade::render('<x-basics13::sidebar-menu />'))
+            ->middleware('web')->name('user-types.probe');
         Route::get('_menu/sessions', static fn (): string => Blade::render('<x-basics13::sidebar-menu />'))
             ->middleware('web')->name('sessions.dashboard');
     }
@@ -79,14 +82,24 @@ class NavigationMenuTest extends RoleTestCase
             NavigationMenu::for(User::factory()->create()),
         );
 
-        $this->assertNotContains('administration', $groups);
+        $this->assertNotContains('basics13', $groups);
         $this->assertNotContains('probe', $groups);
+    }
+
+    public function test_a_subgroup_without_visible_links_is_hidden(): void
+    {
+        $user = User::factory()->withPermissions(['users.view'])->create();
+        $groups = $this->visibleGroups($user);
+
+        $this->assertContains('basics13', $groups);
+        $this->assertNotContains('basics-auxiliary', $groups);
+        $this->assertContains('basics-auxiliary', $this->visibleGroups(User::factory()->withPermissions(['user_types.view'])->create()));
     }
 
     public function test_the_super_admin_sees_every_item(): void
     {
         $this->assertSame(
-            ['admin-dashboard', 'users', 'user-types', 'roles', 'permissions', 'permissions-summary', 'sessions', 'configuration', 'email-configurations', 'email-templates'],
+            ['admin-dashboard', 'users', 'roles', 'permissions', 'permissions-summary', 'sessions', 'configuration', 'email-configurations', 'email-templates', 'user-types'],
             $this->visibleKeys(User::factory()->superAdmin()->create()),
         );
     }
@@ -164,6 +177,69 @@ class NavigationMenuTest extends RoleTestCase
         $this->assertNotContains('probe', $keys);
     }
 
+    public function test_a_later_seed_drops_the_items_it_no_longer_lists_and_spares_other_packages(): void
+    {
+        $this->seedProbeMenus(['users.view']);
+        seedMenus('other-probe', [['key' => 'other-probe', 'label' => 'Other probe', 'sort' => 1, 'route' => 'dashboard']]);
+
+        seedMenus('probe', [['key' => 'probe', 'label' => 'Probe', 'sort' => 1]]);
+
+        $this->assertFalse(Menu::query()->where('key', 'probe-link')->exists());
+        $this->assertSame(0, DB::table('BAS_menu_permission')->whereNotIn('menu_id', Menu::query()->select('id'))->count());
+        $this->assertTrue(Menu::query()->where('key', 'other-probe')->exists());
+    }
+
+    /**
+     * @return iterable<string, array{list<array{key: string, label: string, sort: int, parent?: string, route?: string}>, string}>
+     */
+    public static function invalidTrees(): iterable
+    {
+        yield 'empty list' => [[], 'empty'];
+        yield 'key of another package' => [[['key' => 'users', 'label' => 'Probe', 'sort' => 1, 'route' => 'dashboard']], 'users (basics13)'];
+        yield 'parent outside the seed' => [[['key' => 'probe-link', 'parent' => 'basics13', 'label' => 'Probe', 'sort' => 1, 'route' => 'dashboard']], 'basics13'];
+        yield 'fourth level' => [[
+            ['key' => 'probe', 'label' => 'Probe', 'sort' => 1],
+            ['key' => 'probe-2', 'parent' => 'probe', 'label' => 'Probe', 'sort' => 1],
+            ['key' => 'probe-3', 'parent' => 'probe-2', 'label' => 'Probe', 'sort' => 1],
+            ['key' => 'probe-4', 'parent' => 'probe-3', 'label' => 'Probe', 'sort' => 1, 'route' => 'dashboard'],
+        ], 'three levels'];
+    }
+
+    /**
+     * @param  list<array{key: string, label: string, sort: int, parent?: string, route?: string}>  $items
+     */
+    #[DataProvider('invalidTrees')]
+    public function test_an_invalid_tree_fails_the_seed_and_leaves_the_menus_as_they_were(array $items, string $message): void
+    {
+        $before = Menu::query()->orderBy('key')->pluck('package', 'key')->all();
+
+        try {
+            seedMenus('probe', $items);
+            $this->fail('The seed accepted an invalid tree.');
+        } catch (RuntimeException $exception) {
+            $this->assertStringContainsString($message, $exception->getMessage());
+        }
+
+        $this->assertSame($before, Menu::query()->orderBy('key')->pluck('package', 'key')->all());
+    }
+
+    public function test_the_groups_holding_the_current_page_are_marked(): void
+    {
+        $html = (string) $this->actingAs(User::factory()->superAdmin()->create())->get('_menu/user-types')->getContent();
+
+        $this->assertTrue($this->containsCurrent($html, 'basics13'));
+        $this->assertTrue($this->containsCurrent($html, 'basics-auxiliary'));
+        $this->assertTrue($this->isCurrent($html, 'user-types'));
+        $this->assertFalse($this->isCurrent($html, 'users'));
+    }
+
+    public function test_the_menu_carries_the_script_that_keeps_folded_groups(): void
+    {
+        $this->actingAs(User::factory()->superAdmin()->create());
+
+        $this->assertStringContainsString('basics13.menu.closed', Blade::render('<x-basics13::sidebar-menu />'));
+    }
+
     public function test_removing_a_package_menus_drops_its_items(): void
     {
         $this->seedProbeMenus(['users.view']);
@@ -190,14 +266,44 @@ class NavigationMenuTest extends RoleTestCase
     private function visibleKeys(User $user): array
     {
         $keys = [];
-
-        foreach (NavigationMenu::for($user) as $entry) {
-            foreach ($entry['children'] as $item) {
-                $keys[] = $item['key'];
+        $collect = static function (array $entries) use (&$collect, &$keys): void {
+            foreach ($entries as $entry) {
+                if ($entry['children'] === []) {
+                    $keys[] = $entry['item']['key'];
+                } else {
+                    $collect($entry['children']);
+                }
             }
-        }
+        };
+        $collect(NavigationMenu::for($user));
 
         return $keys;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function visibleGroups(User $user): array
+    {
+        $keys = [];
+        $collect = static function (array $entries) use (&$collect, &$keys): void {
+            foreach ($entries as $entry) {
+                if ($entry['children'] !== []) {
+                    $keys[] = $entry['item']['key'];
+                    $collect($entry['children']);
+                }
+            }
+        };
+        $collect(NavigationMenu::for($user));
+
+        return $keys;
+    }
+
+    private function containsCurrent(string $html, string $key): bool
+    {
+        $this->assertSame(1, preg_match('/<ui-disclosure\b[^>]*data-menu-key="'.$key.'"[^>]*>/', $html, $tag), "Group {$key} is not painted.");
+
+        return preg_match('/\sdata-contains-current(?![:\w-])/', $tag[0]) === 1;
     }
 
     private function isCurrent(string $html, string $key): bool

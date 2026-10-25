@@ -131,8 +131,10 @@ function seedPermissions(array $modules, array $grantToAdmin = [], array $slugs 
 
 /**
  * Seed a package's menu items and leave each one with exactly the permissions listed, so a later
- * version can take a permission away. Every slug MUST exist: an item left without permissions
- * would show to every account, so an unknown slug throws before anything is written.
+ * version can take a permission away; the package's items no longer listed are removed. Every slug
+ * MUST exist: an item left without permissions would show to every account, so an unknown slug
+ * throws before anything is written. So does an empty list, a key another package owns, a parent
+ * outside this list or a tree deeper than three levels.
  *
  * Meant for a package's access seeder, after it seeds its permissions.
  *
@@ -140,6 +142,37 @@ function seedPermissions(array $modules, array $grantToAdmin = [], array $slugs 
  */
 function seedMenus(string $package, array $items): void
 {
+    if ($items === []) {
+        throw new RuntimeException("Menus of {$package} are empty: use removeMenus() to drop them.");
+    }
+
+    $parents = array_column($items, 'parent', 'key');
+
+    foreach (array_column($items, 'key') as $key) {
+        $depth = 1;
+
+        for ($parent = $parents[$key] ?? null; $parent !== null; $parent = $parents[$parent] ?? null) {
+            if (! in_array($parent, array_column($items, 'key'), true)) {
+                throw new RuntimeException("Menu {$key} of {$package} hangs from {$parent}, which {$package} does not seed.");
+            }
+
+            if (++$depth > 3) {
+                throw new RuntimeException("Menu {$key} of {$package} is deeper than three levels.");
+            }
+        }
+    }
+
+    $foreign = DB::table('BAS_menus')
+        ->whereIn('key', array_column($items, 'key'))
+        ->where('package', '!=', $package)
+        ->pluck('package', 'key');
+
+    if ($foreign->isNotEmpty()) {
+        throw new RuntimeException("Menus of {$package} use keys other packages own: ".$foreign->map(
+            static fn (string $owner, string $key): string => "{$key} ({$owner})",
+        )->implode(', '));
+    }
+
     $slugs = array_values(array_unique(array_merge(...array_map(
         static fn (array $item): array => $item['permissions'] ?? [],
         $items,
@@ -178,9 +211,12 @@ function seedMenus(string $package, array $items): void
             ),
             $items,
         )));
-    });
 
-    NavigationMenu::flush();
+        // Their permission links go with them.
+        DB::table('BAS_menus')->where('package', $package)->whereNotIn('key', array_column($items, 'key'))->delete();
+
+        DB::afterCommit(static fn () => NavigationMenu::flush());
+    });
 }
 
 /**

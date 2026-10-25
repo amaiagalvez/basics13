@@ -72,17 +72,18 @@ class BasicsAccessSeeder extends Seeder
      * @var list<array{key: string, label: string, sort: int, parent?: string, icon?: string, route?: string, active?: string, except?: string, permissions?: list<string>}>
      */
     private const MENUS = [
-        ['key' => 'administration', 'label' => 'Administration', 'sort' => 900],
-        ['key' => 'admin-dashboard', 'parent' => 'administration', 'label' => 'Administration dashboard', 'sort' => 10, 'icon' => 'chart-bar', 'route' => 'sessions.dashboard', 'active' => 'sessions.dashboard', 'permissions' => ['sessions.view']],
-        ['key' => 'users', 'parent' => 'administration', 'label' => 'Users', 'sort' => 20, 'icon' => 'user-circle', 'route' => 'users.index', 'active' => 'users.*', 'except' => 'users.permissions-summary.*', 'permissions' => ['users.view', 'users.view_own', 'users.manage_own']],
-        ['key' => 'user-types', 'parent' => 'administration', 'label' => 'User types', 'sort' => 30, 'icon' => 'tag', 'route' => 'user-types.index', 'active' => 'user-types.*', 'permissions' => ['user_types.view']],
-        ['key' => 'roles', 'parent' => 'administration', 'label' => 'Roles', 'sort' => 40, 'icon' => 'shield-check', 'route' => 'roles.index', 'active' => 'roles.*', 'permissions' => ['roles.view']],
-        ['key' => 'permissions', 'parent' => 'administration', 'label' => 'Permissions', 'sort' => 50, 'icon' => 'key', 'route' => 'permissions.index', 'active' => 'permissions.*', 'permissions' => ['roles.view']],
-        ['key' => 'permissions-summary', 'parent' => 'administration', 'label' => 'Permissions summary', 'sort' => 60, 'icon' => 'table-cells', 'route' => 'users.permissions-summary.index', 'active' => 'users.permissions-summary.*', 'permissions' => ['roles.view']],
-        ['key' => 'sessions', 'parent' => 'administration', 'label' => 'Sessions', 'sort' => 70, 'icon' => 'finger-print', 'route' => 'sessions.index', 'active' => 'sessions.*', 'except' => 'sessions.dashboard', 'permissions' => ['sessions.view']],
-        ['key' => 'configuration', 'parent' => 'administration', 'label' => 'Application configuration', 'sort' => 80, 'icon' => 'adjustments-horizontal', 'route' => 'configuration.index', 'active' => 'configuration.*', 'permissions' => ['settings.view']],
-        ['key' => 'email-configurations', 'parent' => 'administration', 'label' => 'SMTP configurations', 'sort' => 90, 'icon' => 'envelope', 'route' => 'email-configurations.index', 'active' => 'email-configurations.*', 'permissions' => ['email.view']],
-        ['key' => 'email-templates', 'parent' => 'administration', 'label' => 'Email templates', 'sort' => 100, 'icon' => 'document-text', 'route' => 'email-templates.index', 'active' => 'email-templates.*', 'permissions' => ['email.view']],
+        ['key' => 'basics13', 'label' => 'Management', 'sort' => 100],
+        ['key' => 'basics-auxiliary', 'parent' => 'basics13', 'label' => 'Auxiliary tables', 'sort' => 900],
+        ['key' => 'admin-dashboard', 'parent' => 'basics13', 'label' => 'Administration dashboard', 'sort' => 10, 'icon' => 'chart-bar', 'route' => 'sessions.dashboard', 'active' => 'sessions.dashboard', 'permissions' => ['sessions.view']],
+        ['key' => 'users', 'parent' => 'basics13', 'label' => 'Users', 'sort' => 20, 'icon' => 'user-circle', 'route' => 'users.index', 'active' => 'users.*', 'except' => 'users.permissions-summary.*', 'permissions' => ['users.view', 'users.view_own', 'users.manage_own']],
+        ['key' => 'user-types', 'parent' => 'basics-auxiliary', 'label' => 'User types', 'sort' => 30, 'icon' => 'tag', 'route' => 'user-types.index', 'active' => 'user-types.*', 'permissions' => ['user_types.view']],
+        ['key' => 'roles', 'parent' => 'basics13', 'label' => 'Roles', 'sort' => 40, 'icon' => 'shield-check', 'route' => 'roles.index', 'active' => 'roles.*', 'permissions' => ['roles.view']],
+        ['key' => 'permissions', 'parent' => 'basics13', 'label' => 'Permissions', 'sort' => 50, 'icon' => 'key', 'route' => 'permissions.index', 'active' => 'permissions.*', 'permissions' => ['roles.view']],
+        ['key' => 'permissions-summary', 'parent' => 'basics13', 'label' => 'Permissions summary', 'sort' => 60, 'icon' => 'table-cells', 'route' => 'users.permissions-summary.index', 'active' => 'users.permissions-summary.*', 'permissions' => ['roles.view']],
+        ['key' => 'sessions', 'parent' => 'basics13', 'label' => 'Sessions', 'sort' => 70, 'icon' => 'finger-print', 'route' => 'sessions.index', 'active' => 'sessions.*', 'except' => 'sessions.dashboard', 'permissions' => ['sessions.view']],
+        ['key' => 'configuration', 'parent' => 'basics13', 'label' => 'Application configuration', 'sort' => 80, 'icon' => 'adjustments-horizontal', 'route' => 'configuration.index', 'active' => 'configuration.*', 'permissions' => ['settings.view']],
+        ['key' => 'email-configurations', 'parent' => 'basics13', 'label' => 'SMTP configurations', 'sort' => 90, 'icon' => 'envelope', 'route' => 'email-configurations.index', 'active' => 'email-configurations.*', 'permissions' => ['email.view']],
+        ['key' => 'email-templates', 'parent' => 'basics13', 'label' => 'Email templates', 'sort' => 100, 'icon' => 'document-text', 'route' => 'email-templates.index', 'active' => 'email-templates.*', 'permissions' => ['email.view']],
     ];
 
     public function run(): void
