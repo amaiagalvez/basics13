@@ -7,7 +7,7 @@ services:
             - ../../packages:/packages
         working_dir: /app-docker
         ports:
-            - "80:80"
+            - "127.0.0.1:80:80"
             - "${VITE_PORT:-5173}:${VITE_PORT:-5173}"
         environment:
             HOME: /tmp
@@ -21,7 +21,7 @@ services:
             XDEBUG_CLIENT_PORT: 9000
             XDEBUG_START_WITH_REQUEST: "trigger"
             XDEBUG_SESSION: VSCODE
-            XDEBUG_MODE: "debug,develop,coverage,trace,profile"
+            XDEBUG_MODE: "${XDEBUG_MODE:-off}"
             PHP_MEMORY_LIMIT: 9064M
         depends_on:
             db:
@@ -77,9 +77,8 @@ services:
             GIT_CONFIG_VALUE_0: /app-docker
         command: bash -c "
             rm -Rf vendor
-            && rm -f composer.lock
             && composer install --no-progress
-            && composer show | grep izt"
+            && composer show | grep amaia"
         networks:
             - frontend
 
@@ -135,8 +134,7 @@ services:
             NPM_CONFIG_CACHE: /npmCache
             NPM_CONFIG_UPDATE_NOTIFIER: "false"
         command: bash -c "
-            rm -f package-lock.json
-            && rm -Rf node_modules
+            rm -Rf node_modules
             && npm install
             && npm run build"
         networks:
@@ -239,7 +237,7 @@ services:
 
     db:
         image: mariadb:11.7
-        command: --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password --sql-mode=""
+        command: --collation-server=utf8mb4_unicode_ci --default-authentication-plugin=mysql_native_password
         environment:
             MYSQL_ROOT_PASSWORD: tormenta
             MYSQL_DATABASE: laravel
@@ -248,7 +246,7 @@ services:
         volumes:
             - ./dc-data/mysql:/var/lib/mysql
             - ./dc-data/mysqldumps:/mysqldumps
-            - ./mysql/init:/docker-entrypoint-initdb.d
+            - ../../packages/basics13/tooling/mysql/init:/docker-entrypoint-initdb.d
         healthcheck:
             test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
             interval: 10s
@@ -270,10 +268,10 @@ services:
         networks:
             - frontend
 
-    mailhog:
-        image: mailhog/mailhog:v1.0.1
+    mailpit:
+        image: axllent/mailpit:v1.27
         ports:
-            - "127.0.0.1:${MAILHOG_PORT:-8025}:8025"
+            - "127.0.0.1:${MAILPIT_PORT:-8025}:8025"
         networks:
             - frontend
 
