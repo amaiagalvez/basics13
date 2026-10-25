@@ -93,12 +93,13 @@ function addUniqueActiveColumnIndex(string $table, string $column, array $scope 
  * system role `admin` so the accounts that already hold it keep their access.
  *
  * Every write only adds: running it again duplicates nothing and takes no permission away from a
- * role. Meant for a package's own data migration, after the basics13 one that creates `admin`.
+ * role. Meant for a package's access seeder, after the basics13 one that creates `admin`.
  *
  * @param  list<string>  $modules  Each module gets one permission per action of Permission::ACTIONS
  * @param  list<string>  $grantToAdmin  Slugs added to the `admin` role
+ * @param  list<string>  $slugs  Loose `{module}.{action}` permissions, for modules that check only some actions
  */
-function seedPermissions(array $modules, array $grantToAdmin = []): void
+function seedPermissions(array $modules, array $grantToAdmin = [], array $slugs = []): void
 {
     $now = now();
     $permissions = [];
@@ -107,6 +108,10 @@ function seedPermissions(array $modules, array $grantToAdmin = []): void
         foreach (Permission::ACTIONS as $action) {
             $permissions[] = ['slug' => $module.'.'.$action, 'module' => $module, 'created_at' => $now, 'updated_at' => $now];
         }
+    }
+
+    foreach ($slugs as $slug) {
+        $permissions[] = ['slug' => $slug, 'module' => explode('.', $slug, 2)[0], 'created_at' => $now, 'updated_at' => $now];
     }
 
     DB::table('BAS_permissions')->insertOrIgnore($permissions);
@@ -129,7 +134,7 @@ function seedPermissions(array $modules, array $grantToAdmin = []): void
  * version can take a permission away. Every slug MUST exist: an item left without permissions
  * would show to every account, so an unknown slug throws before anything is written.
  *
- * Meant for a package's own data migration, after the one that seeds its permissions.
+ * Meant for a package's access seeder, after it seeds its permissions.
  *
  * @param  list<array{key: string, label: string, sort: int, parent?: string, icon?: string, route?: string, active?: string, except?: string, permissions?: list<string>}>  $items
  */

@@ -5,6 +5,7 @@ namespace Basics13\Tests;
 use Basics13\ServiceProvider;
 use Illuminate\Support\Facades\Route;
 use Livewire\LivewireServiceProvider;
+use Basics13\Database\Seeders\BasicsAccessSeeder;
 use Orchestra\Testbench\TestCase as TestbenchTestCase;
 
 /**
@@ -15,6 +16,15 @@ use Orchestra\Testbench\TestCase as TestbenchTestCase;
 abstract class TestCase extends TestbenchTestCase
 {
     use ForbidsDatabaseInUnitTests;
+
+    /**
+     * `migrate:fresh` seeds the starting roles, permissions and menus once per run, as `db:seed`
+     * does in the application.
+     */
+    protected bool $seed = true;
+
+    /** @var class-string */
+    protected string $seeder = BasicsAccessSeeder::class;
 
     /**
      * Loads the package so its config, translations and views are available to the tests.

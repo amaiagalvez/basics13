@@ -7,7 +7,7 @@ use Basics13\Models\User;
 use Basics13\Models\Permission;
 use Illuminate\Support\Facades\DB;
 use Basics13\Tests\Feature\FeatureTestCase;
-use Illuminate\Database\Migrations\Migration;
+use Basics13\Database\Seeders\BasicsAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class RolePermissionSeedTest extends FeatureTestCase
@@ -29,45 +29,18 @@ class RolePermissionSeedTest extends FeatureTestCase
         $this->assertSame(0, Role::query()->where('slug', '!=', 'admin')->where('is_system', true)->count());
     }
 
-    public function test_existing_accounts_outside_the_trash_receive_the_admin_role(): void
-    {
-        $active = User::factory()->create();
-        $archived = User::factory()->archived()->create();
-        $trashed = User::factory()->trashed()->create();
-        $superAdmin = User::factory()->superAdmin()->create();
-
-        $this->runSeedMigration();
-
-        $this->assertSame(['admin'], $active->roles()->pluck('slug')->all());
-        $this->assertSame(['admin'], $archived->roles()->pluck('slug')->all());
-        $this->assertSame([], $trashed->roles()->pluck('slug')->all());
-        $this->assertSame([], $superAdmin->roles()->pluck('slug')->all());
-        $this->assertTrue($active->hasPermissionTo('users.edit'));
-    }
-
     public function test_seeding_again_duplicates_nothing_and_keeps_the_permissions_roles_were_given(): void
     {
         User::factory()->create();
         $viewer = Role::query()->where('slug', 'viewer')->firstOrFail();
         $viewer->permissions()->attach(Permission::query()->where('slug', 'users.delete')->value('id'));
 
-        $this->runSeedMigration();
+        $this->seed(BasicsAccessSeeder::class);
         $counts = $this->rowCounts();
-        $this->runSeedMigration();
+        $this->seed(BasicsAccessSeeder::class);
 
         $this->assertSame($counts, $this->rowCounts());
         $this->assertContains('users.delete', $this->permissionsOf('viewer'));
-    }
-
-    private function runSeedMigration(): void
-    {
-        $migration = require dirname(__DIR__, 3).'/database/migrations/2026_10_22_000006_seed_user_and_role_permissions.php';
-
-        if (! $migration instanceof Migration || ! method_exists($migration, 'up')) {
-            $this->fail('The seed migration must define up().');
-        }
-
-        $migration->up();
     }
 
     /**
@@ -86,7 +59,7 @@ class RolePermissionSeedTest extends FeatureTestCase
     {
         return array_map(
             static fn (string $table): int => DB::table($table)->count(),
-            ['permissions' => 'BAS_permissions', 'roles' => 'BAS_roles', 'permission_role' => 'BAS_permission_role', 'role_user' => 'BAS_role_user'],
+            ['permissions' => 'BAS_permissions', 'roles' => 'BAS_roles', 'permission_role' => 'BAS_permission_role', 'role_user' => 'BAS_role_user', 'menus' => 'BAS_menus', 'menu_permission' => 'BAS_menu_permission'],
         );
     }
 }

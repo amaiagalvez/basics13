@@ -7,11 +7,21 @@ use Basics13\ServiceProvider;
 use Flux\FluxServiceProvider;
 use Livewire\LivewireServiceProvider;
 use Basics13\Tests\ForbidsDatabaseInUnitTests;
+use Basics13\Database\Seeders\BasicsAccessSeeder;
 use Orchestra\Testbench\TestCase as TestbenchTestCase;
 
 abstract class FeatureTestCase extends TestbenchTestCase
 {
     use ForbidsDatabaseInUnitTests;
+
+    /**
+     * `migrate:fresh` seeds the starting roles, permissions and menus once per run, as `db:seed`
+     * does in the application.
+     */
+    protected bool $seed = true;
+
+    /** @var class-string */
+    protected string $seeder = BasicsAccessSeeder::class;
 
     protected function setUp(): void
     {

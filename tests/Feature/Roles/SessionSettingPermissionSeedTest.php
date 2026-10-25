@@ -6,7 +6,7 @@ use Basics13\Models\Role;
 use Basics13\Models\Permission;
 use Illuminate\Support\Facades\DB;
 use Basics13\Tests\Feature\FeatureTestCase;
-use Illuminate\Database\Migrations\Migration;
+use Basics13\Database\Seeders\BasicsAccessSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 class SessionSettingPermissionSeedTest extends FeatureTestCase
@@ -36,23 +36,12 @@ class SessionSettingPermissionSeedTest extends FeatureTestCase
         $viewer = Role::query()->where('slug', 'viewer')->firstOrFail();
         $viewer->permissions()->attach(Permission::query()->where('slug', 'sessions.view')->value('id'));
 
-        $this->runSeedMigration();
+        $this->seed(BasicsAccessSeeder::class);
         $counts = $this->rowCounts();
-        $this->runSeedMigration();
+        $this->seed(BasicsAccessSeeder::class);
 
         $this->assertSame($counts, $this->rowCounts());
         $this->assertContains('sessions.view', $viewer->permissions()->pluck('slug')->all());
-    }
-
-    private function runSeedMigration(): void
-    {
-        $migration = require dirname(__DIR__, 3).'/database/migrations/2026_10_23_000003_seed_session_and_setting_permissions.php';
-
-        if (! $migration instanceof Migration || ! method_exists($migration, 'up')) {
-            $this->fail('The seed migration must define up().');
-        }
-
-        $migration->up();
     }
 
     /**

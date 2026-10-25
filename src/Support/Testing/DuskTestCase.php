@@ -11,11 +11,21 @@ use Facebook\WebDriver\Chrome\ChromeOptions;
 use PHPUnit\Framework\Attributes\BeforeClass;
 use Facebook\WebDriver\Remote\RemoteWebDriver;
 use Illuminate\Contracts\Auth\Authenticatable;
+use Basics13\Database\Seeders\BasicsAccessSeeder;
 use Facebook\WebDriver\Remote\DesiredCapabilities;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 abstract class DuskTestCase extends BaseTestCase
 {
+    /**
+     * `migrate:fresh` of DatabaseMigrations seeds the roles, permissions and menus, as `db:seed`
+     * does in the application.
+     */
+    protected bool $seed = true;
+
+    /** @var class-string */
+    protected string $seeder = BasicsAccessSeeder::class;
+
     /** @param array<string, mixed> $attributes */
     protected function user(array $attributes = []): Model&Authenticatable
     {

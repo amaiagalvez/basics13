@@ -35,4 +35,13 @@ class SeedPermissionsTest extends FeatureTestCase
         $this->assertSame(count(Permission::ACTIONS), Permission::query()->where('module', 'reports')->count());
         $this->assertSame(0, Role::withTrashed()->where('slug', 'admin')->firstOrFail()->permissions()->where('slug', 'reports.manage')->count());
     }
+
+    public function test_it_seeds_loose_slugs_and_grants_them_to_admin(): void
+    {
+        seedPermissions([], ['reports.manage'], ['reports.view', 'reports.manage']);
+        seedPermissions([], ['reports.manage'], ['reports.view', 'reports.manage']);
+
+        $this->assertEqualsCanonicalizing(['reports.view', 'reports.manage'], Permission::query()->where('module', 'reports')->pluck('slug')->all());
+        $this->assertSame(1, Role::query()->where('slug', 'admin')->firstOrFail()->permissions()->where('slug', 'reports.manage')->count());
+    }
 }
