@@ -35,7 +35,7 @@
     @if ($tooltip !== '')
         <flux:tooltip toggleable :content="$tooltip">
             <flux:button type="button" icon="information-circle" size="xs" variant="ghost"
-                :aria-label="$tooltip" data-test="{{ $test }}" />
+                aria-label="{{ __('Information about this field') }}" data-test="{{ $test }}" />
         </flux:tooltip>
     @endif
 </div>
