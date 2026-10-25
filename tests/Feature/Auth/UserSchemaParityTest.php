@@ -24,7 +24,7 @@ class UserSchemaParityTest extends FeatureTestCase
             'id', 'created_at', 'updated_at', 'deleted_at', 'created_by', 'updated_by',
             'deleted_by', 'active', 'remember_token', 'email_verified_at',
             'two_factor_secret', 'two_factor_recovery_codes', 'two_factor_confirmed_at',
-            // Set only by the make-super-admin command, never mass assigned.
+            // Set only by the development UserSeeder, never mass assigned.
             'is_super_admin',
         ];
 

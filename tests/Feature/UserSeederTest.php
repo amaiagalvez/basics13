@@ -20,7 +20,8 @@ class UserSeederTest extends FeatureTestCase
         $this->assertSame('Amaia', $user->name);
         $this->assertTrue(Hash::check('123456', $user->password));
         $this->assertTrue($user->hasVerifiedEmail());
-        $this->assertSame(['admin'], $user->roles()->pluck('slug')->all());
+        $this->assertTrue($user->is_super_admin);
+        $this->assertSame(0, $user->roles()->count());
     }
 
     public function test_running_it_again_does_not_duplicate_the_user_or_reset_the_password(): void
@@ -33,6 +34,7 @@ class UserSeederTest extends FeatureTestCase
 
         $this->assertSame(1, User::where('email', 'info@amaia.eus')->count());
         $this->assertTrue(Hash::check('changed-password', $user->refresh()->password));
-        $this->assertSame(1, $user->roles()->count());
+        $this->assertTrue($user->is_super_admin);
+        $this->assertSame(0, $user->roles()->count());
     }
 }

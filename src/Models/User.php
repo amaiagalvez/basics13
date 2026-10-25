@@ -49,7 +49,7 @@ class User extends Authenticatable implements MustVerifyEmail, PasskeyUser
     use HasFactory, HasRoles, Notifiable, PasskeyAuthenticatable, SoftDeletes, TracksAuditColumns, TwoFactorAuthenticatable;
 
     /**
-     * `is_super_admin` is never mass assigned: only the `basics13:make-super-admin` command sets it.
+     * `is_super_admin` is never mass assigned: only the development `UserSeeder` sets it.
      *
      * @var array{active: bool, is_super_admin: bool}
      */

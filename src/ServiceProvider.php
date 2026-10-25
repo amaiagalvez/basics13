@@ -10,7 +10,6 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Database\Eloquent\Model;
 use Basics13\Livewire\AdvancedSearchModal;
-use Basics13\Console\Commands\MakeSuperAdmin;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
 class ServiceProvider extends BaseServiceProvider
@@ -37,10 +36,6 @@ class ServiceProvider extends BaseServiceProvider
         $this->loadRoutesFrom(__DIR__.'/../routes/configuration.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/personal-events.php');
         $this->loadRoutesFrom(__DIR__.'/../routes/email.php');
-
-        if ($this->app->runningInConsole()) {
-            $this->commands([MakeSuperAdmin::class]);
-        }
 
         Blade::anonymousComponentNamespace('basics13::components', 'basics13');
         Blade::anonymousComponentNamespace('basics13::layouts', 'basics13-layouts');

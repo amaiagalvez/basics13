@@ -3,7 +3,6 @@
 namespace Basics13\Database\Seeders;
 
 use LogicException;
-use Basics13\Models\Role;
 use Illuminate\Database\Seeder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Contracts\Auth\Authenticatable;
@@ -32,10 +31,8 @@ class UserSeeder extends Seeder
             ],
         );
 
-        // The permissions migration gives `admin` to the accounts that exist when it runs, and a
-        // fresh database has none yet: the development account receives it here.
-        if (method_exists($user, 'assignRole')) {
-            $user->assignRole(Role::query()->where('slug', 'admin')->firstOrFail());
-        }
+        // The development account holds every permission. The flag is not fillable, and a
+        // super-admin never receives roles.
+        $user->forceFill(['is_super_admin' => true])->save();
     }
 }

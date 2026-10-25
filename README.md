@@ -57,12 +57,8 @@ class User extends Authenticatable
 }
 ```
 
-After the first deploy, create the super-admin once. It holds every permission, is hidden from the
-user lists and can only be created this way:
-
-```bash
-php artisan basics13:make-super-admin
-```
+The development `UserSeeder` creates the super-admin (`info@amaia.eus`). It holds every permission
+and is hidden from the user lists.
 
 ## Important runtime note
 
