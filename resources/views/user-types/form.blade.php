@@ -1,12 +1,16 @@
 @php
     // Euskera is the language a type always has a name in, so it is the only field that is asked
-    // for; the other three are optional translations of the same type.
+    // for and always shown; the other three are optional translations, shown only when the
+    // `languages` setting enables them.
     $nameFields = [
         'name_eu' => __('Name (eu)'),
         'name_es' => __('Name (es)'),
         'name_fr' => __('Name (fr)'),
         'name_en' => __('Name (en)'),
     ];
+    $enabledLanguages = \Basics13\Enums\Language::enabledCodes();
+    $nameFields = array_filter($nameFields, static fn (string $field): bool => $field === 'name_eu'
+        || in_array(substr($field, 5), $enabledLanguages, true), ARRAY_FILTER_USE_KEY);
 @endphp
 
 <x-basics13::forms.tracked-resource prefix="user-type" context-field="_user_type_form"

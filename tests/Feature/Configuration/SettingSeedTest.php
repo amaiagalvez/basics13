@@ -14,9 +14,9 @@ class SettingSeedTest extends FeatureTestCase
 
     public function test_it_seeds_the_basics13_variables(): void
     {
-        $this->assertSame(3, Setting::query()->count());
+        $this->assertSame(4, Setting::query()->count());
         $this->assertEqualsCanonicalizing(
-            ['alert_email', 'lockout_minutes', 'max_login_attempts'],
+            ['alert_email', 'languages', 'lockout_minutes', 'max_login_attempts'],
             Setting::query()->pluck('variable')->all(),
         );
 
@@ -25,6 +25,7 @@ class SettingSeedTest extends FeatureTestCase
         $this->assertSame('3', $maxAttempts->value);
         $this->assertSame('15', Setting::query()->where('variable', 'lockout_minutes')->value('value'));
         $this->assertSame('', Setting::query()->where('variable', 'alert_email')->value('value'));
+        $this->assertSame('eu', Setting::query()->where('variable', 'languages')->value('value'));
 
         foreach (['eu', 'es', 'fr', 'en'] as $locale) {
             $this->assertNotEmpty($maxAttempts->getAttribute('name_'.$locale));
@@ -41,7 +42,7 @@ class SettingSeedTest extends FeatureTestCase
         $this->runSeedMigration();
         $this->runSeedMigration();
 
-        $this->assertSame(3, Setting::query()->count());
+        $this->assertSame(4, Setting::query()->count());
         $this->assertSame('5', Setting::query()->where('variable', 'max_login_attempts')->value('value'));
     }
 

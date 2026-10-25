@@ -2,6 +2,7 @@
 
 namespace Basics13\Http\Requests;
 
+use Basics13\Enums\Language;
 use Basics13\Models\Setting;
 use Basics13\Enums\SettingType;
 use Illuminate\Support\Facades\Route;
@@ -48,7 +49,12 @@ class UpdateSettingsRequest extends FormRequest
                 SettingType::Integer => ['required', 'integer', 'between:'.Setting::MIN_INTEGER.','.Setting::MAX_INTEGER],
                 SettingType::Email => ['nullable', 'email', 'max:'.MaxLength::string()],
                 SettingType::String => ['nullable', 'string', 'max:'.MaxLength::string()],
+                SettingType::Languages => ['required', 'array', 'min:1'],
             };
+
+            if ($setting->type === SettingType::Languages) {
+                $rules['values.'.$setting->variable.'.*'] = ['string', 'in:'.implode(',', Language::codes())];
+            }
         }
 
         return $rules;
@@ -79,11 +85,16 @@ class UpdateSettingsRequest extends FormRequest
     }
 
     /**
-     * The validated value of a variable, as the column stores it: empty for a blank one.
+     * The validated value of a variable, as the column stores it: empty for a blank one, and the
+     * chosen codes comma-separated, in enum order, for a list of languages.
      */
     public function valueFor(Setting $setting): string
     {
         $value = $this->validated('values.'.$setting->variable);
+
+        if (is_array($value)) {
+            return implode(',', array_intersect(Language::codes(), $value));
+        }
 
         return is_scalar($value) ? trim((string) $value) : '';
     }

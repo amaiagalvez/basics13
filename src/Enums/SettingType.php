@@ -11,4 +11,5 @@ enum SettingType: string
     case Integer = 'integer';
     case String = 'string';
     case Email = 'email';
+    case Languages = 'languages';
 }

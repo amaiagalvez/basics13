@@ -29,6 +29,30 @@
                     $field = 'values.'.$setting->variable;
                     $isInteger = $setting->type === \Basics13\Enums\SettingType::Integer;
                 @endphp
+                @if ($setting->type === \Basics13\Enums\SettingType::Languages)
+                    @php($chosen = old($field, explode(',', (string) $setting->value)))
+                    <flux:fieldset data-test="configuration-{{ $setting->variable }}">
+                        <flux:legend>
+                            {{ $setting->label() }}
+                            <span class="text-red-600 dark:text-red-400" aria-hidden="true">*</span>
+                        </flux:legend>
+                        <flux:description>{{ $setting->description() }}</flux:description>
+                        <div class="flex flex-wrap gap-x-8 gap-y-3">
+                            @foreach (\Basics13\Enums\Language::options() as $code => $nativeName)
+                                <label class="flex cursor-pointer items-center gap-2 text-sm text-zinc-700 dark:text-zinc-300">
+                                    <input type="checkbox" name="values[{{ $setting->variable }}][]" value="{{ $code }}"
+                                        @checked(in_array($code, (array) $chosen, true)) @disabled(! $canEdit)
+                                        id="setting-{{ $setting->variable }}-{{ $code }}"
+                                        data-test="configuration-{{ $setting->variable }}-{{ $code }}"
+                                        class="size-4 shrink-0 rounded accent-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-focus dark:accent-brand-400" />
+                                    <span lang="{{ $code }}">{{ $nativeName }}</span>
+                                </label>
+                            @endforeach
+                        </div>
+                        <flux:error :name="$field" />
+                    </flux:fieldset>
+                    @continue
+                @endif
                 <flux:field>
                     <flux:label for="setting-{{ $setting->variable }}">
                         {{ $setting->label() }}

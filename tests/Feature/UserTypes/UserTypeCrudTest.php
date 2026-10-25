@@ -3,6 +3,7 @@
 namespace Basics13\Tests\Feature\UserTypes;
 
 use Basics13\Models\User;
+use Basics13\Models\Setting;
 use Basics13\Models\UserType;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Database\QueryException;
@@ -32,6 +33,23 @@ class UserTypeCrudTest extends UserTestCase
         $this->delete(route('user-types.destroy', $type))
             ->assertSessionHas('status', __('basics13::messages.moved_to_trash'));
         $this->assertSoftDeleted($type);
+    }
+
+    public function test_the_form_shows_only_the_names_of_the_configured_languages(): void
+    {
+        $this->actingAs($this->manager());
+
+        $this->get(route('user-types.index'))->assertOk()
+            ->assertSee('data-test="user-type-name_eu"', false)
+            ->assertDontSee('data-test="user-type-name_es"', false);
+
+        Setting::query()->where('variable', 'languages')->update(['value' => 'es,en']);
+
+        $this->get(route('user-types.index'))->assertOk()
+            ->assertSee('data-test="user-type-name_eu"', false)
+            ->assertSee('data-test="user-type-name_es"', false)
+            ->assertSee('data-test="user-type-name_en"', false)
+            ->assertDontSee('data-test="user-type-name_fr"', false);
     }
 
     public function test_the_resource_needs_the_user_type_permissions(): void

@@ -1,12 +1,16 @@
 @php
     $request = \Basics13\Http\Requests\EmailTemplateRequest::class;
-    // English is the language every other one falls back to, so it is the only one asked for.
+    // English is the language every other one falls back to, so it is the only one asked for and
+    // always shown; the others appear only when the `languages` setting enables them.
     $languages = [
         'en' => __('English'),
         'eu' => __('Basque'),
         'es' => __('Spanish'),
         'fr' => __('French'),
     ];
+    $enabledLanguages = \Basics13\Enums\Language::enabledCodes();
+    $languages = array_filter($languages, static fn (string $locale): bool => $locale === \Basics13\Models\EmailTemplate::FALLBACK_LOCALE
+        || in_array($locale, $enabledLanguages, true), ARRAY_FILTER_USE_KEY);
 @endphp
 
 <x-basics13::forms.tracked-resource prefix="email-template" context-field="_email_template_form"

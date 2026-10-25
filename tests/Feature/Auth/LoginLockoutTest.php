@@ -90,7 +90,7 @@ class LoginLockoutTest extends AuthFeatureTestCase
     {
         $this->actingAs(User::factory()->withPermissions(['settings.view', 'settings.edit'])->create())
             ->put(route('configuration.update', 'basics13'), ['values' => [
-                'max_login_attempts' => '5', 'lockout_minutes' => '15', 'alert_email' => '',
+                'max_login_attempts' => '5', 'lockout_minutes' => '15', 'alert_email' => '', 'languages' => ['eu'],
             ]])
             ->assertSessionHasNoErrors();
         $this->newBrowserSession();

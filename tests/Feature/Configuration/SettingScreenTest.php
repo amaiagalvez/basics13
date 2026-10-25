@@ -3,6 +3,7 @@
 namespace Basics13\Tests\Feature\Configuration;
 
 use Basics13\Models\User;
+use Basics13\Enums\Language;
 use Basics13\Models\Setting;
 use Basics13\Enums\SettingType;
 use Basics13\Tests\Feature\Roles\RoleTestCase;
@@ -53,11 +54,27 @@ class SettingScreenTest extends RoleTestCase
             'max_login_attempts' => '5',
             'lockout_minutes' => '30',
             'alert_email' => 'security@example.com',
+            'languages' => ['es', 'eu'],
         ]])->assertRedirect(route('configuration.index', ['package' => 'basics13']))->assertSessionHasNoErrors();
 
         $this->assertSame(5, Setting::get('basics13', 'max_login_attempts', 3));
         $this->assertSame(30, Setting::get('basics13', 'lockout_minutes', 15));
         $this->assertSame('security@example.com', Setting::get('basics13', 'alert_email', ''));
+        $this->assertSame('eu,es', Setting::get('basics13', 'languages', ''));
+        $this->assertSame(['eu', 'es'], Language::enabledCodes());
+    }
+
+    public function test_the_languages_need_at_least_one_known_code(): void
+    {
+        $this->actingAs(User::factory()->withPermissions(['settings.view', 'settings.edit'])->create());
+        $values = ['max_login_attempts' => '3', 'lockout_minutes' => '15', 'alert_email' => ''];
+
+        $this->put(route('configuration.update', 'basics13'), ['values' => $values])
+            ->assertSessionHasErrors('values.languages');
+        $this->put(route('configuration.update', 'basics13'), ['values' => [...$values, 'languages' => ['de']]])
+            ->assertSessionHasErrors('values.languages.0');
+
+        $this->assertSame(['eu'], Language::enabledCodes());
     }
 
     public function test_zero_or_a_non_integer_is_rejected_and_the_previous_value_stays(): void
@@ -69,6 +86,7 @@ class SettingScreenTest extends RoleTestCase
                 'max_login_attempts' => '5',
                 'lockout_minutes' => $invalid,
                 'alert_email' => '',
+                'languages' => ['eu'],
             ]])->assertSessionHasErrors('values.lockout_minutes');
         }
 
@@ -81,11 +99,11 @@ class SettingScreenTest extends RoleTestCase
         $this->actingAs(User::factory()->withPermissions(['settings.view', 'settings.edit'])->create());
 
         $this->put(route('configuration.update', 'basics13'), ['values' => [
-            'max_login_attempts' => '3', 'lockout_minutes' => '15', 'alert_email' => '',
+            'max_login_attempts' => '3', 'lockout_minutes' => '15', 'alert_email' => '', 'languages' => ['eu'],
         ]])->assertSessionHasNoErrors();
 
         $this->put(route('configuration.update', 'basics13'), ['values' => [
-            'max_login_attempts' => '3', 'lockout_minutes' => '15', 'alert_email' => 'not-an-email',
+            'max_login_attempts' => '3', 'lockout_minutes' => '15', 'alert_email' => 'not-an-email', 'languages' => ['eu'],
         ]])->assertSessionHasErrors('values.alert_email');
     }
 
@@ -95,12 +113,12 @@ class SettingScreenTest extends RoleTestCase
         Setting::factory()->create(['package' => 'basics13', 'variable' => 'greeting', 'type' => SettingType::String, 'value' => 'Hi']);
 
         $this->put(route('configuration.update', 'basics13'), ['values' => [
-            'max_login_attempts' => '3', 'lockout_minutes' => '15', 'alert_email' => '', 'greeting' => 'Kaixo',
+            'max_login_attempts' => '3', 'lockout_minutes' => '15', 'alert_email' => '', 'languages' => ['eu'], 'greeting' => 'Kaixo',
         ]])->assertSessionHasNoErrors();
         $this->assertSame('Kaixo', Setting::get('basics13', 'greeting', ''));
 
         $this->put(route('configuration.update', 'basics13'), ['values' => [
-            'max_login_attempts' => '3', 'lockout_minutes' => '15', 'alert_email' => '',
+            'max_login_attempts' => '3', 'lockout_minutes' => '15', 'alert_email' => '', 'languages' => ['eu'],
             'greeting' => str_repeat('a', (int) config('basics13.validation.max_length.string') + 1),
         ]])->assertSessionHasErrors('values.greeting');
     }
@@ -110,7 +128,7 @@ class SettingScreenTest extends RoleTestCase
         $this->actingAs(User::factory()->withPermissions(['settings.view', 'settings.edit'])->create());
 
         $this->put(route('configuration.update', 'basics13'), [
-            'values' => ['max_login_attempts' => '4', 'lockout_minutes' => '15', 'alert_email' => ''],
+            'values' => ['max_login_attempts' => '4', 'lockout_minutes' => '15', 'alert_email' => '', 'languages' => ['eu']],
             'type' => ['max_login_attempts' => 'string'],
             'name_en' => ['max_login_attempts' => 'Hacked'],
             'max_login_attempts' => ['type' => 'string', 'name_en' => 'Hacked'],
@@ -132,7 +150,7 @@ class SettingScreenTest extends RoleTestCase
             ->assertDontSee('data-test="configuration-submit"', false);
 
         $this->put(route('configuration.update', 'basics13'), ['values' => [
-            'max_login_attempts' => '9', 'lockout_minutes' => '15', 'alert_email' => '',
+            'max_login_attempts' => '9', 'lockout_minutes' => '15', 'alert_email' => '', 'languages' => ['eu'],
         ]])->assertForbidden();
 
         $this->assertSame(3, Setting::get('basics13', 'max_login_attempts', 1));
