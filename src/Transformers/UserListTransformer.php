@@ -38,12 +38,12 @@ class UserListTransformer extends ListTransformer
 
     protected function getForceDeleteBlockCondition(Model $record): bool
     {
-        return false;
+        return true;
     }
 
     protected function getForceDeleteBlockHint(Model $record): string
     {
-        return '';
+        return __('basics13::messages.user_force_delete_disabled');
     }
 
     /**

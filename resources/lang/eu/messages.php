@@ -29,6 +29,7 @@ return [
     'deleted_name_conflict' => 'Ezabatutako erregistroak izen hori erabiltzen du: :name.',
     'cannot_delete_related' => 'Ezinezkoa da ezabatu lotutako erregistroak dituelako. Artxibatu dezakezu.',
     'cannot_force_delete_related' => 'Ezinezkoa da behin betiko ezabatu lotutako erregistroak dituelako.',
+    'user_force_delete_disabled' => 'Erabiltzaileak ez dira inoiz behin betiko ezabatzen.',
     'archive_instead_of_delete' => 'Artxibatu erregistro hau ezabatu ordez, lotutako erregistroak dituelako.',
 
     // Ekintza-botoiak

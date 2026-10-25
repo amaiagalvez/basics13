@@ -12,6 +12,15 @@ class UserTrashDestroyRequest extends TrashDestroyRequest
 {
     use ResolvesUserModel;
 
+    /**
+     * Users are never deleted permanently, whoever asks. The refusal comes before the policy, so the
+     * super-admin bypass of the Gate does not reach it.
+     */
+    public function authorize(): bool
+    {
+        return false;
+    }
+
     protected function findTrashed(): Model
     {
         $modelClass = $this->userModelClass();

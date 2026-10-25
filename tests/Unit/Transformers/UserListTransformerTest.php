@@ -49,7 +49,7 @@ final class UserListTransformerTest extends TestCase
         $this->assertSame('blocked', $blocked['type']);
         $this->assertSame(__('basics13::messages.delete_permanently'), $blocked['label']);
         $this->assertSame('user-force-delete-blocked-7', $blocked['test']);
-        $this->assertSame('', $blocked['hint']);
+        $this->assertSame(__('basics13::messages.user_force_delete_disabled'), $blocked['hint']);
     }
 
     public function test_routes_use_the_plural_resource_key_by_default(): void

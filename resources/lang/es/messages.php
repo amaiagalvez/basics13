@@ -28,6 +28,7 @@ return [
     'deleted_name_conflict' => 'Un registro eliminado ya usa el nombre :name.',
     'cannot_delete_related' => 'No se puede eliminar porque tiene registros relacionados. Puedes archivarlo.',
     'cannot_force_delete_related' => 'No se puede eliminar definitivamente porque tiene registros relacionados.',
+    'user_force_delete_disabled' => 'Los usuarios nunca se eliminan definitivamente.',
     'archive_instead_of_delete' => 'Archiva este registro en lugar de eliminarlo porque tiene registros relacionados.',
 
     // Botones de acción

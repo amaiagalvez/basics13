@@ -23,7 +23,7 @@ class UserTrashTest extends UserTestCase
             ->assertDontSee('Matching live account');
     }
 
-    public function test_an_account_can_be_restored_and_permanently_deleted(): void
+    public function test_an_account_can_be_restored_but_never_permanently_deleted(): void
     {
         $this->actingAs(User::factory()->admin()->create());
         $account = User::factory()->create();
@@ -36,10 +36,8 @@ class UserTrashTest extends UserTestCase
 
         $account->delete();
 
-        $this->delete(route('users.trash.destroy', $account->getKey()))
-            ->assertRedirect(route('users.trash.index'))
-            ->assertSessionHas('status', __('basics13::messages.permanently_deleted'));
-        $this->assertModelMissing($account);
+        $this->delete(route('users.trash.destroy', $account->getKey()))->assertForbidden();
+        $this->assertDatabaseHas('users', ['id' => $account->getKey()]);
     }
 
     public function test_a_restored_account_returns_to_the_active_list(): void

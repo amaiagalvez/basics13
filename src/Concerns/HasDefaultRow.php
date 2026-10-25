@@ -48,10 +48,13 @@ trait HasDefaultRow
 
     private function clearOtherDefaults(): void
     {
+        // Lock every row, not only the current default: two marks running at once queue behind each
+        // other even when no row carries the flag yet, so each one sees the other's default.
+        static::withTrashed()->lockForUpdate()->get();
+
         static::withTrashed()
             ->whereKeyNot($this->getKey())
             ->where('default', true)
-            ->lockForUpdate()
             ->update(['default' => false]);
     }
 }

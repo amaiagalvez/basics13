@@ -28,6 +28,7 @@ return [
     'deleted_name_conflict' => 'A deleted record already uses the name :name.',
     'cannot_delete_related' => 'Cannot be deleted while it has related records.',
     'cannot_force_delete_related' => 'Cannot be permanently deleted while it has related records.',
+    'user_force_delete_disabled' => 'Users are never deleted permanently.',
     'archive_instead_of_delete' => 'Archive this record instead of deleting it because it has related records.',
 
     // Action buttons

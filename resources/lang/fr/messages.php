@@ -29,6 +29,7 @@ return [
     'deleted_name_conflict' => 'Un enregistrement supprimé utilise déjà le nom :name.',
     'cannot_delete_related' => 'Ne peut pas être supprimé car il a des enregistrements liés.',
     'cannot_force_delete_related' => 'Ne peut pas être supprimé définitivement car il a des enregistrements liés.',
+    'user_force_delete_disabled' => 'Les utilisateurs ne sont jamais supprimés définitivement.',
     'archive_instead_of_delete' => 'Archivez cet enregistrement au lieu de le supprimer car il a des enregistrements liés.',
 
     // Boutons d'action
