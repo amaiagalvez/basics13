@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Database\Eloquent\Model;
 use Basics13\Livewire\AdvancedSearchModal;
+use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Support\ServiceProvider as BaseServiceProvider;
 
 class ServiceProvider extends BaseServiceProvider
@@ -17,6 +18,7 @@ class ServiceProvider extends BaseServiceProvider
     public function boot(): void
     {
         $this->authorizeLogViewer();
+        $this->denyUsersWithoutRoles();
         $this->registerUserPolicy();
         $this->registerManagedMailer();
 
@@ -138,6 +140,21 @@ class ServiceProvider extends BaseServiceProvider
 
                 return $manager->createSymfonyTransport([...$config, 'transport' => 'smtp']);
             });
+        });
+    }
+
+    /**
+     * An account that holds no active role can do nothing: every gate and policy answers no. The
+     * super-admin is not a role holder, so it is left to the permission checks.
+     */
+    protected function denyUsersWithoutRoles(): void
+    {
+        Gate::before(static function (Authenticatable $user): ?bool {
+            if (method_exists($user, 'isSuperAdmin') && $user->isSuperAdmin()) {
+                return null;
+            }
+
+            return method_exists($user, 'holdsAnyRole') && $user->holdsAnyRole() ? null : false;
         });
     }
 

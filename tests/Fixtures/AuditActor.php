@@ -22,4 +22,13 @@ class AuditActor extends Authenticatable
     {
         return AuditActorFactory::new();
     }
+
+    /**
+     * The gate asks every account whether it holds a role before any ability; this fixture stands
+     * for an account that does, so the tests exercise the abilities they define.
+     */
+    public function holdsAnyRole(): bool
+    {
+        return true;
+    }
 }

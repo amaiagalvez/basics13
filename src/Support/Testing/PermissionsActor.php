@@ -42,6 +42,15 @@ final class PermissionsActor extends User
         return $this->superAdmin;
     }
 
+    /**
+     * Holding a permission means holding a role: an actor without any permission is an account
+     * without roles, which the gate refuses everything.
+     */
+    public function holdsAnyRole(): bool
+    {
+        return $this->superAdmin || $this->permissions !== [];
+    }
+
     public function hasPermissionTo(string $permission): bool
     {
         $module = explode('.', $permission, 2)[0];

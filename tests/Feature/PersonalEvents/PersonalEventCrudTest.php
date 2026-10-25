@@ -12,9 +12,9 @@ class PersonalEventCrudTest extends UserTestCase
 {
     use RefreshDatabase;
 
-    public function test_any_user_creates_updates_and_deletes_their_own_events(): void
+    public function test_a_role_holder_creates_updates_and_deletes_their_own_events(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->withPermissions([])->create();
         $this->actingAs($user)->from('/calendar');
 
         $this->post(route('personal-events.store'), ['title' => 'Dentista', 'start_date' => '2026-06-12'])
@@ -39,8 +39,8 @@ class PersonalEventCrudTest extends UserTestCase
 
     public function test_the_owner_is_the_signed_in_user_never_the_payload(): void
     {
-        $user = User::factory()->create();
-        $other = User::factory()->create();
+        $user = User::factory()->withPermissions([])->create();
+        $other = User::factory()->withPermissions([])->create();
 
         $this->actingAs($user)->post(route('personal-events.store'), [
             'title' => 'Reunión',
@@ -54,7 +54,7 @@ class PersonalEventCrudTest extends UserTestCase
     public function test_an_event_of_another_user_cannot_be_touched(): void
     {
         $event = PersonalEvent::factory()->on('2026-06-12')->create(['title' => 'Ajeno']);
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->withPermissions([])->create());
 
         $this->put(route('personal-events.update', $event), ['title' => 'Mío', 'start_date' => '2026-06-12'])
             ->assertForbidden();
@@ -65,7 +65,7 @@ class PersonalEventCrudTest extends UserTestCase
 
     public function test_invalid_dates_are_reported_on_their_field_and_nothing_is_saved(): void
     {
-        $this->actingAs(User::factory()->create());
+        $this->actingAs(User::factory()->withPermissions([])->create());
 
         $this->post(route('personal-events.store'), ['title' => '', 'start_date' => '12/06/2026'])
             ->assertSessionHasErrors(['title', 'start_date']);
@@ -75,8 +75,9 @@ class PersonalEventCrudTest extends UserTestCase
         $this->post(route('personal-events.store'), ['title' => 'Viaje', 'end_date' => '2026-06-11'])
             ->assertSessionHasErrors(['start_date']);
 
-        $event = PersonalEvent::factory()->on('2026-06-12')->create();
-        $this->actingAs(User::query()->findOrFail($event->user_id))->put(route('personal-events.update', $event), [
+        $owner = User::factory()->withPermissions([])->create();
+        $event = PersonalEvent::factory()->on('2026-06-12')->create(['user_id' => $owner->id]);
+        $this->actingAs($owner)->put(route('personal-events.update', $event), [
             'title' => 'Viaje',
             'start_date' => '2026-06-12',
             'end_date' => 'mañana',
@@ -107,7 +108,7 @@ class PersonalEventCrudTest extends UserTestCase
 
     public function test_events_are_read_per_owner_and_by_the_days_they_touch(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->withPermissions([])->create();
         $make = fn (string $start, ?string $end = null): PersonalEvent => PersonalEvent::factory()
             ->for($user)->on($start, $end)->create();
 

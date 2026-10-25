@@ -6,11 +6,14 @@ use Basics13\Models\User;
 use Illuminate\Support\Facades\Gate;
 use Opcodes\LogViewer\LogViewerServiceProvider;
 use Basics13\Http\Middleware\EnsureUserIsActive;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Basics13\Tests\Feature\Auth\AuthFeatureTestCase;
 use Opcodes\LogViewer\Http\Middleware\AuthorizeLogViewer;
 
 class LogViewerAccessTest extends AuthFeatureTestCase
 {
+    use RefreshDatabase;
+
     private const ALLOWED_EMAIL = 'ops@example.test';
 
     private const LOG_VIEWER_PATH = '/log-viewer';
@@ -70,7 +73,7 @@ class LogViewerAccessTest extends AuthFeatureTestCase
     public function test_allowed_users_can_read_the_log_viewer(): void
     {
         $this->withoutMiddleware(EnsureUserIsActive::class)
-            ->actingAs(User::factory()->make(['email' => self::ALLOWED_EMAIL])->forceFill(['id' => 1]))
+            ->actingAs(User::factory()->withPermissions([])->create(['email' => self::ALLOWED_EMAIL]))
             ->get(self::LOG_VIEWER_PATH)
             ->assertOk();
     }
@@ -81,7 +84,7 @@ class LogViewerAccessTest extends AuthFeatureTestCase
     public function test_allowed_users_can_read_the_log_viewer_api(): void
     {
         $this->withoutMiddleware(EnsureUserIsActive::class)
-            ->actingAs(User::factory()->make(['email' => self::ALLOWED_EMAIL])->forceFill(['id' => 1]))
+            ->actingAs(User::factory()->withPermissions([])->create(['email' => self::ALLOWED_EMAIL]))
             ->getJson(self::LOG_VIEWER_API_PATH)
             ->assertOk();
     }
@@ -106,7 +109,7 @@ class LogViewerAccessTest extends AuthFeatureTestCase
      */
     public function test_allowed_users_cannot_download_or_delete_logs(): void
     {
-        $user = User::factory()->make(['email' => self::ALLOWED_EMAIL])->forceFill(['id' => 1]);
+        $user = User::factory()->withPermissions([])->create(['email' => self::ALLOWED_EMAIL]);
 
         foreach (['downloadLogFile', 'downloadLogFolder', 'deleteLogFile', 'deleteLogFolder'] as $ability) {
             $this->assertFalse(

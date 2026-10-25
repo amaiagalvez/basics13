@@ -30,6 +30,11 @@ trait HasRoles
     private ?array $permissionSlugs = null;
 
     /**
+     * Whether the account holds at least one active role outside the trash, once checked.
+     */
+    private ?bool $holdsRole = null;
+
+    /**
      * @return BelongsToMany<Role, $this>
      */
     public function roles(): BelongsToMany
@@ -69,12 +74,25 @@ trait HasRoles
     }
 
     /**
+     * Whether the account holds an active role outside the trash. An account without one can do
+     * nothing in the application: the gate refuses every ability to it.
+     */
+    public function holdsAnyRole(): bool
+    {
+        return $this->holdsRole ??= $this->exists && $this->roles()
+            ->where('BAS_roles.active', true)
+            ->whereNull('BAS_roles.deleted_at')
+            ->exists();
+    }
+
+    /**
      * Drop the loaded slugs, so the next check reads the roles again. Changing the roles through
      * this concern already does it; a change made any other way within the same request needs it.
      */
     public function forgetPermissions(): void
     {
         $this->permissionSlugs = null;
+        $this->holdsRole = null;
     }
 
     public function assignRole(Role $role, ?int $assignedBy = null): void
