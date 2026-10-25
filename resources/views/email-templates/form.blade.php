@@ -22,7 +22,7 @@
         <flux:error name="name" />
     </flux:field>
 
-    <flux:text>{{ __('Write parameters as :name:. :subject: and :content: stand for the subject and the body of each email.') }}</flux:text>
+    <flux:text>{{ __('Write parameters as :name:. :subject: and :content: stand for the subject and the body of each email; :banner: and :legal_text: place the banner and the legal text inside the layout.') }}</flux:text>
 
     @foreach ($languages as $locale => $language)
         <flux:fieldset>

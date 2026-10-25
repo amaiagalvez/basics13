@@ -42,10 +42,22 @@ class EmailTemplateRendererTest extends TestCase
         $renderer = new EmailTemplateRenderer;
 
         $bare = $renderer->body(new EmailTemplate(['body_en' => ':content:']), 'X', [], 'en');
-        $this->assertSame('<div>X</div>', $bare);
+        $this->assertStringNotContainsString('<img', $bare);
+        $this->assertStringContainsString('<tr><td>X</td></tr>', $bare);
 
         $framed = $renderer->body(new EmailTemplate(['body_en' => ':content:', 'banner' => 'https://a.test/b.png', 'legal_text' => 'Legal']), 'X', [], 'en');
-        $this->assertStringStartsWith('<p><img src="https://a.test/b.png"', $framed);
-        $this->assertStringEndsWith('Legal</div>', $framed);
+        $this->assertStringStartsWith('<table role="presentation"', $framed);
+        $this->assertMatchesRegularExpression('/<img src="https:\/\/a\.test\/b\.png".*X.*Legal<\/div>/s', $framed);
+    }
+
+    public function test_a_layout_with_banner_and_legal_text_placeholders_is_not_framed_again(): void
+    {
+        $template = new EmailTemplate(['body_en' => '<main>:banner:|:content:|:legal_text:</main>', 'banner' => 'https://a.test/b.png', 'legal_text' => 'Legal']);
+
+        $body = (new EmailTemplateRenderer)->body($template, 'X', [], 'en');
+
+        $this->assertStringStartsWith('<main><img src="https://a.test/b.png"', $body);
+        $this->assertStringEndsWith('|X|<div style="font-family:Arial,Helvetica,sans-serif;font-size:12px;line-height:18px;color:#71717a;">Legal</div></main>', $body);
+        $this->assertSame('<main>|X|</main>', (new EmailTemplateRenderer)->body(new EmailTemplate(['body_en' => '<main>:banner:|:content:|:legal_text:</main>']), 'X', [], 'en'));
     }
 }

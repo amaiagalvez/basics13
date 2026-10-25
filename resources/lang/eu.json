@@ -492,7 +492,7 @@
     "Use as the default configuration": "Erabili konfigurazio lehenetsi gisa",
     "Use as the default template": "Erabili txantiloi lehenetsi gisa",
     "Username": "Erabiltzaile-izena",
-    "Write parameters as :name:. :subject: and :content: stand for the subject and the body of each email.": "Idatzi parametroak :name: gisa. :subject: eta :content: mezu bakoitzaren gaia eta gorputza dira.",
+    "Write parameters as :name:. :subject: and :content: stand for the subject and the body of each email; :banner: and :legal_text: place the banner and the legal text inside the layout.": "Idatzi parametroak :name: gisa. :subject: eta :content: mezu bakoitzaren gaia eta gorputza dira; :banner: eta :legal_text: bannerra eta lege-testua diseinuaren barruan kokatzen dituzte.",
     "email.view": "Ikusi posta-konfigurazioak eta -txantiloiak",
     "email.edit": "Kudeatu posta-konfigurazioak eta -txantiloiak",
     "email.manage": "Kudeatu posta (sarbide osoa)"

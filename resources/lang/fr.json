@@ -492,7 +492,7 @@
     "Use as the default configuration": "Utiliser comme configuration par défaut",
     "Use as the default template": "Utiliser comme modèle par défaut",
     "Username": "Nom d’utilisateur",
-    "Write parameters as :name:. :subject: and :content: stand for the subject and the body of each email.": "Écrivez les paramètres sous la forme :name:. :subject: et :content: représentent l’objet et le corps de chaque e-mail.",
+    "Write parameters as :name:. :subject: and :content: stand for the subject and the body of each email; :banner: and :legal_text: place the banner and the legal text inside the layout.": "Écrivez les paramètres sous la forme :name:. :subject: et :content: représentent l’objet et le corps de chaque e-mail ; :banner: et :legal_text: placent la bannière et le texte légal dans la mise en page.",
     "email.view": "Voir les configurations et modèles d’e-mail",
     "email.edit": "Gérer les configurations et modèles d’e-mail",
     "email.manage": "Gérer les e-mails (accès complet)"
