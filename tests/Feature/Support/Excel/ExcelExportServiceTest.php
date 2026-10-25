@@ -288,4 +288,16 @@ class ExcelExportServiceTest extends TestCase
     {
         return $export->query()->get()->map(fn ($record): array => $export->map($record))->all();
     }
+
+    public function test_a_column_named_after_a_model_method_takes_its_return_value(): void
+    {
+        AuditedRecord::factory()->create(['name' => 'Alpha']);
+
+        $rows = $this->rows(new ExcelExportService(
+            query: AuditedRecord::query(),
+            columnDefinitions: [['key' => 'getTable', 'label' => 'Table']],
+        ));
+
+        $this->assertSame((new AuditedRecord)->getTable(), $rows[0]['getTable']);
+    }
 }

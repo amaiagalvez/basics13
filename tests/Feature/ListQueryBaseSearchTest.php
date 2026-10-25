@@ -27,6 +27,17 @@ class ListQueryBaseSearchTest extends TestCase
         $this->assertStringContainsString('search=Search', $paginator->url(2));
     }
 
+    public function test_a_page_past_the_end_falls_back_to_the_last_page_with_rows(): void
+    {
+        $record = AuditedRecord::factory()->create(['name' => 'Only record']);
+        $this->app['request']->query->set('page', 5);
+
+        $paginator = (new SearchListQuery)->search('', ['name']);
+
+        $this->assertSame(1, $paginator->currentPage());
+        $this->assertSame([$record->id], $paginator->getCollection()->modelKeys());
+    }
+
     #[DataProvider('literalSearches')]
     public function test_search_treats_like_metacharacters_as_literal_text(string $search, string $decoy): void
     {

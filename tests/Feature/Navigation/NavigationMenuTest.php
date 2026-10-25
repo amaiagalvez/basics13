@@ -145,6 +145,34 @@ class NavigationMenuTest extends RoleTestCase
         $this->assertFalse($this->isCurrent($html, 'sessions'));
     }
 
+    public function test_a_top_level_link_without_permissions_shows_on_its_own(): void
+    {
+        seedMenus('probe', [['key' => 'probe-top', 'label' => 'Probe top', 'sort' => 1, 'route' => 'dashboard']]);
+
+        $keys = array_map(static fn (array $entry): string => $entry['item']['key'], NavigationMenu::for(User::factory()->create()));
+
+        $this->assertContains('probe-top', $keys);
+    }
+
+    public function test_an_account_without_permissions_support_sees_no_guarded_link(): void
+    {
+        $this->seedProbeMenus(['users.view']);
+        $account = new \Illuminate\Foundation\Auth\User;
+
+        $keys = array_map(static fn (array $entry): string => $entry['item']['key'], NavigationMenu::for($account));
+
+        $this->assertNotContains('probe', $keys);
+    }
+
+    public function test_removing_a_package_menus_drops_its_items(): void
+    {
+        $this->seedProbeMenus(['users.view']);
+
+        removeMenus('probe');
+
+        $this->assertFalse(Menu::query()->where('package', 'probe')->exists());
+    }
+
     /**
      * @param  list<string>  $permissions
      */
