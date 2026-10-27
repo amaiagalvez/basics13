@@ -2,8 +2,9 @@
 
 namespace Basics13\Tests\Feature\Forms;
 
-use Basics13\Tests\Feature\FeatureTestCase;
 use Illuminate\Support\Facades\Blade;
+use Basics13\Tests\Feature\FeatureTestCase;
+use Basics13\Http\Requests\PersonalEventRequest;
 
 class FieldLabelInfoTest extends FeatureTestCase
 {
@@ -11,7 +12,7 @@ class FieldLabelInfoTest extends FeatureTestCase
     {
         $html = Blade::render(
             '<x-basics13::forms.field-label :request="$request" field="title" test="event-title-info">Title</x-basics13::forms.field-label>',
-            ['request' => \Basics13\Http\Requests\PersonalEventRequest::class],
+            ['request' => PersonalEventRequest::class],
         );
 
         $this->assertStringContainsString('data-test="event-title-info"', $html);
