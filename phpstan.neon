@@ -12,3 +12,9 @@ parameters:
         - tests/
 
     level: 7
+
+    ignoreErrors:
+        # The package's own config file: Larastan only recognizes the host's config/ directory.
+        -
+            identifier: larastan.noEnvCallsOutsideOfConfig
+            path: config/basics13.php

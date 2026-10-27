@@ -30,6 +30,30 @@ abstract class TranslationFilesTestCase extends TestCase
         }
     }
 
+    /**
+     * JSON translations are global and the last package loaded wins, so a domain package that
+     * redefines a basics13 key would change that text in the whole application.
+     */
+    public function test_json_keys_do_not_redefine_basics13_keys(): void
+    {
+        $basicsLangPath = dirname(__DIR__).'/resources/lang';
+
+        if (realpath($this->langPath()) === realpath($basicsLangPath)) {
+            $this->markTestSkipped('basics13 owns the shared keys.');
+        }
+
+        foreach (self::LOCALES as $locale) {
+            $shared = json_decode((string) file_get_contents("{$basicsLangPath}/{$locale}.json"), true, flags: JSON_THROW_ON_ERROR);
+            $this->assertIsArray($shared);
+
+            $this->assertSame(
+                [],
+                array_values(array_intersect(array_keys($this->jsonTranslations($locale)), array_keys($shared))),
+                "{$locale}.json redefines keys basics13 already translates.",
+            );
+        }
+    }
+
     public function test_translations_keep_the_placeholders_of_their_key(): void
     {
         foreach (self::LOCALES as $locale) {

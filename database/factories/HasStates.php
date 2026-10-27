@@ -31,6 +31,7 @@ trait HasStates
      */
     public static function getRecordOrNew(string $modelClass): Model
     {
+        /** @phpstan-ignore staticMethod.notFound (every model passed in has a factory) */
         return $modelClass::inRandomOrder()->first() ?? $modelClass::factory()->createOne();
     }
 

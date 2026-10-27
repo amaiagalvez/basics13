@@ -497,5 +497,14 @@
     "Write parameters as :name:. :subject: and :content: stand for the subject and the body of each email; :banner: and :legal_text: place the banner and the legal text inside the layout.": "Escribe los parámetros como :name:. :subject: y :content: representan el asunto y el cuerpo de cada correo; :banner: y :legal_text: colocan el banner y el texto legal dentro del diseño.",
     "email.view": "Ver configuraciones y plantillas de correo",
     "email.edit": "Gestionar configuraciones y plantillas de correo",
-    "email.manage": "Gestionar el correo (acceso total)"
+    "email.manage": "Gestionar el correo (acceso total)",
+    "ID": "ID",
+    "Types": "Tipos",
+    "Created at": "Fecha de creación",
+    "+:count more": "+:count más",
+    "Calendar": "Calendario",
+    "District": "Comarca",
+    "Start date": "Fecha de inicio",
+    "End date": "Fecha de fin",
+    "Today": "Hoy"
 }

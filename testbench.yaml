@@ -1,2 +1,5 @@
 providers:
   - Basics13\ServiceProvider
+
+env:
+  - AUTH_MODEL=Basics13\Models\User

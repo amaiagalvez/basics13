@@ -202,6 +202,7 @@ class UserListTransformer extends ListTransformer
                 // Add impersonate action for superadmins on non-superadmin users (not themselves)
                 $currentUser = Auth::user();
                 if ($currentUser !== null
+                    /** @phpstan-ignore function.alreadyNarrowedType (the host may configure another user model) */
                     && method_exists($currentUser, 'isSuperAdmin')
                     && $currentUser->isSuperAdmin()
                     && ! (bool) $record->getAttribute('is_super_admin')

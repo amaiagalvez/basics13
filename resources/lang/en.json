@@ -497,5 +497,14 @@
     "Write parameters as :name:. :subject: and :content: stand for the subject and the body of each email; :banner: and :legal_text: place the banner and the legal text inside the layout.": "Write parameters as :name:. :subject: and :content: stand for the subject and the body of each email; :banner: and :legal_text: place the banner and the legal text inside the layout.",
     "email.view": "View email configurations and templates",
     "email.edit": "Manage email configurations and templates",
-    "email.manage": "Manage email (full access)"
+    "email.manage": "Manage email (full access)",
+    "ID": "ID",
+    "Types": "Types",
+    "Created at": "Created at",
+    "+:count more": "+:count more",
+    "Calendar": "Calendar",
+    "District": "District",
+    "Start date": "Start date",
+    "End date": "End date",
+    "Today": "Today"
 }
