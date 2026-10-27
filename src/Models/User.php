@@ -20,6 +20,11 @@ use Illuminate\Database\Eloquent\Attributes\UseFactory;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 
 /**
+ * Unlike the other resource models, the account model carries no `#[UsePolicy]`: the host may
+ * replace it through `auth.providers.users.model`, so `ServiceProvider::registerUserPolicy()` binds
+ * the policy to whichever class is configured. It skips `TransactionalDelete` too, because no
+ * package registers a `deleting` guard on users; add the trait if one ever does.
+ *
  * @property int $id
  * @property string $name
  * @property string $email
