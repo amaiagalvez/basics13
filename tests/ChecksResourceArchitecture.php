@@ -6,7 +6,14 @@ use ReflectionClass;
 use ReflectionMethod;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Database\Eloquent\Model;
+use Basics13\Concerns\TracksAuditColumns;
+use Illuminate\Support\Facades\Validator;
+use Basics13\Concerns\TransactionalDelete;
+use Basics13\Support\Validation\MaxLength;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Basics13\Http\Requests\SearchableListRequest;
 use Illuminate\Database\Eloquent\Attributes\UsePolicy;
 
 /**
@@ -177,6 +184,47 @@ trait ChecksResourceArchitecture
         }
     }
 
+    public function test_resource_models_share_the_lifecycle_traits_and_factory_states(): void
+    {
+        foreach ($this->resourcesOrSkip() as $resource => $modelClass) {
+            $traits = class_uses_recursive($modelClass);
+
+            foreach ([SoftDeletes::class, TracksAuditColumns::class, TransactionalDelete::class] as $trait) {
+                $this->assertContains($trait, $traits, "{$resource} must use {$trait}");
+            }
+
+            $model = new $modelClass;
+            $this->assertInstanceOf(Model::class, $model);
+            $factory = $modelClass::factory();
+            $this->assertTrue(method_exists($factory, 'trashed'), "{$resource} factory must offer the trashed() state");
+
+            if (in_array('active', $model->getFillable(), true)) {
+                $this->assertArrayHasKey('active', $model->getCasts(), "{$resource} must cast its active flag");
+                $this->assertTrue(method_exists($factory, 'archived'), "{$resource} factory must offer the archived() state");
+            }
+        }
+    }
+
+    public function test_list_requests_share_the_search_rules_and_normalization(): void
+    {
+        $limit = MaxLength::string();
+
+        foreach ($this->resourcesOrSkip() as $resource => $modelClass) {
+            $requestClass = Str::before($modelClass, '\\Models\\')."\\Http\\Requests\\{$resource}ListRequest";
+            $this->assertTrue(is_a($requestClass, SearchableListRequest::class, true), "{$requestClass} must extend SearchableListRequest");
+
+            $rules = $this->listRequest($requestClass, null)->rules();
+            $this->assertTrue(Validator::make([], $rules)->passes(), "{$resource}: an omitted search must pass");
+            $this->assertTrue(Validator::make(['search' => str_repeat('a', $limit)], $rules)->passes(), "{$resource}: a search at the limit must pass");
+            $this->assertTrue(Validator::make(['search' => ['Ane']], $rules)->fails(), "{$resource}: an array search must fail");
+            $this->assertTrue(Validator::make(['search' => str_repeat('a', $limit + 1)], $rules)->fails(), "{$resource}: an over-long search must fail");
+
+            foreach ([[null, ''], ['', ''], ['  x  ', 'x'], ['   ', '']] as [$input, $expected]) {
+                $this->assertSame($expected, $this->listRequest($requestClass, $input)->search(), "{$resource}: search normalization");
+            }
+        }
+    }
+
     /**
      * @return array<string, class-string>
      */
@@ -187,6 +235,17 @@ trait ChecksResourceArchitecture
         }
 
         return $this->resources();
+    }
+
+    /**
+     * @param  class-string<SearchableListRequest>  $requestClass
+     */
+    private function listRequest(string $requestClass, mixed $search): SearchableListRequest
+    {
+        $request = $requestClass::create('/', 'GET', $search === null ? [] : ['search' => $search]);
+        $request->setRouteResolver(static fn (): null => null);
+
+        return $request;
     }
 
     private function routePrefix(string $resource): string
